@@ -1,5 +1,5 @@
 [tools]
-node = "lts"
+node = "20"
 bun = "latest"
 claude = "latest"
 flyctl = "latest"
@@ -8,6 +8,7 @@ pi = "latest"
 lazydocker = "latest"
 mermaid-ascii = "latest"
 nub = "latest"
+infisical = "latest"
 # Not bare `hunkdiff`: the registry alias is aqua and ships the bin as hunkdiff-linux-x64.
 "npm:hunkdiff" = "latest"
 "npm:@plannotator/tot" = "latest"

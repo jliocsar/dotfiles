@@ -78,3 +78,6 @@ export EXECUTOR_URL="https://executor-selfhost-loving-puma.fly.dev/mcp"
 
 # Supabase CLI
 export PATH="/home/jliocsar/.supabase/bin:$PATH"
+
+# Pi
+export PATH="/home/jliocsar/.local/share/mise/installs/node/24.19.0/bin:$PATH"

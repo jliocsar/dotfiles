@@ -58,6 +58,16 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/block-secrets",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "SessionEnd": [
