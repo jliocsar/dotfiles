@@ -9,8 +9,8 @@ import * as Schema from 'effect/Schema'
 import * as SqlClient from 'effect/unstable/sql/SqlClient'
 import * as SqlSchema from 'effect/unstable/sql/SqlSchema'
 
+import type { Entry } from '../domain.ts'
 import {
-  Entry,
   EntryId,
   EntryNotFound,
   EntrySlug,
@@ -20,6 +20,8 @@ import {
   entrySlug,
   VersionConflict,
 } from '../domain.ts'
+import { Cipher } from './Cipher.ts'
+import type { CipherShape } from './Cipher.ts'
 import { ObjectStore } from './ObjectStore.ts'
 
 export interface EntriesShape {
@@ -63,11 +65,32 @@ const orNotFound = (ref: EntryId | EntrySlug) =>
 
 const pad = (value: number) => value.toString().padStart(2, '0')
 
+const sealPlaintextBodies = Effect.fn('Entries.sealPlaintextBodies')(function* (
+  sql: SqlClient.SqlClient,
+  cipher: CipherShape,
+) {
+  const rows = yield* SqlSchema.findAll({
+    Request: Schema.Void,
+    Result: Schema.Struct({ id: EntryId, body: Schema.String }),
+    execute: () => sql`SELECT id, body FROM entries WHERE body NOT LIKE 'enc:v1:%'`,
+  })(undefined).pipe(Effect.orDie)
+
+  for (const row of rows) {
+    yield* sql`UPDATE entries SET body = ${cipher.seal(row.body)} WHERE id = ${row.id}`.pipe(
+      Effect.orDie,
+    )
+  }
+
+  if (rows.length > 0) {
+    yield* Effect.log('sealed plaintext bodies').pipe(Effect.annotateLogs({ count: rows.length }))
+  }
+})
+
 const timestampTitle = (at: Date) =>
   `${at.getFullYear()}-${pad(at.getMonth() + 1)}-${pad(at.getDate())} ` +
   `${pad(at.getHours())}:${pad(at.getMinutes())}`
 
-const queries = (sql: SqlClient.SqlClient) => {
+const queries = (sql: SqlClient.SqlClient, Entry: CipherShape['Entry']) => {
   const columns = sql.literal(ENTRY_COLUMNS)
 
   const selectByType = flow(
@@ -161,6 +184,7 @@ export class Entries extends Context.Service<Entries, EntriesShape>()('app/Entri
   make: Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient
     const objects = yield* ObjectStore
+    const cipher = yield* Cipher
     const {
       selectByType,
       selectRecent,
@@ -169,7 +193,9 @@ export class Entries extends Context.Service<Entries, EntriesShape>()('app/Entri
       selectBySlug,
       selectById,
       selectSlug,
-    } = queries(sql)
+    } = queries(sql, cipher.Entry)
+
+    yield* sealPlaintextBodies(sql, cipher)
 
     const uniqueSlug = Effect.fn('Entries.uniqueSlug')(function* (base: string, suffix: string) {
       const taken = yield* selectSlug(base)
@@ -219,7 +245,7 @@ export class Entries extends Context.Service<Entries, EntriesShape>()('app/Entri
     })
 
     const insert = Effect.fn('Entries.insert')(function* (entry: Entry) {
-      const row = yield* Effect.orDie(Schema.encodeEffect(Entry)(entry))
+      const row = yield* Effect.orDie(Schema.encodeEffect(cipher.Entry)(entry))
 
       yield* sql`
         INSERT INTO entries ${sql.insert({ ...row, created_at: row.updated_at })}
@@ -273,7 +299,7 @@ export class Entries extends Context.Service<Entries, EntriesShape>()('app/Entri
 
           yield* sql`
             UPDATE entries
-            SET title = ${next.title}, body = ${next.body}, version = ${next.version},
+            SET title = ${next.title}, body = ${cipher.seal(next.body)}, version = ${next.version},
                 updated_at = ${DateTime.formatIso(now)}
             WHERE id = ${next.id} AND version = ${input.expectedVersion}
           `

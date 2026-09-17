@@ -9,7 +9,6 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient'
 import * as SqlSchema from 'effect/unstable/sql/SqlSchema'
 
 import {
-  Entry,
   EntryId,
   ShareLink,
   ShareNotFound,
@@ -18,7 +17,8 @@ import {
   shareToken,
   shareTtlDuration,
 } from '../domain.ts'
-import type { ShareLinkId, ShareTtl } from '../domain.ts'
+import type { Entry, ShareLinkId, ShareTtl } from '../domain.ts'
+import { Cipher } from './Cipher.ts'
 import { ENTRY_COLUMNS } from './Entries.ts'
 
 export interface ShareLinksShape {
@@ -39,6 +39,7 @@ const newToken = Effect.sync(() =>
 export class ShareLinks extends Context.Service<ShareLinks, ShareLinksShape>()('app/ShareLinks', {
   make: Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient
+    const { Entry } = yield* Cipher
     const columns = sql.literal('id, entry_id, token, expires_at, revoked_at, created_at')
     const entryColumns = sql.literal(ENTRY_COLUMNS)
 

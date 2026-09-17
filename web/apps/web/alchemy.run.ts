@@ -40,6 +40,11 @@ export default Alchemy.Stack(
       name: 'PASSWORD_HASH',
       value: yield* Config.redacted('PASSWORD_HASH'),
     })
+    yield* Fly.Secret('EncryptionKey', {
+      app: site,
+      name: 'ENCRYPTION_KEY',
+      value: yield* Config.redacted('ENCRYPTION_KEY'),
+    })
     yield* Fly.Secret('SessionSecret', {
       app: site,
       name: 'SESSION_SECRET',

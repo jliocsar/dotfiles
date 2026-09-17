@@ -6,6 +6,7 @@ import * as HttpRouter from 'effect/unstable/http/HttpRouter'
 import { Router } from './router.ts'
 import { Auth } from './services/Auth.ts'
 import { BackupLayer } from './services/Backup.ts'
+import { Cipher } from './services/Cipher.ts'
 import { DatabaseLayer } from './services/Database.ts'
 import { Entries } from './services/Entries.ts'
 import { Markdown } from './services/Markdown.ts'
@@ -20,7 +21,7 @@ const Services = Layer.mergeAll(
     Markdown.layer.pipe(Layer.provideMerge(EntriesLayer)),
     ShareLinks.layer,
     BackupLayer.pipe(Layer.provide(ObjectStore.layer)),
-  ).pipe(Layer.provide(DatabaseLayer)),
+  ).pipe(Layer.provide(Layer.mergeAll(DatabaseLayer, Cipher.layer))),
   BunHttpServer.layerConfig({ port: Config.port('PORT').pipe(Config.withDefault(3123)) }),
 )
 

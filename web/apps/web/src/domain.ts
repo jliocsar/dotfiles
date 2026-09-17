@@ -37,7 +37,7 @@ export const EntrySlug = Schema.String.pipe(Schema.brand('EntrySlug'))
 
 export const entrySlug = Schema.decodeSync(EntrySlug)
 
-export const Entry = Schema.Struct({
+export const entryFields = {
   id: EntryId,
   type: EntryType,
   slug: EntrySlug,
@@ -48,7 +48,11 @@ export const Entry = Schema.Struct({
   bytes: Schema.NullOr(Schema.Int),
   version: Schema.Int,
   updatedAt: Schema.DateTimeUtcFromString,
-}).pipe(Schema.encodeKeys({ updatedAt: 'updated_at', objectKey: 'object_key' }))
+}
+
+export const ENTRY_KEYS = { updatedAt: 'updated_at', objectKey: 'object_key' } as const
+
+export const Entry = Schema.Struct(entryFields).pipe(Schema.encodeKeys(ENTRY_KEYS))
 
 export const MentionTarget = Schema.Struct({
   id: EntryId,
