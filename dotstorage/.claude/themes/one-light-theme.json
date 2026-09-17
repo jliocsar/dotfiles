@@ -1,0 +1,70 @@
+{
+  "name": "Delta One Light",
+  "base": "light",
+  "overrides": {
+    "text": "#242529",
+    "inverseText": "#FAFAFA",
+    "inactive": "#7E8086",
+    "inactiveShimmer": "#58585A",
+    "subtle": "#A2A3A7",
+    "background": "#D4DBF4",
+    "selectionBg": "#D4DBF4",
+
+    "claude": "#AD6E25",
+    "claudeShimmer": "#C18401",
+    "success": "#168C28",
+    "error": "#D03A42",
+    "warning": "#A48819",
+    "warningShimmer": "#C18401",
+
+    "permission": "#5C78E2",
+    "permissionShimmer": "#7D82E8",
+    "suggestion": "#5C78E2",
+    "remember": "#5C78E2",
+    "ide": "#5C78E2",
+    "professionalBlue": "#5C78E2",
+    "claudeBlue_FOR_SYSTEM_SPINNER": "#5C78E2",
+    "claudeBlueShimmer_FOR_SYSTEM_SPINNER": "#7D82E8",
+    "planMode": "#3882B7",
+    "fastMode": "#3882B7",
+    "fastModeShimmer": "#0BBCD6",
+
+    "autoAccept": "#A449AB",
+    "autoAcceptShimmer": "#C070C8",
+    "skill": "#A449AB",
+    "merged": "#A449AB",
+    "bashBorder": "#A449AB",
+    "effortUltra": "#A449AB",
+
+    "briefLabelYou": "#7E8086",
+    "briefLabelClaude": "#AD6E25",
+
+    "red_FOR_SUBAGENTS_ONLY": "#DE3E35",
+    "orange_FOR_SUBAGENTS_ONLY": "#AD6E25",
+    "yellow_FOR_SUBAGENTS_ONLY": "#D2B67C",
+    "green_FOR_SUBAGENTS_ONLY": "#3F953A",
+    "cyan_FOR_SUBAGENTS_ONLY": "#0997B3",
+    "blue_FOR_SUBAGENTS_ONLY": "#2F5AF3",
+    "purple_FOR_SUBAGENTS_ONLY": "#950095",
+    "pink_FOR_SUBAGENTS_ONLY": "#A4195A",
+
+    "promptBorder": "#C9C9CA",
+    "promptBorderShimmer": "#7E8086",
+
+    "rate_limit_fill": "#5C78E2",
+    "rate_limit_empty": "#CBCDF6",
+
+    "diffAdded": "#CDE4D6",
+    "diffRemoved": "#E6D1D5",
+    "diffAddedDimmed": "#E4EFE8",
+    "diffRemovedDimmed": "#F0E5E8",
+    "diffAddedWord": "#85D6A3",
+    "diffRemovedWord": "#EFA4B2",
+
+    "userMessageBackground": "#EBEBEC",
+    "userMessageBackgroundHover": "#DFDFE0",
+    "composerSidebarBackground": "#EBEBEC",
+    "bashMessageBackgroundColor": "#F1E8F2",
+    "memoryBackgroundColor": "#E7EEF3"
+  }
+}

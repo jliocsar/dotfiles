@@ -1,0 +1,22 @@
+{
+  "displayName": "JC",
+  "diffOptions": {
+    "defaultDiffType": "since-base",
+    "diffStyle": "unified",
+    "diffIndicators": "bars",
+    "lineDiffType": "char",
+    "overflow": "wrap",
+    "fontFamily": "Space Mono",
+    "lineBgIntensity": "subtle"
+  },
+  "reviewAnalysis": {
+    "semanticDiff": false,
+    "callFlow": true
+  },
+  "theme": {
+    "mode": "system",
+    "light": "plannotator",
+    "dark": "plannotator"
+  },
+  "favicon": "classic"
+}

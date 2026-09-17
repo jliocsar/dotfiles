@@ -1,0 +1,11 @@
+node_modules
+**/node_modules
+**/tmp
+**/.env
+apps/web/app.db*
+apps/web/public/app.css
+apps/web/public/editor.js
+apps/web/public/files
+.claude
+.agents
+*.md

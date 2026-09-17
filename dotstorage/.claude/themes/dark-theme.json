@@ -1,0 +1,70 @@
+{
+  "name": "Zenbones Dark",
+  "base": "dark",
+  "overrides": {
+    "text": "#B4BDC3",
+    "inverseText": "#1C1917",
+    "inactive": "#888F94",
+    "inactiveShimmer": "#979FA4",
+    "subtle": "#6E6763",
+    "background": "#3D4042",
+    "selectionBg": "#3D4042",
+
+    "claude": "#B77E64",
+    "claudeShimmer": "#D68C67",
+    "success": "#819B69",
+    "error": "#DE6E7C",
+    "warning": "#B77E64",
+    "warningShimmer": "#D68C67",
+
+    "permission": "#6099C0",
+    "permissionShimmer": "#61ABDA",
+    "suggestion": "#6099C0",
+    "remember": "#6099C0",
+    "ide": "#6099C0",
+    "professionalBlue": "#6099C0",
+    "claudeBlue_FOR_SYSTEM_SPINNER": "#6099C0",
+    "claudeBlueShimmer_FOR_SYSTEM_SPINNER": "#61ABDA",
+    "planMode": "#66A5AD",
+    "fastMode": "#66A5AD",
+    "fastModeShimmer": "#65B8C1",
+
+    "autoAccept": "#B279A7",
+    "autoAcceptShimmer": "#CF86C1",
+    "skill": "#B279A7",
+    "merged": "#B279A7",
+    "bashBorder": "#B279A7",
+    "effortUltra": "#B279A7",
+
+    "briefLabelYou": "#888F94",
+    "briefLabelClaude": "#B77E64",
+
+    "red_FOR_SUBAGENTS_ONLY": "#DE6E7C",
+    "orange_FOR_SUBAGENTS_ONLY": "#B77E64",
+    "yellow_FOR_SUBAGENTS_ONLY": "#D68C67",
+    "green_FOR_SUBAGENTS_ONLY": "#819B69",
+    "cyan_FOR_SUBAGENTS_ONLY": "#66A5AD",
+    "blue_FOR_SUBAGENTS_ONLY": "#6099C0",
+    "purple_FOR_SUBAGENTS_ONLY": "#B279A7",
+    "pink_FOR_SUBAGENTS_ONLY": "#CF86C1",
+
+    "promptBorder": "#403833",
+    "promptBorderShimmer": "#685F5A",
+
+    "rate_limit_fill": "#6099C0",
+    "rate_limit_empty": "#1D2C36",
+
+    "diffAdded": "#232D1A",
+    "diffRemoved": "#3E2225",
+    "diffAddedDimmed": "#1C2414",
+    "diffRemovedDimmed": "#3B151A",
+    "diffAddedWord": "#3B492D",
+    "diffRemovedWord": "#62393D",
+
+    "userMessageBackground": "#25211F",
+    "userMessageBackgroundHover": "#302B29",
+    "composerSidebarBackground": "#272321",
+    "bashMessageBackgroundColor": "#281925",
+    "memoryBackgroundColor": "#181F20"
+  }
+}

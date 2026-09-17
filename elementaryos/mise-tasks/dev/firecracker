@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+#MISE description="Install Firecracker"
+#MISE dir="/tmp"
+set -euo pipefail
+
+if [[ -x "$(command -v firecracker)" ]]; then
+  echo "[dev] firecracker already installed"
+  exit 0
+fi
+
+version="v1.16.1"
+arch="$(uname -m)"
+
+echo "[dev] Installing firecracker $version"
+curl -fsSLO "https://github.com/firecracker-microvm/firecracker/releases/download/$version/firecracker-$version-$arch.tgz"
+tar -xzf "firecracker-$version-$arch.tgz"
+sudo install -m 755 "release-$version-$arch/firecracker-$version-$arch" /usr/local/bin/firecracker
+sudo install -m 755 "release-$version-$arch/jailer-$version-$arch" /usr/local/bin/jailer
+rm -rf "firecracker-$version-$arch.tgz" "release-$version-$arch"

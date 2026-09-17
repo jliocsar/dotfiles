@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+#MISE description="Install Claude Desktop (beta) from Anthropic's apt repo"
+#MISE dir="/tmp"
+set -euo pipefail
+
+if [[ -x "$(command -v claude-desktop)" ]]; then
+  echo "[dev] claude-desktop already installed"
+  exit 0
+fi
+
+echo "[dev] Installing claude-desktop"
+
+keyring="/usr/share/keyrings/claude-desktop-archive-keyring.asc"
+sudo curl -fsSLo "$keyring" https://downloads.claude.ai/claude-desktop/key.asc
+
+echo "deb [arch=amd64,arm64 signed-by=$keyring] https://downloads.claude.ai/claude-desktop/apt/stable stable main" \
+  | sudo tee /etc/apt/sources.list.d/claude-desktop.list >/dev/null
+
+sudo apt update
+sudo apt install -y claude-desktop

@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+#MISE description="Install Ente Auth desktop"
+#MISE dir="/tmp"
+set -euo pipefail
+
+if dpkg -s ente-auth &>/dev/null; then
+  echo "[dev] ente-auth already installed"
+  exit 0
+fi
+
+echo "[dev] Installing ente-auth"
+# ente/ente is a monorepo: /releases/latest is whatever app shipped last, so
+# pick the newest auth-v* release that carries the .deb.
+ente_auth_url=$(curl -fsSL https://api.github.com/repos/ente-io/ente/releases \
+  | jq -re 'first(.[] | select(.tag_name | startswith("auth-v")) | .assets[] | select(.name | endswith("-x86_64.deb"))) | .browser_download_url')
+wget -O ente-auth.deb "$ente_auth_url"
+sudo dpkg -i ./ente-auth.deb
+rm -f ./ente-auth.deb

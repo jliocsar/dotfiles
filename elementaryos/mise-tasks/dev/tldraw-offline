@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+#MISE description="Install tldraw offline desktop app"
+#MISE dir="/tmp"
+set -euo pipefail
+
+echo "[dev] Installing tldraw-offline"
+
+wget -O tldraw-offline.deb \
+  https://github.com/tldraw/tldraw-offline/releases/latest/download/tldraw-offline-linux-amd64.deb
+
+sudo dpkg -i ./tldraw-offline.deb
+rm -f ./tldraw-offline.deb

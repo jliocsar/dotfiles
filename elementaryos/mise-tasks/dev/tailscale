@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+#MISE description="Install + bring up Tailscale"
+#MISE dir="/tmp"
+set -euo pipefail
+
+if [[ -x "$(command -v tailscale)" ]]; then
+  echo "[dev] tailscale already installed"
+  sudo tailscale update
+  exit 0
+fi
+
+echo "[dev] Installing tailscale"
+curl -fsSL https://tailscale.com/install.sh | sh
+sudo tailscale up

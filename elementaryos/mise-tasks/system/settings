@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+#MISE description="Apply elementary OS desktop settings (dark mode, dock, fonts, keybindings)"
+# No `set -e`: a single missing gsettings schema must not abort the whole setup.
+
+echo "[system] Changing system settings"
+
+# Enables battery percentage on the topbar
+gsettings set io.elementary.desktop.wingpanel.power show-percentage true
+
+# Sets dockbar items
+#gsettings set io.elementary.dock launchers "['com.mitchellh.ghostty.desktop', 'google-chrome.desktop', 'obsidian.desktop', 'inkwell.desktop', 'slack.desktop', 'Handy.desktop', 'io.elementary.files.desktop', 'io.elementary.settings.desktop', 'io.elementary.monitor.desktop']"
+gsettings set io.elementary.dock icon-size 48
+
+# Always shows the current layout on topbar
+gsettings set io.elementary.wingpanel.keyboard always-show-layout true
+
+# Always shows the caps lock indicator on topbar
+gsettings set io.elementary.wingpanel.keyboard capslock true
+
+# Enables scroll to switch workspaces on topbar
+gsettings set io.elementary.desktop.wingpanel scroll-to-switch-workspaces true
+
+# Equivalent of leaving the panel "Prevent Sleep" toggle on by default.
+# The toggle itself is a runtime gtk_application_inhibit() call with no persistence,
+# so instead we disable the underlying auto-suspend + idle screensaver keys.
+gsettings set org.gnome.settings-daemon.plugins.power sleep-inactive-ac-type 'nothing'
+gsettings set org.gnome.settings-daemon.plugins.power sleep-inactive-battery-type 'nothing'
+gsettings set org.gnome.desktop.session idle-delay 0
+gsettings set org.gnome.desktop.screensaver idle-activation-enabled false
+
+# Sets kbd layouts to en-US and pt-BR
+gsettings set org.gnome.desktop.input-sources sources "[('xkb', 'us'), ('xkb', 'br')]"
+
+# Rebinds Caps lock to Escape
+#gsettings set org.gnome.desktop.input-sources xkb-options "['grp:alt_shift_toggle', 'caps:escape']"
+gsettings set org.gnome.desktop.input-sources xkb-options "['grp:alt_shift_toggle']"
+
+# Changes default system font family
+#gsettings set org.gnome.desktop.interface document-font-name "SF Pro 10 @opsz=17"
+#gsettings set org.gnome.desktop.interface font-name 'SF Pro 9'
+#gsettings set org.gnome.desktop.interface monospace-font-name "Comic Mono 10"
+
+# Rebinds window resize
+gsettings set org.gnome.desktop.wm.keybindings begin-resize "['<Super><Shift>R']"
+
+# Rebinds toggle fullscreen
+gsettings set org.gnome.desktop.wm.keybindings toggle-fullscreen "['<Super>w']"
+
+# Changes system titlebars font family
+#gsettings set org.gnome.desktop.wm.preferences titlebar-font "SF Pro weight=590 11 @opsz=17,wght=590"
+
+# Changes system titlebars buttons layout
+#gsettings set org.gnome.desktop.wm.preferences button-layout "close,minimize,maximize:"
+
+# --- Free keybindings for the i3el tiling window manager --------------------
+# i3el grabs Super+hjkl (focus), Super+\ and Super+- (splits), and the i3
+# workspace convention Super+[Shift]+1..9/0. elementary/mutter already own some
+# of those accelerators and the built-in binding wins the grab (so Super+h
+# minimizes instead of focusing), so clear them. These are global user prefs, so
+# they also apply in the Secure Session fallback — cosmetic, not a safety issue.
+
+# Super+h is minimize; i3el uses it for focus-left. (i3 has no minimize concept.)
+#gsettings set org.gnome.desktop.wm.keybindings minimize "[]"
+## Super+l locks the screen; i3el uses it for focus-right. Lock via the panel still works.
+#gsettings set org.gnome.settings-daemon.plugins.media-keys screensaver "[]"
+## Super+- / Super++ zoom the desktop; i3el uses Super+- for vertical split.
+#gsettings set io.elementary.desktop.wm.keybindings zoom-out "[]"
+#gsettings set io.elementary.desktop.wm.keybindings zoom-in "[]"
+
+# i3 workspace convention: Super+N switches, Super+Shift+N moves the window.
+# elementary maps Super+Shift+N to *switch* (backwards from i3), so clear those.
+for n in 1 2 3 4 5 6 7 8 9; do
+  #gsettings set org.gnome.desktop.wm.keybindings "switch-to-workspace-$n" "[]"
+  gsettings reset org.gnome.desktop.wm.keybindings "switch-to-workspace-$n"
+done
+# Drop the Super+0 / Super+Shift+0 aliases for the last workspace, keep the End ones.
+gsettings set io.elementary.desktop.wm.keybindings switch-to-workspace-last "['<Super>End']"
+gsettings set io.elementary.desktop.wm.keybindings move-to-workspace-last "['<Super><Shift>End']"
+# The dock launches its Nth item on Super+N — the exact keys i3el wants for
+# switching to workspace N. Clear them so i3el can own Super+1..9.
+for n in 1 2 3 4 5 6 7 8 9; do
+  gsettings set io.elementary.dock.keybindings "launch-dock-$n" "[]"
+done
+
+# NOTE(jliocsar): Hack to re-apply settings to the dock launchers; OS relaunches the dock.
+if [[ -n "${dock_pid:-}" ]]; then
+  kill -9 "$dock_pid"
+fi

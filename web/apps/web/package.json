@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json.schemastore.org/package",
+  "name": "@dotfiles/web",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun run fonts && bun run css:watch & bun run js:watch & bun run --hot src/server.ts",
+    "start": "bun run src/server.ts",
+    "fonts": "mkdir -p public/files && cp node_modules/@fontsource/inter/files/inter-latin-{400,500,600}-normal.woff2 node_modules/@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-{400,500}-normal.woff2 node_modules/@fontsource-variable/newsreader/files/newsreader-latin-opsz-normal.woff2 public/files/",
+    "css": "tailwindcss -i src/styles/app.css -o public/app.css --minify",
+    "css:watch": "tailwindcss -i src/styles/app.css -o public/app.css --watch",
+    "build": "bun run fonts && bun run css && bun run js",
+    "js": "bun build src/client/editor.ts --outdir public --minify",
+    "js:watch": "bun build src/client/editor.ts --outdir public --watch",
+    "deploy": "bun --env-file=.env alchemy deploy --stage prod"
+  },
+  "dependencies": {
+    "@codemirror/lang-markdown": "^6.5.2",
+    "@codemirror/language": "6.12.4",
+    "@codemirror/state": "6.7.4",
+    "@codemirror/view": "6.43.11",
+    "@dotfiles/jsx": "workspace:*",
+    "@effect/platform-bun": "4.0.0-rc.112",
+    "@effect/sql-sqlite-bun": "4.0.0-rc.112",
+    "@fontsource-variable/newsreader": "^5.3.0",
+    "@fontsource/ibm-plex-mono": "^5.3.0",
+    "@fontsource/inter": "^5.3.0",
+    "@lezer/highlight": "1.2.3",
+    "@replit/codemirror-vim": "^6.4.0",
+    "@sindresorhus/slugify": "^3.0.1",
+    "@tailwindcss/typography": "^0.5.20",
+    "basecoat-css": "^1.0.2",
+    "codemirror": "^6.0.2",
+    "effect": "4.0.0-rc.112",
+    "htmx.org": "^2.0.10",
+    "motion": "^13.4.0",
+    "shiki": "^4.4.3"
+  },
+  "devDependencies": {
+    "@alchemy.run/frontend-frameworks": "2.0.0-beta.77",
+    "@effect/platform-node": "4.0.0-rc.112",
+    "@tailwindcss/cli": "^4.3.3",
+    "alchemy": "2.0.0-beta.77",
+    "tailwindcss": "^4.3.3"
+  }
+}

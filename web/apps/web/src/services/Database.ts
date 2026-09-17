@@ -1,0 +1,63 @@
+import * as SqliteClient from '@effect/sql-sqlite-bun/SqliteClient'
+import * as SqliteMigrator from '@effect/sql-sqlite-bun/SqliteMigrator'
+import * as Config from 'effect/Config'
+import * as Effect from 'effect/Effect'
+import * as Layer from 'effect/Layer'
+import * as SqlClient from 'effect/unstable/sql/SqlClient'
+
+const createEntries = Effect.gen(function* () {
+  const sql = yield* SqlClient.SqlClient
+
+  yield* sql`
+    CREATE TABLE entries (
+      id TEXT PRIMARY KEY,
+      type TEXT NOT NULL,
+      slug TEXT NOT NULL UNIQUE,
+      title TEXT NOT NULL,
+      body TEXT NOT NULL DEFAULT '',
+      archived_at TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      version INTEGER NOT NULL DEFAULT 1
+    )
+  `
+
+  yield* sql`CREATE INDEX entries_section ON entries (type, archived_at, updated_at DESC)`
+})
+
+const addArtifactColumns = Effect.gen(function* () {
+  const sql = yield* SqlClient.SqlClient
+
+  yield* sql`ALTER TABLE entries ADD COLUMN object_key TEXT`
+  yield* sql`ALTER TABLE entries ADD COLUMN mime TEXT`
+  yield* sql`ALTER TABLE entries ADD COLUMN bytes INTEGER`
+})
+
+const createShareLinks = Effect.gen(function* () {
+  const sql = yield* SqlClient.SqlClient
+
+  yield* sql`
+    CREATE TABLE share_links (
+      id TEXT PRIMARY KEY,
+      entry_id TEXT NOT NULL,
+      token TEXT NOT NULL UNIQUE,
+      expires_at TEXT,
+      revoked_at TEXT,
+      created_at TEXT NOT NULL
+    )
+  `
+
+  yield* sql`CREATE INDEX share_links_entry ON share_links (entry_id, revoked_at)`
+})
+
+const ClientLayer = SqliteClient.layerConfig({
+  filename: Config.string('DATABASE_PATH').pipe(Config.withDefault('app.db')),
+})
+
+export const DatabaseLayer = SqliteMigrator.layer({
+  loader: SqliteMigrator.fromRecord({
+    '1_entries': createEntries,
+    '2_artifacts': addArtifactColumns,
+    '3_share_links': createShareLinks,
+  }),
+}).pipe(Layer.provideMerge(ClientLayer))

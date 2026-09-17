@@ -1,0 +1,48 @@
+# Neovim
+.config/nvim/
+
+# zsh
+.zshrc
+
+# Tmux
+.tmux.conf
+.config/tmux/
+
+# Herdr
+.config/herdr/config.toml
+
+# GTK settings
+.config/gtk-3.0/settings.ini
+.config/gtk-3.0/gtk.css
+
+# Ghostty
+.config/ghostty/config.ghostty
+.config/ghostty/themes/
+
+# Claude
+.claude/skills/
+.claude/hooks/
+.claude/themes/
+.claude/output-styles/
+.claude/settings.json
+
+# Pi
+.pi/agent/extensions/
+.pi/agent/themes/
+.pi/agent/cloak.json
+.pi/agent/settings.json
+
+# Agents
+.agents/agents/
+.agents/skills/
+.agents/AGENTS.md
+
+# Hunk
+.config/hunk/config.toml
+.config/hunk/zenbones-dark.toml
+.config/hunk/zenbones-light.toml
+.config/hunk/delta-one-dark.toml
+.config/hunk/delta-one-light.toml
+
+# Plannotator
+.plannotator/config.json

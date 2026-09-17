@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+#MISE description="Install [tools], then run every file task group by group"
+set -euo pipefail
+
+mise install
+
+# Sequential on purpose: parallel tasks race on the apt lock.
+# system:pantheon is standalone and opts out.
+for group in base system web dev term; do
+  for task in $(mise tasks ls --json | jq -r --arg g "$group:" '.[].name | select(startswith($g))'); do
+    [[ "$task" == "system:pantheon" ]] && continue
+    mise run "$task"
+  done
+done

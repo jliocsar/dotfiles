@@ -1,0 +1,12 @@
+{
+  "mcp": {
+    "toolMode": "proxy",
+    "startup": "lazy",
+    "servers": {
+      "executor": {
+        "type": "remote",
+        "url": "https://executor-selfhost-loving-puma.fly.dev/mcp"
+      }
+    }
+  }
+}

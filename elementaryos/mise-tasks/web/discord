@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+#MISE description="Install Discord"
+#MISE dir="/tmp"
+set -euo pipefail
+
+echo "[web] Installing Discord"
+if [[ ! -f "./discord.deb" ]]; then
+  wget -O discord.deb "https://discord.com/api/download?platform=linux&format=deb"
+fi
+sudo dpkg -i discord.deb

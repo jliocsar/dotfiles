@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+#MISE description="Install base apt packages"
+set -euo pipefail
+
+echo "[base] Installing base packages..."
+sudo apt-get update
+sudo apt-get install -y \
+  bison \
+  build-essential \
+  byacc \
+  curl \
+  file \
+  fonts-liberation \
+  gcc \
+  git \
+  graphviz \
+  imagemagick \
+  libatk1.0-dev \
+  libayatana-appindicator3-dev \
+  libdbus-1-dev \
+  libevent-dev \
+  libfuse2 \
+  libgranite-dev \
+  libgtk-3-dev \
+  libgtk-layer-shell-dev \
+  librsvg2-dev \
+  libsixel-bin \
+  libssl-dev \
+  libwebkit2gtk-4.1-dev \
+  libwingpanel-dev \
+  libxdo-dev \
+  lua5.4 \
+  make \
+  meson \
+  openssh-server \
+  pkg-config \
+  tldr \
+  valac \
+  wget \
+  xclip \
+  xsel \
+  zsh

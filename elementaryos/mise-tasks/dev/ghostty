@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+#MISE description="Install Ghostty + set it as the default terminal"
+#MISE dir="/tmp"
+set -euo pipefail
+
+if [[ ! -f "/usr/bin/ghostty" ]]; then
+  echo "[dev] Installing ghostty"
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/mkasberg/ghostty-ubuntu/HEAD/install.sh)"
+fi
+
+echo "[dev] Setting default terminal to Ghostty..."
+sudo update-alternatives --set x-terminal-emulator /usr/bin/ghostty

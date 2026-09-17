@@ -1,0 +1,37 @@
+keybind = ctrl+shift+k=toggle_tab_overview
+
+# Exactly one of the backgrounds stays uncommented; the `theme` script swaps them.
+# Delta One — custom theme files in ~/.config/ghostty/themes/, palette from
+# Delta's bundled theme. Background is Delta's editor bg, not Zed's terminal bg.
+theme = light:Delta One Light,dark:Delta One Dark
+background = 191c1f
+#background = fafafa
+# Zenbones
+#theme = light:Zenbones Light,dark:Zenbones Dark
+#background = 0c0b0a
+#background = fafafa
+
+gtk-titlebar = true
+gtk-titlebar-style = tabs
+gtk-toolbar-style = flat
+window-show-tab-bar = never
+
+app-notifications = no-clipboard-copy
+desktop-notifications = false
+clipboard-read = allow
+clipboard-write = allow
+
+#font-family = Ioskeley Mono
+font-family = Martian Mono
+#font-family = CozetteVector
+#font-family = Comic Mono
+font-size = 9
+font-style = SemiBold
+font-style-bold = ExtraBold
+font-style-italic = SemiBold Italic
+font-style-bold-italic = ExtraBold Italic
+font-feature = -calt
+font-feature = -liga
+font-feature = -dlig
+adjust-cell-width = 0
+adjust-cell-height = 4

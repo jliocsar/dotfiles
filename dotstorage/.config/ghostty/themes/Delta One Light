@@ -1,0 +1,24 @@
+# Delta One Light — ghostty palette, 1:1 with Delta's bundled `Delta One Light`
+# theme. See "Delta One Dark" for the token mapping.
+palette = 0=#000000
+palette = 1=#de3e35
+palette = 2=#3f953a
+palette = 3=#d2b67c
+palette = 4=#2f5af3
+palette = 5=#950095
+palette = 6=#0997b3
+palette = 7=#bbbbbb
+palette = 8=#000000
+palette = 9=#de3e35
+palette = 10=#3f953a
+palette = 11=#d2b67c
+palette = 12=#2f5af3
+palette = 13=#a00095
+palette = 14=#0bbcd6
+palette = 15=#ffffff
+background = #fafafa
+foreground = #2a2c33
+cursor-color = #5c78e2
+cursor-text = #fafafa
+selection-background = #d4dbf4
+selection-foreground = #242529

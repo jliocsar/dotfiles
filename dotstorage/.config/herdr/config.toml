@@ -1,0 +1,141 @@
+onboarding = false
+
+[keys]
+prefix = "ctrl+a"
+split_vertical = "prefix+shift+l"
+split_horizontal = "prefix+shift+j"
+swap_pane_left = "prefix+shift+left"
+swap_pane_down = "prefix+shift+down"
+swap_pane_up = "prefix+shift+up"
+swap_pane_right = "prefix+shift+right"
+
+# Delta One, layered over herdr's built-in one-dark/one-light. Every token below
+# comes from Delta's bundled `Delta One` theme (themes/delta-one.json in the
+# binary), so the base only matters for anything herdr adds later.
+# auto_switch follows the host terminal's light/dark report (ghostty sends it
+# when the `theme` command flips the system color-scheme).
+[theme]
+name = "one-dark"
+auto_switch = true
+dark_name = "one-dark"
+light_name = "one-light"
+
+# Delta One Dark — editor.bg #191c1f, panel.bg #202327, surface.bg #22252a,
+# border #32363e, element.selected #2c2f35, text #dce0e5, text.muted #a9afbc,
+# text.placeholder #878a98, accent #74ade8, syntax keyword/string/etc.
+[theme.custom.dark]
+accent = "#74ade8"
+panel_bg = "#202327"
+sidebar_bg = "reset"
+active_row_bg = "#2c2f35"
+selection_bg = "#2f3f4f"
+surface0 = "#22252a"
+surface1 = "#32363e"
+surface_dim = "#202327"
+overlay0 = "#878a98"
+overlay1 = "#a9afbc"
+text = "#dce0e5"
+subtext0 = "#acb2be"
+mauve = "#b477cf"
+green = "#a1c181"
+yellow = "#dec184"
+red = "#d07277"
+blue = "#74ade8"
+teal = "#6eb4bf"
+peach = "#bf956a"
+
+# Delta One Light — same tokens from the light variant (editor.bg #fafafa).
+[theme.custom.light]
+accent = "#5c78e2"
+panel_bg = "#ebebec"
+sidebar_bg = "reset"
+active_row_bg = "#dadbdd"
+selection_bg = "#d4dbf4"
+surface0 = "#ebebec"
+surface1 = "#c9c9ca"
+surface_dim = "#ebebec"
+overlay0 = "#7e8086"
+overlay1 = "#58585a"
+text = "#242529"
+subtext0 = "#58585a"
+mauve = "#a449ab"
+green = "#669f59"
+yellow = "#a48819"
+red = "#d36151"
+blue = "#5c78e2"
+teal = "#3882b7"
+peach = "#ad6e25"
+
+# Zenbones, layered over gruvbox (closest warm built-in base). Every token is
+# overridden below, so the base only matters for anything herdr adds later.
+# auto_switch follows the host terminal's light/dark report (ghostty sends it
+# when the `theme` command flips the system color-scheme).
+#[theme]
+#name = "gruvbox"
+#auto_switch = true
+#dark_name = "gruvbox"
+#light_name = "gruvbox-light"
+#name = "one-dark"
+#auto_switch = false
+#dark_name = "one-dark"
+#light_name = "one-light"
+
+# Zenbones Dark — zenbones.nvim tokens: bg #1c1917, fg #b4bdc3, bg1 #403833,
+# fg1 #888f94, Visual #3d4042, LineNr #685f5a, rose/leaf/wood/water/blossom/sky.
+#[theme.custom.dark]
+#accent = "#b77e64"
+#panel_bg = "#25211f"
+#sidebar_bg = "reset"
+#active_row_bg = "#302b29"
+#selection_bg = "#3d4042"
+#surface0 = "#302b29"
+#surface1 = "#403833"
+#surface_dim = "#25211f"
+# Muted fg tiers sit a step brighter than zenbones.nvim's LineNr/fg1 because
+# the ghostty background (#0c0b0a) is darker than the zenbones bg (#1c1917).
+#overlay0 = "#7a716c"
+#overlay1 = "#979fa4"
+#text = "#b4bdc3"
+#subtext0 = "#a3abb0"
+#mauve = "#b279a7"
+#green = "#819b69"
+#yellow = "#b77e64"
+#red = "#de6e7c"
+#blue = "#6099c0"
+#teal = "#66a5ad"
+#peach = "#b77e64"
+
+# Zenbones Light — same tokens resolved against the light spec (bg #f0edec).
+#[theme.custom.light]
+#accent = "#944927"
+#panel_bg = "#e9e4e2"
+#sidebar_bg = "reset"
+#active_row_bg = "#ddd6d3"
+#selection_bg = "#ded6d1"
+#surface0 = "#ddd6d3"
+#surface1 = "#cfc1ba"
+#surface_dim = "#e9e4e2"
+#overlay0 = "#a4968f"
+#overlay1 = "#8e817b"
+#text = "#2c363c"
+#subtext0 = "#44525b"
+#mauve = "#88507d"
+#green = "#4f6c31"
+#yellow = "#944927"
+#red = "#a8334c"
+#blue = "#286486"
+#teal = "#3b8992"
+#peach = "#944927"
+
+[ui]
+tab_bar_position = "top"
+status_indicators = "symbols"
+
+[ui.toast]
+delivery = "herdr"
+
+[experimental]
+kitty_graphics = true
+
+[ui.sound]
+enabled = true

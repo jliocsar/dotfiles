@@ -1,0 +1,17 @@
+[tools]
+node = "lts"
+bun = "latest"
+claude = "latest"
+flyctl = "latest"
+pi = "latest"
+"github:vercel-labs/agent-browser" = "0.34.0"
+lazydocker = "latest"
+mermaid-ascii = "latest"
+nub = "latest"
+# Not bare `hunkdiff`: the registry alias is aqua and ships the bin as hunkdiff-linux-x64.
+"npm:hunkdiff" = "latest"
+"npm:@plannotator/tot" = "latest"
+"github:backnotprop/plannotator" = { version = "latest", asset_pattern = "plannotator-linux-x64" }
+"github:dmtrKovalenko/fff" = { version = "latest", asset_pattern = "fff-mcp-x86_64-unknown-linux-gnu" }
+# Monorepo with mixed tags; cli-v* only. Attestation opt-out: ente's sigstore timestamps fail to verify.
+"github:ente-io/ente" = { version = "latest", tag_regex = "^cli-v", version_prefix = "cli-v", asset_pattern = "ente-cli-v{{version}}-linux-amd64.tar.gz", github_attestations = false }

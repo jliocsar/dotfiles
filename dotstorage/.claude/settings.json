@@ -1,0 +1,217 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "fileSuggestion": {
+    "type": "command",
+    "command": "/home/jliocsar/.bun/bin/bun run --env-file /dev/null /home/jliocsar/.dotfiles/claude/fff-suggest/fff-suggest.ts"
+  },
+  "env": {
+    "CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN": "0",
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "0",
+    "ENABLE_LSP_TOOL": "1"
+  },
+  "includeCoAuthoredBy": false,
+  "permissions": {
+    "defaultMode": "auto"
+  },
+  "skillOverrides": {
+    "artifact-design": "off",
+    "claude-api": "off",
+    "code-review": "off",
+    "dataviz": "off",
+    "deep-research": "off",
+    "fewer-permission-prompts": "off",
+    "init": "off",
+    "keybindings-help": "off",
+    "review": "off",
+    "run": "off",
+    "security-review": "off",
+    "simplify": "off",
+    "update-config": "off",
+    "verify": "off"
+  },
+  "hooks": {
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/notify"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh '/home/jliocsar/Projects/tmux-manager-sidebar/agent-hooks/agent-status.sh' needs-input"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/protect-tmp-dir",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.dotfiles/claude/claude-session-metadata end"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.dotfiles/claude/claude-session-metadata start"
+          }
+        ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash '/home/jliocsar/.claude/hooks/herdr-agent-state.sh' session",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh '/home/jliocsar/Projects/tmux-manager-sidebar/agent-hooks/agent-status.sh' idle"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/slopblock",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh '/home/jliocsar/Projects/tmux-manager-sidebar/agent-hooks/agent-status.sh' idle"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh '/home/jliocsar/Projects/tmux-manager-sidebar/agent-hooks/agent-status.sh' working"
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "matcher": "tldraw-offline",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node '/home/jliocsar/skills/tldraw-offline/inject-server-context.mjs' SubagentStart"
+          }
+        ]
+      }
+    ]
+  },
+  "worktree": {
+    "symlinkDirectories": [
+      "node_modules",
+      ".cache"
+    ],
+    "baseRef": "head",
+    "bgIsolation": "worktree"
+  },
+  "enableArtifact": false,
+  "statusLine": {
+    "type": "command",
+    "command": "/home/jliocsar/.bun/bin/bun run --env-file /dev/null /home/jliocsar/.dotfiles/claude/statusline/index.ts"
+  },
+  "enabledPlugins": {
+    "github@claude-plugins-official": false,
+    "host-html@host-html": false,
+    "plannotator@plannotator": true,
+    "rust-analyzer-lsp@claude-plugins-official": false,
+    "typescript-lsp@claude-plugins-official": false,
+    "userland@claude-userland": true
+  },
+  "extraKnownMarketplaces": {
+    "claude-plugins-official": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-plugins-official"
+      }
+    },
+    "plannotator": {
+      "source": {
+        "source": "github",
+        "repo": "backnotprop/plannotator"
+      }
+    },
+    "userland": {
+      "source": {
+        "source": "directory",
+        "path": "/home/jliocsar/Projects/claude-userland"
+      }
+    }
+  },
+  "sandbox": {
+    "enabled": false,
+    "autoAllowBashIfSandboxed": false
+  },
+  "effortLevel": "xhigh",
+  "modelSettings": {
+    "claude-opus-5": {
+      "effortLevel": "xhigh"
+    },
+    "claude-fable-5": {
+      "effortLevel": "xhigh"
+    },
+    "claude-fable-5-1": {
+      "effortLevel": "xhigh"
+    }
+  },
+  "autoCompactWindow": 400000,
+  "promptSuggestionEnabled": false,
+  "awaySummaryEnabled": false,
+  "tui": "fullscreen",
+  "autoMemoryEnabled": false,
+  "skipDangerousModePermissionPrompt": true,
+  "skipWorkflowUsageWarning": true,
+  "theme": "custom:one-dark-theme",
+  "editorMode": "vim",
+  "verbose": false,
+  "preferredNotifChannel": "notifications_disabled",
+  "switchModelsOnFlag": false,
+  "teammateMode": "tmux",
+  "skipAutoPermissionPrompt": true,
+  "voiceEnabled": true
+}

@@ -1,0 +1,12 @@
+apps/web/public/app.css
+
+apps/web/app.db*
+
+tsconfig.tsbuildinfo
+apps/web/public/editor.js
+apps/web/public/files
+apps/web/.env
+
+apps/web/.alchemy
+
+tmp/

@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+#MISE description="Install Amp CLI"
+#MISE dir="/tmp"
+# Not a mise tool: the npm package @ampcode/cli exposes no listable versions to mise.
+set -euo pipefail
+
+if [[ -x "$(command -v amp)" ]]; then
+  echo "[dev] amp already installed"
+  exit 0
+fi
+
+echo "[dev] Installing amp"
+curl -fsSL https://ampcode.com/install.sh | bash

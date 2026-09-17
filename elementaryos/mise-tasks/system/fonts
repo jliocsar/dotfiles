@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+#MISE description="Install fonts (SF Pro, Nerd Symbols, Martian Mono) + refresh cache"
+#MISE dir="/tmp"
+set -euo pipefail
+
+echo "[system] Installing fonts"
+mkdir -p "$HOME/.fonts"
+
+if [[ ! -f "$HOME/.fonts/SF-Pro.ttf" ]]; then
+  echo "[system] SF Pro"
+  wget -O "$HOME/.fonts/SF-Pro.ttf" \
+    https://github.com/sahibjotsaggu/San-Francisco-Pro-Fonts/raw/refs/heads/master/SF-Pro.ttf
+fi
+
+if [[ ! -f "$HOME/.fonts/SymbolsNerdFontMono-Regular.ttf" ]]; then
+  echo "[system] Symbols Nerd Font"
+  nerd_url=$(curl https://api.github.com/repos/ryanoasis/nerd-fonts/releases/latest \
+    | jq -r '.assets[] | select(.name == "NerdFontsSymbolsOnly.zip") | .browser_download_url')
+  wget -O NerdFontsSymbolsOnly.zip "$nerd_url"
+  unzip -o NerdFontsSymbolsOnly.zip SymbolsNerdFontMono-Regular.ttf
+  mv SymbolsNerdFontMono-Regular.ttf "$HOME/.fonts"
+fi
+
+echo "[system] Clearing fonts cache"
+sudo fc-cache -fv

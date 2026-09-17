@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+#MISE description="Link dotfiles + install oh-my-zsh"
+set -euo pipefail
+
+if [[ -d "$HOME/.oh-my-zsh" ]]; then
+  echo "[term] oh-my-zsh already installed"
+  exit 0
+fi
+
+if [[ -f "$HOME/.zshrc" ]]; then
+  rm "$HOME/.zshrc"
+fi
+
+"$HOME/.dotfiles/dotfiles.pl" link
+
+echo "[term] Installing oh-my-zsh"
+echo "[term] Do not forget to run 'mise run post-install'"
+sh -c "$(wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -)"

@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+#MISE description="Install Obsidian"
+#MISE dir="/tmp"
+set -euo pipefail
+
+if dpkg -s obsidian &>/dev/null; then
+  echo "[dev] obsidian already installed"
+  exit 0
+fi
+
+echo "[dev] Installing obsidian"
+# /releases/latest can point at a release whose assets are still uploading,
+# so walk the list and take the newest one that actually has the .deb.
+obsidian_url=$(curl -fsSL https://api.github.com/repos/obsidianmd/obsidian-releases/releases \
+  | jq -re 'first(.[].assets[] | select(.name | endswith("_amd64.deb"))) | .browser_download_url')
+wget -O obsidian.deb "$obsidian_url"
+sudo dpkg -i ./obsidian.deb
+rm -f ./obsidian.deb

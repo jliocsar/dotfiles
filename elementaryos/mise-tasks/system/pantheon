@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+#MISE description="Install Pantheon tweaks (flatpak). Standalone — not part of `setup`."
+set -euo pipefail
+
+echo "[system] Installing pantheon related packages..."
+flatpak install pantheon-tweaks

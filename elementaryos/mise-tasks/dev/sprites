@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+#MISE description="Install Sprite CLI"
+#MISE dir="/tmp"
+# Not a mise tool: binaries live in vendor S3 (sprites-binaries.t3.storage.dev),
+# versioned by a release.txt channel pointer with no listable version index.
+set -euo pipefail
+
+if [[ -x "$(command -v sprite)" ]]; then
+  echo "[dev] sprite already installed"
+  exit 0
+fi
+
+echo "[dev] Installing sprite"
+curl -fsSL https://sprites.dev/install.sh | sh

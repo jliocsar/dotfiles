@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+#MISE description="Enable + start the SSH server"
+set -euo pipefail
+
+echo "[system] Starting ssh server"
+sudo systemctl enable --now ssh

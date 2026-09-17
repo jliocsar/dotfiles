@@ -1,0 +1,123 @@
+{
+  "$schema": "./node_modules/@effect/tsgo/oxlint-schema.json",
+  "extends": [
+    "./node_modules/@effect/tsgo/oxlint-presets/recommended.json",
+    "./node_modules/@jliocsar/begone-slop/preset.json"
+  ],
+  "plugins": ["typescript", "promise", "effecttsgo"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error",
+    "pedantic": "error"
+  },
+  "ignorePatterns": [
+    "**/*.d.ts",
+    "**/dist/**",
+    "**/public/**",
+    ".agents/**",
+    ".claude/**",
+    ".husky/**"
+  ],
+  "jsPlugins": ["@jliocsar/begone-slop"],
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "regex": "^effect$|^effect/testing$|^effect/unstable/[a-z0-9-]+$",
+            "allowTypeImports": true,
+            "message": "Import the leaf module, not the barrel: `effect/Effect`, `effect/unstable/schema/Schema`."
+          }
+        ]
+      }
+    ],
+    "promise/prefer-await-to-then": "error",
+    "id-length": [
+      "error",
+      {
+        "min": 2,
+        "exceptions": ["i", "j"],
+        "properties": "never"
+      }
+    ],
+    "curly": ["error", "all"],
+    "no-else-return": [
+      "error",
+      {
+        "allowElseIf": false
+      }
+    ],
+    "no-nested-ternary": "error",
+    "prefer-template": "error",
+    "complexity": ["error", 15],
+    "max-classes-per-file": "off",
+    "max-lines": ["error", 1000],
+    "max-lines-per-function": [
+      "error",
+      {
+        "max": 200,
+        "skipBlankLines": true,
+        "skipComments": true,
+        "IIFEs": true
+      }
+    ],
+    "require-yield": "off",
+    "no-empty": [
+      "error",
+      {
+        "allowEmptyCatch": true
+      }
+    ],
+    "typescript/prefer-readonly-parameter-types": "off",
+    "typescript/array-type": [
+      "error",
+      {
+        "default": "array",
+        "readonly": "array"
+      }
+    ],
+    "no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_"
+      }
+    ],
+    "typescript/consistent-type-imports": [
+      "error",
+      {
+        "prefer": "type-imports",
+        "fixStyle": "separate-type-imports"
+      }
+    ],
+    "typescript/restrict-template-expressions": [
+      "error",
+      {
+        "allowNumber": true,
+        "allowBoolean": true
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["**/*.test.ts", "**/test/**/*.ts"],
+      "rules": {
+        "begone-slop/expect-padding": "error",
+        "max-lines-per-function": "off",
+        "typescript/no-non-null-assertion": "off",
+        "typescript/no-confusing-void-expression": "off",
+        "typescript/no-unnecessary-type-conversion": "off"
+      }
+    },
+    {
+      "files": ["apps/web/alchemy.run.ts"],
+      "rules": {
+        "effecttsgo/any-unknown-in-error-context": "off",
+        "effecttsgo/layer-merge-all-with-dependencies": "off",
+        "typescript/no-unsafe-assignment": "off"
+      }
+    }
+  ]
+}

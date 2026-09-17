@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+#MISE description="Install Handy (offline speech-to-text)"
+#MISE dir="/tmp"
+set -euo pipefail
+
+echo "[dev] Installing handy"
+
+# Release assets carry the version in their name, so resolve it from the API.
+handy_url=$(curl -fsSL https://api.github.com/repos/cjpais/handy/releases/latest \
+  | jq -r '.assets[] | select(.name | endswith("_amd64.deb")) | .browser_download_url')
+wget -O handy.deb "$handy_url"
+
+sudo dpkg -i ./handy.deb
+rm -f ./handy.deb

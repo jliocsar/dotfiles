@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+#MISE description="Install bb desktop (AppImage) with a desktop entry"
+#MISE dir="/tmp"
+set -euo pipefail
+
+install_dir="/opt/bb"
+appimage="$install_dir/bb.AppImage"
+
+echo "[dev] Installing bb"
+
+bb_url=$(curl -fsSL https://api.github.com/repos/get-bb/bb/releases/latest \
+  | jq -r '.assets[] | select(.name | endswith("x86_64.AppImage")) | .browser_download_url')
+wget -O bb.AppImage "$bb_url"
+chmod +x ./bb.AppImage
+
+# The icon lives inside the AppImage, so unpack a throwaway copy to lift it out.
+rm -rf ./squashfs-root
+./bb.AppImage --appimage-extract >/dev/null
+icon=$(readlink -f ./squashfs-root/.DirIcon)
+
+sudo mkdir -p "$install_dir"
+sudo install -m 755 ./bb.AppImage "$appimage"
+sudo install -m 644 "$icon" "$install_dir/bb.png"
+sudo ln -sf "$appimage" /usr/local/bin/bb
+
+sudo tee /usr/local/share/applications/bb.desktop >/dev/null <<DESKTOP
+[Desktop Entry]
+Type=Application
+Name=bb
+# Without the hint the app lands on XWayland, where mutter draws a stubby GTK
+# titlebar instead of the Pantheon one. The AppImage re-spawns itself through a
+# supervisor that drops CLI flags, so this has to be an inherited env var.
+Exec=env ELECTRON_OZONE_PLATFORM_HINT=wayland $appimage %U
+Icon=$install_dir/bb.png
+Terminal=false
+StartupWMClass=bb-desktop
+Categories=Development;Utility;
+DESKTOP
+
+sudo update-desktop-database /usr/local/share/applications || true
+
+rm -rf ./bb.AppImage ./squashfs-root

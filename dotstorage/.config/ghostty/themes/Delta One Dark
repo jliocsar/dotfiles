@@ -1,0 +1,27 @@
+# Delta One Dark — ghostty palette, 1:1 with Delta's bundled `Delta One Dark`
+# theme (themes/delta-one.json inside the Delta binary). ANSI slots are the
+# theme's terminal.ansi.* tokens; the background is the editor/thread
+# background (#191c1f) rather than Zed's terminal.background (#282c34) so the
+# terminal matches the Delta window.
+palette = 0=#282c34
+palette = 1=#e06c75
+palette = 2=#98c379
+palette = 3=#e5c07b
+palette = 4=#61afef
+palette = 5=#c678dd
+palette = 6=#56b6c2
+palette = 7=#abb2bf
+palette = 8=#636d83
+palette = 9=#ea858b
+palette = 10=#aad581
+palette = 11=#ffd885
+palette = 12=#85c1ff
+palette = 13=#d398eb
+palette = 14=#6ed5de
+palette = 15=#fafafa
+background = #191c1f
+foreground = #abb2bf
+cursor-color = #74ade8
+cursor-text = #191c1f
+selection-background = #2f3f4f
+selection-foreground = #dce0e5

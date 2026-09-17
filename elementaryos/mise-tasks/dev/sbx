@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+#MISE description="Install sbx"
+#MISE dir="/tmp"
+set -euo pipefail
+
+if [[ -x "$(command -v sbx)" ]]; then
+  echo "[dev] sbx already installed"
+  exit 0
+fi
+
+echo "[dev] Installing sbx"
+curl -fsSL https://get.docker.com | sudo REPO_ONLY=1 sh
+sudo apt-get install docker-sbx
+sudo usermod -aG kvm $USER
+newgrp kvm
+#sbx login

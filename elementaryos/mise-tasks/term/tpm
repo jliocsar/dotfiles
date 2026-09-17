@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+#MISE description="Install tmux plugin manager (tpm)"
+set -euo pipefail
+
+if [[ -d "$HOME/.tmux/plugins/tpm" ]]; then
+  echo "[term] tpm already installed"
+  exit 0
+fi
+
+echo "[term] Installing tpm"
+mkdir -p "$HOME/.tmux/plugins"
+git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"

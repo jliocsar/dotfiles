@@ -1,0 +1,10 @@
+/* Monitor (io.elementary.monitor) wingpanel indicator gap fix.
+   Each metric is [icon][label width_chars=4, centered]. Short values like "6%"
+   get centering whitespace before the next icon; "44°C" fills the box and butts
+   against the memory icon. So only the memory icon needs extra left margin to
+   match the cpu->temp gap.
+   Grid child order: 1 cpu, 2 cpu-freq (hidden), 3 cpu-temp, 4 memory.
+   Note: tied to the current set of enabled metrics; revisit if you toggle fields. */
+.composited-indicator grid > box:nth-child(3) image {
+    margin-left: 8px;
+}

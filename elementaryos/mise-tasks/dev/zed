@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+#MISE description="Install Zed editor"
+#MISE dir="/tmp"
+# Not a mise tool: the github backend fails artifact attestation verification,
+# and the vendor installer also lands the .desktop entry with absolute paths.
+set -euo pipefail
+
+# Guard on the real path — ~/.local/bin isn't on PATH in a non-interactive shell.
+if [[ -x "$HOME/.local/bin/zed" ]]; then
+  echo "[dev] zed already installed"
+  exit 0
+fi
+
+echo "[dev] Installing zed"
+curl -fsSL https://zed.dev/install.sh | sh
