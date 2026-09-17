@@ -305,8 +305,9 @@ Enforced by the server, not by prompt: slugs immutable, no delete tool,
   secret logs everything out). Wrong passwords wait two seconds before answering.
 - Secrets: Google OAuth client, token encryption key, session signing key, Tigris creds.
 - Google scope: `calendar.readonly`. That's the only one.
-- Backup: existing SQLite backup routine. Upgrade to continuous replication into the
-  same bucket once there's data you'd miss.
+- Backup: Fly volume snapshots (daily, 30-day retention) plus `services/Backup.ts`:
+  hourly `VACUUM INTO` uploaded to the artifacts bucket as `backups/app-<hour>.db`.
+  Restore = download one, place it at `DATABASE_PATH`, restart the machine.
 
 ---
 

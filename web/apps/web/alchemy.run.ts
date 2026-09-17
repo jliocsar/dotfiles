@@ -82,7 +82,7 @@ export default Alchemy.Stack(
       region: REGION,
       image: image.repoDigest.pipe(required('repoDigest')),
       guest: { cpuKind: 'shared', cpus: 1, memoryMb: 512 },
-      mounts: [{ path: '/data', sizeGb: 1 }],
+      mounts: [{ path: '/data', sizeGb: 1, snapshotRetention: 30 }],
       restart: { policy: 'always' },
       services: [
         {

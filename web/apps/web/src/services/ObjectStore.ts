@@ -3,12 +3,19 @@ import * as Context from 'effect/Context'
 import * as Effect from 'effect/Effect'
 import * as Layer from 'effect/Layer'
 import * as Redacted from 'effect/Redacted'
+import * as Schema from 'effect/Schema'
+
+export class UploadFailed extends Schema.TaggedError<UploadFailed>()('UploadFailed', {
+  key: Schema.String,
+  cause: Schema.Unknown,
+}) {}
 
 export interface ObjectStoreShape {
   readonly newKey: Effect.Effect<string>
   readonly uploadUrl: (key: string) => string
   readonly downloadUrl: (key: string, mime: string, disposition: string) => string
   readonly remove: (key: string) => Effect.Effect<void>
+  readonly upload: (key: string, file: Bun.BunFile) => Effect.Effect<number, UploadFailed>
 }
 
 const UPLOAD_TTL_SECONDS = 15 * 60
@@ -53,7 +60,14 @@ export class ObjectStore extends Context.Service<ObjectStore, ObjectStoreShape>(
         Effect.promise(() => client.delete(key)),
       )
 
-      return { newKey, uploadUrl, downloadUrl, remove } satisfies ObjectStoreShape
+      const upload = Effect.fn('ObjectStore.upload')((key: string, file: Bun.BunFile) =>
+        Effect.tryPromise({
+          try: () => client.write(key, file),
+          catch: (cause) => new UploadFailed({ key, cause }),
+        }),
+      )
+
+      return { newKey, uploadUrl, downloadUrl, remove, upload } satisfies ObjectStoreShape
     }),
   },
 ) {
