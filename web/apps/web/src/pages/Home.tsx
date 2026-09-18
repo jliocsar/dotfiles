@@ -108,7 +108,7 @@ export const HomePage = Effect.fn('HomePage')(function* (props: {
                 >
                   <Icon
                     name={section.type}
-                    class={section.type === 'artifact' ? 'size-4 shrink-0' : 'size-[18px] shrink-0'}
+                    class={section.type === 'artifact' ? 'size-3.5 shrink-0' : 'size-4 shrink-0'}
                   />
                   {section.label}
                 </a>
