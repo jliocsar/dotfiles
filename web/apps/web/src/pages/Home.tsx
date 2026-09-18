@@ -102,7 +102,14 @@ export const HomePage = Effect.fn('HomePage')(function* (props: {
             {NAV.map((section, index) => (
               <>
                 {index === 0 ? null : <Dot />}
-                <a class="transition-colors hover:text-foreground" href={section.path}>
+                <a
+                  class="inline-flex items-center gap-1 transition-colors hover:text-foreground"
+                  href={section.path}
+                >
+                  <Icon
+                    name={section.type}
+                    class={section.type === 'artifact' ? 'size-4 shrink-0' : 'size-[18px] shrink-0'}
+                  />
                   {section.label}
                 </a>
               </>
