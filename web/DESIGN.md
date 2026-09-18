@@ -15,20 +15,20 @@ Names follow shadcn/basecoat so they drop into `styles/app.css` after the
 honours `--radius`: buttons, rows and tabs get `radius-md` (6px), the tab
 track and code blocks `radius-lg` (8px), kbd and inline code `radius-sm` (4px).
 
-| token | light | dark |
-| --- | --- | --- |
-| `--background` | `#fcfcfc` | `#0f0f0f` |
-| `--foreground` | `#161616` | `#ededed` |
-| `--muted` (hover bg, code bg, segmented track) | `#f2f2f2` | `#222222` |
-| `--muted-foreground` (dates, meta, ghost buttons) | `#767676` | `#8a8a8a` |
-| `--subtle-foreground` (group labels, status, dot) | `#a3a3a3` | `#5c5c5c` |
-| `--border` | `#e6e6e6` | `#2c2c2c` |
-| `--input` (outline button, selected tab in dark) | `#e6e6e6` | `#3a3a3a` |
-| `--border-strong` (blockquote rule, link underline) | `#d0d0d0` | `#333333` |
-| `--accent` / `--accent-foreground` (solid button) | `#161616` / `#fcfcfc` | `#ededed` / `#0f0f0f` |
-| `--ring` (focus outline) | `#161616` | `#ededed` |
-| `--radius` | `8px` | `8px` |
-| `--ease-out` | `cubic-bezier(0.23, 1, 0.32, 1)` | |
+| token                                               | light                            | dark                  |
+| --------------------------------------------------- | -------------------------------- | --------------------- |
+| `--background`                                      | `#fcfcfc`                        | `#0f0f0f`             |
+| `--foreground`                                      | `#161616`                        | `#ededed`             |
+| `--muted` (hover bg, code bg, segmented track)      | `#f2f2f2`                        | `#222222`             |
+| `--muted-foreground` (dates, meta, ghost buttons)   | `#767676`                        | `#8a8a8a`             |
+| `--subtle-foreground` (group labels, status, dot)   | `#a3a3a3`                        | `#5c5c5c`             |
+| `--border`                                          | `#e6e6e6`                        | `#2c2c2c`             |
+| `--input` (outline button, selected tab in dark)    | `#e6e6e6`                        | `#3a3a3a`             |
+| `--border-strong` (blockquote rule, link underline) | `#d0d0d0`                        | `#333333`             |
+| `--accent` / `--accent-foreground` (solid button)   | `#161616` / `#fcfcfc`            | `#ededed` / `#0f0f0f` |
+| `--ring` (focus outline)                            | `#161616`                        | `#ededed`             |
+| `--radius`                                          | `8px`                            | `8px`                 |
+| `--ease-out`                                        | `cubic-bezier(0.23, 1, 0.32, 1)` |                       |
 
 Dark mode: basecoat's `.dark` class on `<html>`, set by `window.basecoat.theme`
 (persisted in `localStorage.themeMode`, falling back to `prefers-color-scheme`
@@ -49,29 +49,29 @@ No other colors. No shadows except the 1px ring under the active segmented tab.
 
 ## Type
 
-| role | family | fallback |
-| --- | --- | --- |
-| `--font-sans` — all UI chrome | Inter 400/500/600 | `ui-sans-serif, system-ui` |
-| `--font-serif` — page and note titles, markdown headings | Newsreader 400/500 (opsz axis) | `ui-serif, Georgia` |
-| `--font-mono` — note body, source and preview, excerpts | IBM Plex Mono 400/500 | `ui-monospace, Menlo` |
+| role                                                     | family                         | fallback                   |
+| -------------------------------------------------------- | ------------------------------ | -------------------------- |
+| `--font-sans` — all UI chrome                            | Inter 400/500/600              | `ui-sans-serif, system-ui` |
+| `--font-serif` — page and note titles, markdown headings | Newsreader 400/500 (opsz axis) | `ui-serif, Georgia`        |
+| `--font-mono` — note body, source and preview, excerpts  | IBM Plex Mono 400/500          | `ui-monospace, Menlo`      |
 
 Body default: sans 13px / 1.5, `-webkit-font-smoothing: antialiased`.
 
-| element | size | weight | line-height | notes |
-| --- | --- | --- | --- | --- |
-| page h1 ("Notes", note title) | 34px serif | 400 | 1.15 | `letter-spacing: -0.01em`, 10px below |
-| markdown h2 | 22px serif | 500 | — | margin `1.6em 0 0.4em` |
-| markdown h3 | 18px serif | 500 | — | margin `1.4em 0 0.3em` |
-| note body (textarea + rendered) | 14px mono | 400 | 1.75 | `tab-size: 2` |
-| code block | 13px mono | 400 | 1.6 | `--muted` bg, `12px 14px` padding |
-| inline code | 0.92em mono | — | — | `--muted` bg, `0.1em 0.35em` padding |
-| list row title | 13.5px sans | 400 | — | ellipsis, one line |
-| row date, meta row, "Edited Sep 9" | 12px sans | 400 | — | `--muted-foreground`, tabular nums |
-| button label, back link | 12.5px sans | 500 | — | |
-| segmented tab | 12px sans | 500 | — | |
-| status ("Saving…", "Saved") | 11.5px sans | 400 | — | `--subtle-foreground`, tabular nums |
-| month group label | 11px sans | 500 | — | uppercase, `letter-spacing: 0.08em`, `--subtle-foreground` |
-| kbd | 10.5px sans | 500 | — | |
+| element                            | size        | weight | line-height | notes                                                      |
+| ---------------------------------- | ----------- | ------ | ----------- | ---------------------------------------------------------- |
+| page h1 ("Notes", note title)      | 34px serif  | 400    | 1.15        | `letter-spacing: -0.01em`, 10px below                      |
+| markdown h2                        | 22px serif  | 500    | —           | margin `1.6em 0 0.4em`                                     |
+| markdown h3                        | 18px serif  | 500    | —           | margin `1.4em 0 0.3em`                                     |
+| note body (textarea + rendered)    | 14px mono   | 400    | 1.75        | `tab-size: 2`                                              |
+| code block                         | 13px mono   | 400    | 1.6         | `--muted` bg, `12px 14px` padding                          |
+| inline code                        | 0.92em mono | —      | —           | `--muted` bg, `0.1em 0.35em` padding                       |
+| list row title                     | 13.5px sans | 400    | —           | ellipsis, one line                                         |
+| row date, meta row, "Edited Sep 9" | 12px sans   | 400    | —           | `--muted-foreground`, tabular nums                         |
+| button label, back link            | 12.5px sans | 500    | —           |                                                            |
+| segmented tab                      | 12px sans   | 500    | —           |                                                            |
+| status ("Saving…", "Saved")        | 11.5px sans | 400    | —           | `--subtle-foreground`, tabular nums                        |
+| month group label                  | 11px sans   | 500    | —           | uppercase, `letter-spacing: 0.08em`, `--subtle-foreground` |
+| kbd                                | 10.5px sans | 500    | —           |                                                            |
 
 Dates are short: `Sep 9`, `Aug 28`. No year until it differs from the current one.
 
@@ -190,37 +190,37 @@ entrance, no stagger, no page fade.
 
 What does animate, and only these:
 
-| what | property | duration | easing |
-| --- | --- | --- | --- |
-| button / tab press | `transform: scale(0.97)` | 140ms | `--ease-out` |
-| button hover | `background-color`, `border-color` | 140ms | `ease` |
-| row hover | `background-color` | 120ms | `ease` |
-| back link, tab, text hover | `color` | 120–140ms | `ease` |
-| status text swap | `opacity` | 200ms | `ease` |
+| what                       | property                           | duration  | easing       |
+| -------------------------- | ---------------------------------- | --------- | ------------ |
+| button / tab press         | `transform: scale(0.97)`           | 140ms     | `--ease-out` |
+| button hover               | `background-color`, `border-color` | 140ms     | `ease`       |
+| row hover                  | `background-color`                 | 120ms     | `ease`       |
+| back link, tab, text hover | `color`                            | 120–140ms | `ease`       |
+| status text swap           | `opacity`                          | 200ms     | `ease`       |
 
 `prefers-reduced-motion: reduce` disables all of the above. Hover styles are
 gated behind `(hover: hover) and (pointer: fine)`.
 
 ## Keyboard
 
-| key | where | does |
-| --- | --- | --- |
-| `n` | anywhere outside a field | new note, opens in Source, focuses the editor |
-| `esc` | in the editor | blurs |
-| `esc` | on a note, outside a field | back to the list |
-| `j` / `k` | on the list | move focus between rows |
+| key       | where                      | does                                          |
+| --------- | -------------------------- | --------------------------------------------- |
+| `n`       | anywhere outside a field   | new note, opens in Source, focuses the editor |
+| `esc`     | in the editor              | blurs                                         |
+| `esc`     | on a note, outside a field | back to the list                              |
+| `j` / `k` | on the list                | move focus between rows                       |
 
 Every keyboard action is instant.
 
 ## Home
 
 `/` is the root every list's `← Home` points at. Same frame as every other
-page; no back link, and the crumbs' right side holds the theme toggle and a
-ghost `Sign out`.
+page; the crumbs row holds the four section links separated by dots where the
+back link would be, and its right side holds a ghost `Sign out` then the theme
+toggle.
 
 - h1: today's date, long form (`Wednesday, September 16`), local clock.
-- meta: the four section links separated by dots; `ctrl k` + `jump anywhere`
-  flush right.
+- meta: `ctrl k` + `jump anywhere`, flush left.
 - content: two equal columns, 40px gap, one column under `sm`. Left is
   `Calendar` then `Recent`; right is `Open tasks` with `All N lists ↗`.
 

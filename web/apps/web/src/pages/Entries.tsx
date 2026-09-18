@@ -129,6 +129,8 @@ const BackLink = (props: { readonly back: Back | undefined }) =>
 
 export const Page = (props: {
   readonly back?: Back
+  /** Replaces the back link on the crumbs row (home has no back). */
+  readonly crumbs?: Node
   readonly actions?: Node
   readonly heading: Node
   readonly meta: Node
@@ -136,10 +138,10 @@ export const Page = (props: {
 }) => (
   <main class="mx-auto max-w-[1000px] px-4 pt-10 pb-24 sm:px-8">
     <div class="mb-10 flex h-7 items-center justify-between">
-      <BackLink back={props.back} />
+      {props.crumbs ?? <BackLink back={props.back} />}
       <div class="flex items-center gap-1">
-        <ThemeToggle />
         {props.actions}
+        <ThemeToggle />
       </div>
     </div>
     <h1 class="mb-2.5 font-serif text-[34px] leading-[39px] font-normal tracking-[-0.01em]">

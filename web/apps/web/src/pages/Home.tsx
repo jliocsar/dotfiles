@@ -94,25 +94,28 @@ export const HomePage = Effect.fn('HomePage')(function* (props: {
   return (
     <Layout title="Home">
       <Page
+        crumbs={
+          <nav
+            class="flex h-7 items-center gap-2.5 text-xs font-medium text-muted-foreground"
+            aria-label="Sections"
+          >
+            {NAV.map((section, index) => (
+              <>
+                {index === 0 ? null : <Dot />}
+                <a class="transition-colors hover:text-foreground" href={section.path}>
+                  {section.label}
+                </a>
+              </>
+            ))}
+          </nav>
+        }
         actions={<SignOut />}
         heading={heading}
         meta={
-          <>
-            <nav class="flex items-center gap-2.5" aria-label="Sections">
-              {NAV.map((section, index) => (
-                <>
-                  {index === 0 ? null : <Dot />}
-                  <a class="transition-colors hover:text-foreground" href={section.path}>
-                    {section.label}
-                  </a>
-                </>
-              ))}
-            </nav>
-            <span class="ml-auto flex items-center gap-1.5">
-              <kbd class="kbd rounded-sm">ctrl k</kbd>
-              jump anywhere
-            </span>
-          </>
+          <span class="flex items-center gap-1.5">
+            <kbd class="kbd rounded-sm">ctrl k</kbd>
+            jump anywhere
+          </span>
         }
       >
         <div class="grid grid-cols-1 items-start gap-x-10 sm:grid-cols-2">
