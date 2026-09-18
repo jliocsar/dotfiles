@@ -9,12 +9,13 @@ import { Layout, ThemeToggle } from '../components/Layout.tsx'
 import { Entries } from '../services/Entries.ts'
 import { Markdown } from '../services/Markdown.ts'
 import { DEFAULT_SHARE_TTL, SHARE_TTL_SHORT, sectionOf, ShareTtl } from '../domain.ts'
-import type { Entry, EntrySlug, Section, ShareLink } from '../domain.ts'
+import type { Entry, EntrySlug, MeetingRef, Section, ShareLink } from '../domain.ts'
 import { ShareLinks } from '../services/ShareLinks.ts'
 import { artifactFile, formatBytes, previewOf } from '../artifacts.ts'
 import type { ArtifactFile, Preview } from '../artifacts.ts'
 import { parseTasks, taskProgress } from '../tasks.ts'
 import type { Task } from '../tasks.ts'
+import { clock } from '../zone.ts'
 
 interface Back {
   readonly href: string
@@ -71,6 +72,11 @@ const NEW_BUTTON = 'btn ml-auto border-transparent'
 const SHARE_PANEL = [
   'fixed inset-auto m-0 w-[400px] rounded-lg border bg-background p-1 text-xs text-muted-foreground shadow-lg',
   '[position-anchor:--share] [top:calc(anchor(bottom)+6px)] [right:anchor(right)]',
+].join(' ')
+
+const MEETING_PANEL = [
+  'fixed inset-auto m-0 w-[360px] rounded-lg border bg-background p-1 text-xs text-muted-foreground shadow-lg',
+  '[position-anchor:--meeting] [top:calc(anchor(bottom)+6px)] [right:anchor(right)]',
 ].join(' ')
 
 const SHARE_ROW =
@@ -435,6 +441,65 @@ const SharePanel = (props: {
   </div>
 )
 
+const MeetingMeta = (props: { readonly meeting: MeetingRef; readonly zone: DateTime.TimeZone }) => (
+  <>
+    <span class="tabular-nums">
+      {clock(props.meeting.start, props.zone)}
+      {props.meeting.end === undefined ? '' : `–${clock(props.meeting.end, props.zone)}`}
+    </span>
+    <Dot />
+    {props.meeting.attendees.length === 0 ? null : (
+      <>
+        <span title={props.meeting.attendees.map((attendee) => attendee.email).join('\n')}>
+          {props.meeting.attendees.length} attendee
+          {props.meeting.attendees.length === 1 ? '' : 's'}
+        </span>
+        <Dot />
+      </>
+    )}
+    {props.meeting.link === undefined ? null : (
+      <>
+        <a
+          class="inline-flex items-center gap-1 transition-colors hover:text-foreground"
+          href={props.meeting.link}
+          target="_blank"
+          rel="noopener"
+          hx-boost="false"
+        >
+          <Icon name="video" class="size-3.5" />
+          Join
+        </a>
+        <Dot />
+      </>
+    )}
+  </>
+)
+
+// The list of today's events is fetched when the panel first opens, not with the page.
+const MeetingActions = (props: { readonly entry: Entry }) => (
+  <>
+    <button
+      type="button"
+      class="btn [anchor-name:--meeting]"
+      data-variant="ghost"
+      popovertarget="meeting-panel"
+    >
+      <Icon name="calendar" />
+      {props.entry.meeting?.eventId === undefined ? 'Attach meeting' : 'Change meeting'}
+    </button>
+    <div
+      id="meeting-panel"
+      popover
+      class={MEETING_PANEL}
+      hx-get={`/e/${props.entry.slug}/meeting`}
+      hx-trigger="toggle once"
+      hx-swap="innerHTML"
+    >
+      <p class="px-2 py-2.5 text-xs text-muted-foreground/60">Loading today's meetings…</p>
+    </div>
+  </>
+)
+
 const ArtifactActions = (props: { readonly entry: Entry; readonly linkCount: number }) => (
   <>
     <button
@@ -564,6 +629,7 @@ export const EntryPage = Effect.fn('EntryPage')(function* (props: {
   readonly slug: EntrySlug
   readonly origin: string
   readonly openShare: boolean
+  readonly zone: DateTime.TimeZone
 }) {
   const entries = yield* Entries
   const markdown = yield* Markdown
@@ -603,12 +669,16 @@ export const EntryPage = Effect.fn('EntryPage')(function* (props: {
                   <Dot />
                 </>
               )}
+              {entry.meeting === null ? null : (
+                <MeetingMeta meeting={entry.meeting} zone={props.zone} />
+              )}
               <span>Edited {shortDate(entry, currentYear)}</span>
               <div class="ml-auto flex items-center gap-1.5">
                 <span class="text-[11.5px] text-muted-foreground/60 tabular-nums" data-status />
                 {file === undefined ? null : (
                   <ArtifactActions entry={entry} linkCount={links.length} />
                 )}
+                {entry.type === 'meeting' ? <MeetingActions entry={entry} /> : null}
                 {isTaskList || file !== undefined ? null : (
                   <SourcePreviewTabs startInSource={startInSource} />
                 )}

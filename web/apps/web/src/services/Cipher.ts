@@ -15,6 +15,8 @@ import { entryFields, ENTRY_KEYS } from '../domain.ts'
 export interface CipherShape {
   readonly seal: (plain: string) => string
   readonly isSealed: (stored: string) => boolean
+  /** Plain string in memory, `enc:v1:…` in the database. */
+  readonly Sealed: Schema.Codec<string, string>
   readonly Entry: Schema.Codec<DomainEntry, typeof DomainEntry.Encoded>
 }
 
@@ -87,7 +89,12 @@ export class Cipher extends Context.Service<Cipher, CipherShape>()('app/Cipher',
       Schema.encodeKeys(ENTRY_KEYS),
     )
 
-    return { seal: (plain) => seal(key, plain), isSealed, Entry } satisfies CipherShape
+    return {
+      seal: (plain) => seal(key, plain),
+      isSealed,
+      Sealed: SealedString,
+      Entry,
+    } satisfies CipherShape
   }),
 }) {
   static readonly layer = Layer.effect(this)(this.make)

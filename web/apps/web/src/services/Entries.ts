@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema'
 import * as SqlClient from 'effect/unstable/sql/SqlClient'
 import * as SqlSchema from 'effect/unstable/sql/SqlSchema'
 
-import type { Entry } from '../domain.ts'
+import type { Entry, MeetingRef } from '../domain.ts'
 import {
   EntryId,
   EntryNotFound,
@@ -18,6 +18,7 @@ import {
   MentionTarget,
   entryId,
   entrySlug,
+  timestampTitle,
   VersionConflict,
 } from '../domain.ts'
 import { Cipher } from './Cipher.ts'
@@ -30,9 +31,12 @@ export interface EntriesShape {
   readonly targets: Effect.Effect<readonly MentionTarget[]>
   readonly existing: (slugs: readonly string[]) => Effect.Effect<ReadonlySet<string>>
   readonly bySlug: (slug: EntrySlug) => Effect.Effect<Entry, EntryNotFound>
-  readonly create: (type: EntryType, title: Option.Option<string>) => Effect.Effect<Entry>
+  /** Live meeting notes keyed by the calendar event they were created from. */
+  readonly byEventIds: (eventIds: readonly string[]) => Effect.Effect<ReadonlyMap<string, Entry>>
+  readonly create: (input: EntryCreate) => Effect.Effect<Entry>
   readonly createArtifact: (input: ArtifactInput) => Effect.Effect<Entry>
   readonly put: (input: EntryPut) => Effect.Effect<Entry, EntryNotFound | VersionConflict>
+  readonly setMeeting: (input: MeetingPut) => Effect.Effect<Entry, EntryNotFound>
   readonly archive: (slug: EntrySlug) => Effect.Effect<Entry, EntryNotFound>
   readonly restore: (slug: EntrySlug) => Effect.Effect<Entry, EntryNotFound>
   readonly remove: (slug: EntrySlug) => Effect.Effect<Entry, EntryNotFound>
@@ -45,6 +49,14 @@ export interface ArtifactInput {
   readonly bytes: number
 }
 
+export interface EntryCreate {
+  readonly type: EntryType
+  /** Slug source when set; otherwise a wall-clock title in `zone`. */
+  readonly title: Option.Option<string>
+  readonly zone: DateTime.TimeZone
+  readonly meeting?: MeetingRef
+}
+
 export interface EntryPut {
   readonly id: EntryId
   readonly title: string
@@ -52,8 +64,14 @@ export interface EntryPut {
   readonly expectedVersion: number
 }
 
+export interface MeetingPut {
+  readonly id: EntryId
+  readonly title: string
+  readonly meeting: MeetingRef
+}
+
 export const ENTRY_COLUMNS =
-  'id, type, slug, title, body, object_key, mime, bytes, version, updated_at'
+  'id, type, slug, title, body, meeting, object_key, mime, bytes, version, updated_at'
 
 const slugSet = (rows: readonly { readonly slug: string }[]) => new Set(rows.map((row) => row.slug))
 
@@ -62,8 +80,6 @@ const orNotFound = (ref: EntryId | EntrySlug) =>
     onNone: () => new EntryNotFound({ ref }),
     onSome: Effect.succeed<Entry>,
   })
-
-const pad = (value: number) => value.toString().padStart(2, '0')
 
 const sealPlaintextBodies = Effect.fn('Entries.sealPlaintextBodies')(function* (
   sql: SqlClient.SqlClient,
@@ -85,10 +101,6 @@ const sealPlaintextBodies = Effect.fn('Entries.sealPlaintextBodies')(function* (
     yield* Effect.log('sealed plaintext bodies').pipe(Effect.annotateLogs({ count: rows.length }))
   }
 })
-
-const timestampTitle = (at: Date) =>
-  `${at.getFullYear()}-${pad(at.getMonth() + 1)}-${pad(at.getDate())} ` +
-  `${pad(at.getHours())}:${pad(at.getMinutes())}`
 
 const queries = (sql: SqlClient.SqlClient, Entry: CipherShape['Entry']) => {
   const columns = sql.literal(ENTRY_COLUMNS)
@@ -142,6 +154,19 @@ const queries = (sql: SqlClient.SqlClient, Entry: CipherShape['Entry']) => {
     Effect.orDie,
   )
 
+  const selectByEventIds = flow(
+    SqlSchema.findAll({
+      Request: Schema.Array(Schema.String),
+      Result: Entry,
+      execute: (eventIds) => sql`
+        SELECT ${columns} FROM entries
+        WHERE type = 'meeting' AND archived_at IS NULL
+          AND json_extract(meeting, '$.eventId') IN ${sql.in(eventIds)}
+      `,
+    }),
+    Effect.orDie,
+  )
+
   const selectBySlug = flow(
     SqlSchema.findOneOption({
       Request: EntrySlug,
@@ -174,6 +199,7 @@ const queries = (sql: SqlClient.SqlClient, Entry: CipherShape['Entry']) => {
     selectRecent,
     selectTargets,
     selectExisting,
+    selectByEventIds,
     selectBySlug,
     selectById,
     selectSlug,
@@ -190,6 +216,7 @@ export class Entries extends Context.Service<Entries, EntriesShape>()('app/Entri
       selectRecent,
       selectTargets,
       selectExisting,
+      selectByEventIds,
       selectBySlug,
       selectById,
       selectSlug,
@@ -224,6 +251,20 @@ export class Entries extends Context.Service<Entries, EntriesShape>()('app/Entri
       Effect.flatMap(selectById(id), orNotFound(id)),
     )
 
+    const byEventIds = Effect.fn('Entries.byEventIds')((eventIds: readonly string[]) =>
+      eventIds.length === 0
+        ? Effect.succeed(new Map<string, Entry>())
+        : Effect.map(
+            selectByEventIds(eventIds),
+            (rows) =>
+              new Map(
+                rows.flatMap((row) =>
+                  row.meeting?.eventId === undefined ? [] : [[row.meeting.eventId, row] as const],
+                ),
+              ),
+          ),
+    )
+
     const blank = Effect.fn('Entries.blank')(function* (type: EntryType, title: string) {
       const now = yield* DateTime.now
       const id = entryId(Bun.randomUUIDv7())
@@ -236,6 +277,7 @@ export class Entries extends Context.Service<Entries, EntriesShape>()('app/Entri
         slug,
         title,
         body: '',
+        meeting: null,
         objectKey: null,
         mime: null,
         bytes: null,
@@ -255,14 +297,14 @@ export class Entries extends Context.Service<Entries, EntriesShape>()('app/Entri
     })
 
     const create = Effect.fn('Entries.create')(
-      function* (type: EntryType, title: Option.Option<string>) {
+      function* (input: EntryCreate) {
         const now = yield* DateTime.now
         const entry = yield* blank(
-          type,
-          Option.getOrElse(title, () => timestampTitle(DateTime.toDate(now))),
+          input.type,
+          Option.getOrElse(input.title, () => timestampTitle(now, input.zone)),
         )
 
-        return yield* insert(entry)
+        return yield* insert({ ...entry, meeting: input.meeting ?? null })
       },
       sql.withTransaction,
       Effect.catchTag('SqlError', Effect.die),
@@ -308,6 +350,33 @@ export class Entries extends Context.Service<Entries, EntriesShape>()('app/Entri
         }
 
         return yield* new VersionConflict({ entry: current })
+      },
+      sql.withTransaction,
+      Effect.catchTag('SqlError', Effect.die),
+    )
+
+    // Attaching a calendar event (§3.3): title and snapshot change, slug and body don't.
+    const setMeeting = Effect.fn('Entries.setMeeting')(
+      function* (input: MeetingPut) {
+        const current = yield* byId(input.id)
+        const now = yield* DateTime.now
+        const next: Entry = {
+          ...current,
+          title: input.title,
+          meeting: input.meeting,
+          version: current.version + 1,
+          updatedAt: now,
+        }
+        const row = yield* Effect.orDie(Schema.encodeEffect(cipher.Entry)(next))
+
+        yield* sql`
+          UPDATE entries
+          SET title = ${row.title}, meeting = ${row.meeting}, version = ${row.version},
+              updated_at = ${row.updated_at}
+          WHERE id = ${row.id}
+        `
+
+        return next
       },
       sql.withTransaction,
       Effect.catchTag('SqlError', Effect.die),
@@ -363,9 +432,11 @@ export class Entries extends Context.Service<Entries, EntriesShape>()('app/Entri
       targets,
       existing,
       bySlug,
+      byEventIds,
       create,
       createArtifact,
       put,
+      setMeeting,
       archive,
       restore,
       remove,

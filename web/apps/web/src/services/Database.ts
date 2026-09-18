@@ -50,6 +50,21 @@ const createShareLinks = Effect.gen(function* () {
   yield* sql`CREATE INDEX share_links_entry ON share_links (entry_id, revoked_at)`
 })
 
+const addMeetings = Effect.gen(function* () {
+  const sql = yield* SqlClient.SqlClient
+
+  yield* sql`ALTER TABLE entries ADD COLUMN meeting TEXT`
+  yield* sql`
+    CREATE TABLE google_accounts (
+      id TEXT PRIMARY KEY,
+      email TEXT NOT NULL,
+      calendar_ids TEXT NOT NULL,
+      refresh_token TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    )
+  `
+})
+
 const ClientLayer = SqliteClient.layerConfig({
   filename: Config.string('DATABASE_PATH').pipe(Config.withDefault('app.db')),
 })
@@ -59,5 +74,6 @@ export const DatabaseLayer = SqliteMigrator.layer({
     '1_entries': createEntries,
     '2_artifacts': addArtifactColumns,
     '3_share_links': createShareLinks,
+    '4_meetings': addMeetings,
   }),
 }).pipe(Layer.provideMerge(ClientLayer))

@@ -45,6 +45,16 @@ export default Alchemy.Stack(
       name: 'ENCRYPTION_KEY',
       value: yield* Config.redacted('ENCRYPTION_KEY'),
     })
+    yield* Fly.Secret('GoogleClientId', {
+      app: site,
+      name: 'GOOGLE_CLIENT_ID',
+      value: yield* Config.redacted('GOOGLE_CLIENT_ID'),
+    })
+    yield* Fly.Secret('GoogleClientSecret', {
+      app: site,
+      name: 'GOOGLE_CLIENT_SECRET',
+      value: yield* Config.redacted('GOOGLE_CLIENT_SECRET'),
+    })
     yield* Fly.Secret('SessionSecret', {
       app: site,
       name: 'SESSION_SECRET',

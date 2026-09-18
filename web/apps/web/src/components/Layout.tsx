@@ -21,6 +21,16 @@ const THEME_BOOT = `(() => {
   addEventListener('DOMContentLoaded', paint)
 })()`
 
+// Server-side "today" and default titles use this zone; first visit reloads once to apply it.
+const ZONE_BOOT = `(() => {
+  const zone = Intl.DateTimeFormat().resolvedOptions().timeZone
+  const current = document.cookie.match(/(?:^|; )tz=([^;]*)/)?.[1]
+  if (current !== zone) {
+    document.cookie = 'tz=' + zone + '; path=/; max-age=31536000; samesite=lax; secure'
+    if (current === undefined) location.reload()
+  }
+})()`
+
 const HTMX_CONFIG = '{"historyCacheSize":0}'
 
 export const ThemeToggle = () => (
@@ -93,6 +103,7 @@ export const Layout = (props: {
       <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png" />
       <link rel="manifest" href="/assets/manifest.webmanifest" />
       <script>{raw(THEME_BOOT)}</script>
+      <script>{raw(ZONE_BOOT)}</script>
       <link rel="stylesheet" href="/assets/app.css" />
       <script src="/vendor/htmx/htmx.min.js" defer />
       <script src="/vendor/basecoat/basecoat.min.js" defer />

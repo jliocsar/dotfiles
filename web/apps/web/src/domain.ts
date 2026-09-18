@@ -1,3 +1,4 @@
+import * as DateTime from 'effect/DateTime'
 import * as Duration from 'effect/Duration'
 import * as Option from 'effect/Option'
 import * as Schema from 'effect/Schema'
@@ -20,6 +21,25 @@ export type ShareTtl = typeof ShareTtl.Type
 
 export type ShareLink = typeof ShareLink.Type
 
+export type GoogleAccountId = typeof GoogleAccountId.Type
+
+export type GoogleAccount = typeof GoogleAccount.Type
+
+export type Attendee = typeof Attendee.Type
+
+export type MeetingRef = typeof MeetingRef.Type
+
+/** One calendar event, already normalised from whatever Google returned. */
+export interface CalendarEvent {
+  readonly accountId: GoogleAccountId
+  readonly id: string
+  readonly title: string
+  readonly start: DateTime.Utc
+  readonly end: DateTime.Utc
+  readonly attendees: readonly Attendee[]
+  readonly link: string | undefined
+}
+
 export interface Section {
   readonly type: EntryType
   readonly path: `/${string}`
@@ -37,12 +57,32 @@ export const EntrySlug = Schema.String.pipe(Schema.brand('EntrySlug'))
 
 export const entrySlug = Schema.decodeSync(EntrySlug)
 
+export const GoogleAccountId = Schema.String.pipe(Schema.brand('GoogleAccountId'))
+
+export const googleAccountId = Schema.decodeSync(GoogleAccountId)
+
+export const Attendee = Schema.Struct({
+  email: Schema.String,
+  name: Schema.optionalKey(Schema.String),
+})
+
+// Snapshotted from the calendar once, never re-synced (§1 MeetingRef).
+export const MeetingRef = Schema.Struct({
+  accountId: Schema.NullOr(GoogleAccountId),
+  eventId: Schema.optionalKey(Schema.String),
+  start: Schema.DateTimeUtcFromString,
+  end: Schema.optionalKey(Schema.DateTimeUtcFromString),
+  attendees: Schema.Array(Attendee),
+  link: Schema.optionalKey(Schema.String),
+})
+
 export const entryFields = {
   id: EntryId,
   type: EntryType,
   slug: EntrySlug,
   title: Schema.String,
   body: Schema.String,
+  meeting: Schema.NullOr(Schema.fromJsonString(MeetingRef)),
   objectKey: Schema.NullOr(Schema.String),
   mime: Schema.NullOr(Schema.String),
   bytes: Schema.NullOr(Schema.Int),
@@ -50,7 +90,10 @@ export const entryFields = {
   updatedAt: Schema.DateTimeUtcFromString,
 }
 
-export const ENTRY_KEYS = { updatedAt: 'updated_at', objectKey: 'object_key' } as const
+export const ENTRY_KEYS = {
+  updatedAt: 'updated_at',
+  objectKey: 'object_key',
+} as const
 
 export const Entry = Schema.Struct(entryFields).pipe(Schema.encodeKeys(ENTRY_KEYS))
 
@@ -102,6 +145,45 @@ export class ShareNotFound extends Schema.TaggedError<ShareNotFound>()('ShareNot
   token: ShareToken,
 }) {}
 
+export const googleAccountFields = {
+  id: GoogleAccountId,
+  email: Schema.String,
+  calendarIds: Schema.fromJsonString(Schema.Array(Schema.String)),
+  refreshToken: Schema.String,
+  createdAt: Schema.DateTimeUtcFromString,
+}
+
+export const GOOGLE_ACCOUNT_KEYS = {
+  calendarIds: 'calendar_ids',
+  refreshToken: 'refresh_token',
+  createdAt: 'created_at',
+} as const
+
+export const GoogleAccount = Schema.Struct(googleAccountFields).pipe(
+  Schema.encodeKeys(GOOGLE_ACCOUNT_KEYS),
+)
+
+export const snapshotEvent = (event: CalendarEvent): MeetingRef => ({
+  accountId: event.accountId,
+  eventId: event.id,
+  start: event.start,
+  end: event.end,
+  attendees: event.attendees,
+  ...(event.link === undefined ? {} : { link: event.link }),
+})
+
+const pad = (value: number) => value.toString().padStart(2, '0')
+
+/** Default title for a fresh entry: the wall-clock time in the user's zone. */
+export const timestampTitle = (now: DateTime.Utc, zone: DateTime.TimeZone) => {
+  const parts = DateTime.toParts(DateTime.setZone(now, zone))
+
+  return (
+    `${parts.year}-${pad(parts.month)}-${pad(parts.day)} ` +
+    `${pad(parts.hour)}:${pad(parts.minute)}`
+  )
+}
+
 const SHARE_TTL_DURATIONS = {
   '1h': Option.some(Duration.hours(1)),
   '1d': Option.some(Duration.days(1)),
@@ -120,9 +202,19 @@ export const shareTtlDuration = (ttl: ShareTtl) => SHARE_TTL_DURATIONS[ttl]
 
 export const SECTIONS = {
   note: { type: 'note', path: '/notes', label: 'Notes', noun: 'note' },
-  meeting: { type: 'meeting', path: '/meetings', label: 'Meeting Notes', noun: 'meeting note' },
+  meeting: {
+    type: 'meeting',
+    path: '/meetings',
+    label: 'Meeting Notes',
+    noun: 'meeting note',
+  },
   task: { type: 'task', path: '/tasks', label: 'Tasks', noun: 'task' },
-  artifact: { type: 'artifact', path: '/artifacts', label: 'Artifacts', noun: 'artifact' },
+  artifact: {
+    type: 'artifact',
+    path: '/artifacts',
+    label: 'Artifacts',
+    noun: 'artifact',
+  },
 } satisfies Record<EntryType, Section>
 
 export const NAV: readonly Section[] = [

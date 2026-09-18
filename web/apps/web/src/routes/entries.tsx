@@ -15,7 +15,9 @@ import { Entries } from '../services/Entries.ts'
 import { ObjectStore } from '../services/ObjectStore.ts'
 import { ShareLinks } from '../services/ShareLinks.ts'
 import { artifactFile, contentDisposition } from '../artifacts.ts'
+import { newMeetingNote } from '../meetings.ts'
 import { parseTasks, serializeTasks } from '../tasks.ts'
+import { requestOrigin, requestZone } from '../zone.ts'
 
 const EntryParams = Schema.Struct({
   slug: EntrySlug,
@@ -41,13 +43,6 @@ const ShareForm = Schema.Struct({
 
 const slugParam = Effect.map(HttpRouter.schemaPathParams(EntryParams), (params) => params.slug)
 
-const requestOrigin = Effect.map(HttpServerRequest.HttpServerRequest, (request) => {
-  const proto = request.headers['x-forwarded-proto'] ?? 'http'
-  const host = request.headers['host'] ?? 'localhost'
-
-  return `${proto}://${host}`
-})
-
 const notFound = (ref: string) => respond(<p>no entry called {ref}</p>, 404)
 
 const badRequest = respond(<p>bad request</p>, 400)
@@ -59,9 +54,10 @@ const seeOther = (location: string) => HttpServerResponse.redirect(location, { s
 const entryRoute = Effect.gen(function* () {
   const slug = yield* slugParam
   const origin = yield* requestOrigin
+  const zone = yield* requestZone
   const params = yield* HttpServerRequest.ParsedSearchParams
 
-  return yield* page(EntryPage({ slug, origin, openShare: params['share'] !== undefined }))
+  return yield* page(EntryPage({ slug, origin, zone, openShare: params['share'] !== undefined }))
 }).pipe(
   Effect.catchTag('EntryNotFound', (error) =>
     Effect.succeed(respond(MissingPage({ slug: error.ref }), 404)),
@@ -141,7 +137,15 @@ const revokeRoute = Effect.gen(function* () {
 const createRoute = (section: Section) =>
   Effect.gen(function* () {
     const entries = yield* Entries
-    const entry = yield* entries.create(section.type, Option.none())
+    const zone = yield* requestZone
+    const entry =
+      section.type === 'meeting'
+        ? yield* newMeetingNote(zone)
+        : yield* entries.create({
+            type: section.type,
+            title: Option.none(),
+            zone,
+          })
 
     return seeOther(`/e/${entry.slug}`)
   })
@@ -149,7 +153,12 @@ const createRoute = (section: Section) =>
 const claimRoute = Effect.gen(function* () {
   const entries = yield* Entries
   const slug = yield* slugParam
-  const entry = yield* entries.create('note', Option.some(slug))
+  const zone = yield* requestZone
+  const entry = yield* entries.create({
+    type: 'note',
+    title: Option.some(slug),
+    zone,
+  })
 
   return seeOther(`/e/${entry.slug}`)
 }).pipe(
@@ -208,7 +217,11 @@ const sectionRoutes = (section: Section) =>
   )
 
 export const EntriesRoutes = Layer.mergeAll(
-  HttpRouter.add('GET', '/', page(HomePage())),
+  HttpRouter.add(
+    'GET',
+    '/',
+    Effect.flatMap(requestZone, (zone) => page(HomePage({ zone }))),
+  ),
   HttpRouter.add('GET', '/e/:slug', entryRoute),
   HttpRouter.add('GET', '/a/:slug', artifactRoute),
   HttpRouter.add('POST', '/e/:slug/create', claimRoute),

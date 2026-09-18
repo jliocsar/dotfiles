@@ -323,7 +323,7 @@ Enforced by the server, not by prompt: slugs immutable, no delete tool,
 | **P5**    | PWA polish, install, mobile capture pass                                                                                      |
 | **Later** | `@` autocomplete, FTS search, revision history, CLI, Drive/Meet transcripts, calendar writes                                  |
 
-Done: P0 except the broken-`@` page, P2, P3. P1 is next; P4 after; P5 waits.
+Done: P0 except the broken-`@` page, P1, P2, P3. P4 is next; P5 waits.
 
 ---
 

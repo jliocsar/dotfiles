@@ -115,7 +115,10 @@ export class ShareLinks extends Context.Service<ShareLinks, ShareLinksShape>()('
 
     const resolve = Effect.fn('ShareLinks.resolve')(function* (token: ShareToken) {
       const now = yield* DateTime.now
-      const found = yield* selectShared({ token, now: DateTime.formatIso(now) })
+      const found = yield* selectShared({
+        token,
+        now: DateTime.formatIso(now),
+      })
 
       return yield* Option.match(found, {
         onNone: () => new ShareNotFound({ token }),
