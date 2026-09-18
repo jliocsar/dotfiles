@@ -1,0 +1,36 @@
+diff --git a/lib/Fly/replicas.js b/lib/Fly/replicas.js
+index fd7aa574f0503642545af07a99e451fb9a82d3b1..c5250edc37c5fada7079a0e7ed9f4fb738ad9057 100644
+--- a/lib/Fly/replicas.js
++++ b/lib/Fly/replicas.js
+@@ -127,8 +127,9 @@ export const ensureStarted = Effect.fn(function* (appName, machine, skipLaunch)
+     const machineId = machine.id;
+     if (machineId === undefined || skipLaunch)
+         return machine;
+-    const state = machine.state;
+-    if (state !== "started" && state !== "starting") {
++    const current = (yield* getMachineById(appName, machineId)) ?? machine;
++    const state = current.state;
++    if (state === "stopped" || state === "suspended" || state === "failed") {
+         yield* machines
+             .startMachine({
+             app_name: appName,
+diff --git a/src/Fly/replicas.ts b/src/Fly/replicas.ts
+index ac6fc0543b05a624f86cea04b5a80ee9dcd9dd57..91cc1b3f6ca018c552ecdd0ed10bbf99c9e92bfe 100644
+--- a/src/Fly/replicas.ts
++++ b/src/Fly/replicas.ts
+@@ -262,8 +262,13 @@ export const ensureStarted = Effect.fn(function* (
+ ) {
+   const machineId = machine.id;
+   if (machineId === undefined || skipLaunch) return machine;
+-  const state = machine.state;
+-  if (state !== "started" && state !== "starting") {
++  // Backported from beta.78: an update response reports a transient state
++  // while Fly replaces the instance; starting it then fails with
++  // "machine getting replaced, refusing to start". Re-read and only start
++  // from a genuinely dead state.
++  const current = (yield* getMachineById(appName, machineId)) ?? machine;
++  const state = current.state;
++  if (state === "stopped" || state === "suspended" || state === "failed") {
+     yield* machines
+       .startMachine({
+         app_name: appName,
