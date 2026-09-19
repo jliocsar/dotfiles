@@ -253,7 +253,10 @@ const run = Effect.fn('runCommand')(function* (palette: Palette) {
           Option.orElse(
             Option.map(closestData(event.target, 'index'), (index) => goIndex(Number(index))),
             () =>
-              closestData(event.target, 'tab').pipe(Option.flatMap(tabNamed), Option.map(selectTab)),
+              closestData(event.target, 'tab').pipe(
+                Option.flatMap(tabNamed),
+                Option.map(selectTab),
+              ),
           ),
           (action) => claim(event, action),
         ),

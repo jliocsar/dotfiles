@@ -46,3 +46,12 @@
 
 # Plannotator
 .plannotator/config.json
+
+# Niri + quickshell
+.config/niri/config.kdl
+.config/quickshell/
+.config/fontconfig/conf.d/60-sf-pro-nerd-fallback.conf
+.config/mako/config
+.config/systemd/user/quickshell.service
+.config/autostart/nm-applet.desktop
+.local/bin/waybar-claude-usage

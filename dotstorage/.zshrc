@@ -40,12 +40,20 @@ eval "$(zoxide init zsh)"
 source $ZSH/oh-my-zsh.sh
 source $HOME/.dotfiles/zsh/dotfiles.zsh
 
-# lumen
-export LUMEN_AI_PROVIDER="anthropic"
-export LUMEN_AI_MODEL="claude-haiku-4-5"
-
 # secrets
+# .zsh_secrets only holds urls + the infisical project id. the actual secrets are
+# pulled from infisical into a tmpfs cache (gone on reboot) and re-fetched hourly.
 . "$HOME/.zsh_secrets"
+if [[ -n "$INFISICAL_PERSONAL_PROJECT_ID" ]]; then
+  infisical_cache="${XDG_RUNTIME_DIR:-/tmp}/infisical-personal.env"
+  if [[ -z "$(find "$infisical_cache" -mmin -60 2>/dev/null)" ]]; then
+    infisical export --projectId="$INFISICAL_PERSONAL_PROJECT_ID" --env=dev --format=dotenv-export --silent > "$infisical_cache.tmp" 2>/dev/null \
+      && mv "$infisical_cache.tmp" "$infisical_cache" \
+      || rm -f "$infisical_cache.tmp"
+  fi
+  [[ -f "$infisical_cache" ]] && . "$infisical_cache"
+  unset infisical_cache
+fi
 
 # fzf
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
@@ -73,11 +81,10 @@ export PATH=$PATH:$ANDROID_HOME/tools
 # Added by codebase-memory-mcp install
 export PATH="/home/jliocsar/.local/bin:$PATH"
 
-# executor
-export EXECUTOR_URL="https://executor-selfhost-loving-puma.fly.dev/mcp"
 
 # Supabase CLI
 export PATH="/home/jliocsar/.supabase/bin:$PATH"
 
 # Pi
 export PATH="/home/jliocsar/.local/share/mise/installs/node/24.19.0/bin:$PATH"
+

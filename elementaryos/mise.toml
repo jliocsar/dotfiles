@@ -1,5 +1,6 @@
 [tools]
-node = "20"
+cmake = "latest"
+node = "lts"
 bun = "latest"
 claude = "latest"
 flyctl = "latest"

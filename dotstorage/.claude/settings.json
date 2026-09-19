@@ -170,8 +170,7 @@
     "host-html@host-html": false,
     "plannotator@plannotator": true,
     "rust-analyzer-lsp@claude-plugins-official": false,
-    "typescript-lsp@claude-plugins-official": false,
-    "userland@claude-userland": true
+    "typescript-lsp@claude-plugins-official": false
   },
   "extraKnownMarketplaces": {
     "claude-plugins-official": {
@@ -184,12 +183,6 @@
       "source": {
         "source": "github",
         "repo": "backnotprop/plannotator"
-      }
-    },
-    "userland": {
-      "source": {
-        "source": "directory",
-        "path": "/home/jliocsar/Projects/claude-userland"
       }
     }
   },

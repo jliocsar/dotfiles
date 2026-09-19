@@ -1,0 +1,5 @@
+[Desktop Entry]
+Type=Application
+Name=Network Manager Applet
+# The quickshell wifi indicator replaces the tray icon.
+Hidden=true

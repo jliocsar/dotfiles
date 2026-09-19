@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+#MISE description="Build quickshell against a private Qt (noble ships 6.4, quickshell needs 6.6+). Standalone — not part of `setup`."
+#MISE dir="/tmp"
+set -euo pipefail
+
+qt_version="6.11.2"
+qt_root="$HOME/.local/share/qt"
+qt_dir="$qt_root/$qt_version/gcc_64"
+quickshell_ref="master"
+
+if [[ -x /usr/local/bin/qs ]] && /usr/local/bin/qs --version -v 2>/dev/null | grep -q "Qt $qt_version"; then
+  echo "[system] quickshell on Qt $qt_version already installed"
+  exit 0
+fi
+
+echo "[system] Installing quickshell build deps"
+# cpptrace is vendored via FetchContent; it needs libunwind + libdwarf.
+sudo apt-get install -y --no-install-recommends \
+  libcli11-dev spirv-tools libjemalloc-dev libunwind-dev libdwarf-dev \
+  libdrm-dev libgbm-dev libvulkan-dev libwayland-dev wayland-protocols \
+  libpipewire-0.3-dev libxcb1-dev pkg-config ninja-build libwayland-bin curl
+
+if [[ ! -d "$qt_dir" ]]; then
+  echo "[system] Fetching official Qt $qt_version binaries into $qt_root"
+  # Official Qt builds ship private headers, so no source build needed.
+  uvx --from aqtinstall aqt install-qt linux desktop "$qt_version" linux_gcc_64 \
+    -m qtshadertools qttasktree -O "$qt_root"
+fi
+
+# Qt 6.11's private wayland headers reference wl_fixes (wayland >= 1.24) but noble ships 1.22.
+# Generate a 1.24 client-protocol header with the system scanner and put it first on the
+# include path; nothing links against wl_fixes so the 1.22 runtime lib is fine.
+echo "[system] Generating wayland 1.24 header shim"
+rm -rf wayland-shim && mkdir wayland-shim
+curl -fsSL https://gitlab.freedesktop.org/wayland/wayland/-/raw/1.24.0/protocol/wayland.xml \
+  | sed 's/ deprecated-since="[^"]*"//g' > wayland-shim/wayland.xml
+cp /usr/include/wayland-client.h wayland-shim/
+wayland-scanner client-header wayland-shim/wayland.xml wayland-shim/wayland-client-protocol.h
+
+echo "[system] Building quickshell ($quickshell_ref)"
+rm -rf quickshell
+git clone --depth 1 --branch "$quickshell_ref" https://github.com/quickshell-mirror/quickshell.git
+# The binary rpaths into the private Qt so nothing else on the box sees it.
+# Hyprland/i3/X11/greetd/pam/polkit: not used under niri.
+cmake="$(mise -C "$HOME/.dotfiles/elementaryos" which cmake)"
+"$cmake" -S quickshell -B quickshell/build -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_PREFIX_PATH="$qt_dir" \
+  -DCMAKE_INSTALL_PREFIX=/usr/local \
+  -DCMAKE_INSTALL_RPATH="$qt_dir/lib" \
+  -DCMAKE_CXX_FLAGS="-I$PWD/wayland-shim" \
+  -DDISTRIBUTOR="jliocsar dotfiles (Qt $qt_version via aqtinstall)" \
+  -DVENDOR_CPPTRACE=ON \
+  -DHYPRLAND=OFF -DI3=OFF -DX11=OFF \
+  -DSERVICE_GREETD=OFF -DSERVICE_PAM=OFF -DSERVICE_POLKIT=OFF
+"$cmake" --build quickshell/build
+sudo "$cmake" --install quickshell/build
+
+rm -rf quickshell wayland-shim
+echo "[system] Done: $(/usr/local/bin/qs --version -v | head -3)"

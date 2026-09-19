@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Claude Code subscription usage for the waybar custom/claude-usage module.
+# Shows the session %, tooltip has session + week + next reset.
+set -uo pipefail
+
+report=$(timeout 60 claude -p --output-format json --no-session-persistence /usage 2>/dev/null | jq -r '.result // empty')
+session=$(grep -m1 '^Current session:' <<<"$report" || true)
+week=$(grep -m1 '^Current week (all models):' <<<"$report" || true)
+
+if [[ -z "$session" && -z "$week" ]]; then
+  printf '{"text":"–","tooltip":"claude usage unavailable","class":"unavailable"}\n'
+  exit 0
+fi
+
+# "Current session: 2% used · resets Sep 19, 12am (America/Belem)"
+percent=$(sed -E 's/^[^:]+: ([0-9]+)%.*/\1/' <<<"$session")
+class=""
+if [[ -n "$percent" ]]; then
+  (( percent >= 90 )) && class="critical" || { (( percent >= 70 )) && class="warning"; }
+fi
+
+jq -cn --arg text "${percent:-?}%" --arg class "$class" \
+  --arg tooltip "$(sed -E 's/^Current //' <<<"$session"$'\n'"$week" | sed -E 's/ \([A-Za-z_/]+\)$//')" \
+  '{text: $text, tooltip: $tooltip, class: $class}'

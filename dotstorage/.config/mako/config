@@ -1,0 +1,11 @@
+# Delta One Dark, matches waybar.
+default-timeout=15000
+font=SF Pro 11
+background-color=#191c1fe6
+text-color=#fafafa
+border-color=#ffffff14
+border-size=1
+border-radius=10
+padding=12
+margin=12
+anchor=top-right

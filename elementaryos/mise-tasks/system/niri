@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+#MISE description="Build niri from source + install it as a lightdm session alongside Pantheon. Standalone — not part of `setup`."
+#MISE dir="/tmp"
+set -euo pipefail
+
+niri_tag="v26.04"
+
+if [[ -x /usr/local/bin/niri ]] && /usr/local/bin/niri --version | grep -q "${niri_tag#v}"; then
+  echo "[system] niri $niri_tag already installed"
+  exit 0
+fi
+
+echo "[system] Installing niri build deps + desktop companions"
+# Build deps: the Ubuntu 24.04 line from niri's Getting-Started wiki.
+# xcb dev libs are for xwayland-satellite (X11 apps under niri).
+# Companions: default config spawns waybar; Mod+D fuzzel; swaylock/swayidle lock; mako notifs;
+# portals give file pickers + screen sharing.
+sudo apt-get update
+# --no-install-recommends: xdg-desktop-portal-gnome recommends gnome-shell, which drags in gdm3.
+sudo apt-get install -y --no-install-recommends \
+  gcc clang libudev-dev libgbm-dev libxkbcommon-dev libegl1-mesa-dev libwayland-dev \
+  libinput-dev libdbus-1-dev libsystemd-dev libseat-dev libpipewire-0.3-dev \
+  libpango1.0-dev libdisplay-info-dev \
+  libxcb1-dev libxcb-cursor-dev libxcb-composite0-dev libxcb-randr0-dev libxcb-res0-dev \
+  libxcb-xfixes0-dev libxcb-xinput-dev libxcb-xkb-dev xwayland \
+  waybar fuzzel mako-notifier swaylock swayidle swaybg \
+  xdg-desktop-portal-gnome xdg-desktop-portal-gtk
+
+echo "[system] Building niri $niri_tag"
+rm -rf niri
+git clone --depth 1 --branch "$niri_tag" https://github.com/YaLTeR/niri.git
+(cd niri && cargo build --release)
+
+echo "[system] Building xwayland-satellite"
+# Not on crates.io, git only.
+cargo install --locked --git https://github.com/Supreeeme/xwayland-satellite.git xwayland-satellite
+
+echo "[system] Installing niri"
+# Layout from the wiki's "Manual Installation" table, except the session file:
+# lightdm only scans /usr/share/wayland-sessions, not /usr/local.
+sudo install -m 755 niri/target/release/niri /usr/local/bin/niri
+sudo install -m 755 niri/resources/niri-session /usr/local/bin/niri-session
+sudo install -m 755 "$HOME/.cargo/bin/xwayland-satellite" /usr/local/bin/xwayland-satellite
+sudo install -Dm 644 niri/resources/niri.desktop /usr/share/wayland-sessions/niri.desktop
+sudo install -Dm 644 niri/resources/niri-portals.conf /usr/local/share/xdg-desktop-portal/niri-portals.conf
+sudo install -Dm 644 niri/resources/niri.service /etc/systemd/user/niri.service
+sudo install -Dm 644 niri/resources/niri-shutdown.target /etc/systemd/user/niri-shutdown.target
+# The unit hardcodes the packaged path.
+sudo sed -i 's|ExecStart=/usr/bin/niri|ExecStart=/usr/local/bin/niri|' /etc/systemd/user/niri.service
+systemctl --user daemon-reload
+
+if [[ ! -f "$HOME/.config/niri/config.kdl" ]]; then
+  echo "[system] Seeding ~/.config/niri/config.kdl from the default config (terminal: ghostty)"
+  mkdir -p "$HOME/.config/niri"
+  sed 's/"alacritty"/"ghostty"/' niri/resources/default-config.kdl > "$HOME/.config/niri/config.kdl"
+fi
+
+# Keep Pantheon's default app associations (image viewer, video player, ...).
+ln -sfn /usr/share/applications/pantheon-mimeapps.list "$HOME/.local/share/applications/niri-mimeapps.list" 2>/dev/null || true
+
+rm -rf niri
+echo "[system] Done. Log out and pick 'niri' in the greeter. Super+Shift+/ shows the hotkeys."

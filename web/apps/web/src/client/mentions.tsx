@@ -130,7 +130,10 @@ const rank = (target: MentionTarget, query: string): number =>
     ? 0
     : RANKS.findIndex((test) => test(squash(target.title), squash(target.slug), query))
 
-export const search = (targets: readonly MentionTarget[], query: string): readonly MentionTarget[] => {
+export const search = (
+  targets: readonly MentionTarget[],
+  query: string,
+): readonly MentionTarget[] => {
   const squashed = squash(query)
 
   return targets
@@ -594,8 +597,7 @@ export const mountMentions = Effect.fn('mountMentions')(function* (host: Host, s
 
     return Option.orElse(
       Option.map(closestData(event.target, 'index'), (index) => pickIndex(Number(index))),
-      () =>
-        closestData(event.target, 'tab').pipe(Option.flatMap(tabNamed), Option.map(selectTab)),
+      () => closestData(event.target, 'tab').pipe(Option.flatMap(tabNamed), Option.map(selectTab)),
     )
   })
 

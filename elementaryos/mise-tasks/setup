@@ -5,10 +5,10 @@ set -euo pipefail
 mise install
 
 # Sequential on purpose: parallel tasks race on the apt lock.
-# system:pantheon is standalone and opts out.
+# system:pantheon, system:niri and system:quickshell are standalone and opt out.
 for group in base system web dev term; do
   for task in $(mise tasks ls --json | jq -r --arg g "$group:" '.[].name | select(startswith($g))'); do
-    [[ "$task" == "system:pantheon" ]] && continue
+    [[ "$task" == "system:pantheon" || "$task" == "system:niri" || "$task" == "system:quickshell" ]] && continue
     mise run "$task"
   done
 done
