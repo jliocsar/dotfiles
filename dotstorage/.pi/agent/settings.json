@@ -2,8 +2,7 @@
   "packages": [
     "npm:@ff-labs/pi-fff",
     "npm:pi-mcp-adapter",
-    "git:github.com/jliocsar/pi-workflows",
-    "npm:@plannotator/pi-extension"
+    "git:github.com/jliocsar/pi-workflows"
   ],
   "enabledModels": [
     "anthropic/claude-fable-5",
