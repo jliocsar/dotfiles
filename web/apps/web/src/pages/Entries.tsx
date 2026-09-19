@@ -939,7 +939,7 @@ export const EntryPage = Effect.fn('EntryPage')(function* (props: {
                 <span class="text-[11.5px] text-muted-foreground/60 tabular-nums" data-status />
                 <button
                   type="button"
-                  class="btn [anchor-name:--tags] text-foreground"
+                  class="btn [anchor-name:--tags]"
                   data-variant="ghost"
                   popovertarget="tags-panel"
                 >
