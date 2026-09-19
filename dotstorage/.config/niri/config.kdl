@@ -115,6 +115,31 @@ overview {
     backdrop-color "#191c1f"
 }
 
+// Frosted glass behind the quickshell bar and its popups. The surfaces themselves
+// are semi-transparent (see quickshell/Theme.qml bgPanel / bgPopup). The dock asks
+// for its own blur region through ext-background-effect, so no rule for it here.
+blur {
+    passes 3
+    offset 3.0
+    noise 0.02
+    saturation 1.2
+}
+
+layer-rule {
+    match namespace="^qs-bar$"
+
+    background-effect {
+        blur true
+    }
+
+    popups {
+        geometry-corner-radius 10
+        background-effect {
+            blur true
+        }
+    }
+}
+
 layout {
     // Set gaps around windows in logical pixels.
     gaps 16

@@ -45,7 +45,26 @@ PanelWindow {
     exclusiveZone: hidden ? 0 : pill.height
     color: "transparent"
     mask: Region { item: pill }
+    // Blur follows the pill (ext-background-effect), so it slides out with it instead of
+    // niri blurring the whole surface rect. Regions are rect unions with no rounded-rect
+    // shape, so the pill is a cross of two rects plus a circle in each corner.
+    BackgroundEffect.blurRegion: Region {
+        id: blurRegion
+        readonly property int r: pill.radius
+        x: pill.x + r
+        y: pill.y
+        width: pill.width - 2 * r
+        height: pill.height
+        regions: [
+            Region { x: pill.x; y: pill.y + blurRegion.r; width: pill.width; height: pill.height - 2 * blurRegion.r },
+            Region { shape: RegionShape.Ellipse; x: pill.x; y: pill.y; width: 2 * blurRegion.r; height: 2 * blurRegion.r },
+            Region { shape: RegionShape.Ellipse; x: pill.x + pill.width - 2 * blurRegion.r; y: pill.y; width: 2 * blurRegion.r; height: 2 * blurRegion.r },
+            Region { shape: RegionShape.Ellipse; x: pill.x; y: pill.y + pill.height - 2 * blurRegion.r; width: 2 * blurRegion.r; height: 2 * blurRegion.r },
+            Region { shape: RegionShape.Ellipse; x: pill.x + pill.width - 2 * blurRegion.r; y: pill.y + pill.height - 2 * blurRegion.r; width: 2 * blurRegion.r; height: 2 * blurRegion.r }
+        ]
+    }
     WlrLayershell.namespace: "qs-dock"
+    visible: !hidden || slide.running
 
     Rectangle {
         id: pill
@@ -54,7 +73,7 @@ PanelWindow {
         radius: 18
         color: Theme.bgPanel
         y: dock.hidden ? height + dock.margins.bottom : 0
-        Behavior on y { NumberAnimation { duration: Theme.dockSlideMs; easing.type: Easing.InOutCubic } }
+        Behavior on y { NumberAnimation { id: slide; duration: Theme.dockSlideMs; easing.type: Easing.InOutCubic } }
         border.color: Theme.border
         border.width: 1
 

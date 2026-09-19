@@ -36,8 +36,9 @@ Singleton {
     readonly property color border: light ? "#c9c9ca" : "#32363e"
     readonly property color selection: light ? "#d4dbf4" : "#2f3f4f"
     readonly property color hover: light ? Qt.rgba(0, 0, 0, 0.06) : Qt.rgba(1, 1, 1, 0.07)
-    readonly property color bgPanel: Qt.alpha(bg, 0.88)
-    readonly property color bgPopup: Qt.alpha(panel, 0.97)
+    // Low alpha on purpose: niri blurs what sits behind these (layer-rule in its config).
+    readonly property color bgPanel: Qt.alpha(bg, 0.6)
+    readonly property color bgPopup: Qt.alpha(panel, 0.85)
 
     // Text
     readonly property color fg: light ? "#4d4f52" : "#acb2be"
