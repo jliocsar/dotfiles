@@ -7,6 +7,7 @@ import * as Option from 'effect/Option'
 
 import { Icon } from '../components/Icon.tsx'
 import { Layout, ThemeToggle } from '../components/Layout.tsx'
+import { UploadDialog } from '../components/UploadDialog.tsx'
 import { Entries } from '../services/Entries.ts'
 import { Markdown } from '../services/Markdown.ts'
 import { DEFAULT_SHARE_TTL, SHARE_TTL_SHORT, sectionOf, ShareTtl } from '../domain.ts'
@@ -447,12 +448,18 @@ export const ListPage = Effect.fn('ListPage')(function* (props: {
             <Dot />
             <span>Newest first</span>
             {props.section.type === 'artifact' ? (
-              <label class={NEW_BUTTON} data-variant="outline" data-new>
-                <input type="file" class="sr-only" data-upload />
+              <button
+                type="button"
+                class={NEW_BUTTON}
+                data-variant="outline"
+                data-new
+                command="show-modal"
+                commandfor="upload"
+              >
                 <Icon name="plus" />
-                <span data-upload-label>New</span>
+                New
                 <kbd class="kbd rounded-sm dark:bg-foreground/10">n</kbd>
-              </label>
+              </button>
             ) : (
               <form class="ml-auto" method="post" action={props.section.path}>
                 <button type="submit" class={NEW_BUTTON} data-variant="outline" data-new>
@@ -486,6 +493,7 @@ export const ListPage = Effect.fn('ListPage')(function* (props: {
           </>
         ))}
       </Page>
+      {props.section.type === 'artifact' ? <UploadDialog /> : null}
     </Layout>
   )
 })

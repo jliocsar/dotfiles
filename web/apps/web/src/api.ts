@@ -17,20 +17,36 @@ export const SaveResponse = Schema.Struct({
   html: Schema.String,
 })
 
-export const PresignResponse = Schema.Struct({
+// A batch is one request each way; a title an artifact already has comes back in `skipped`.
+export const PresignRequest = Schema.Struct({
+  titles: Schema.Array(Schema.String),
+})
+
+export const PresignTarget = Schema.Struct({
+  title: Schema.String,
   key: Schema.String,
   url: Schema.String,
 })
 
-export const RegisterRequest = Schema.Struct({
+export const PresignResponse = Schema.Struct({
+  targets: Schema.Array(PresignTarget),
+  skipped: Schema.Array(Schema.String),
+})
+
+export const RegisterFile = Schema.Struct({
   key: Schema.String,
   title: Schema.String,
   mime: Schema.String,
   bytes: Schema.Int,
 })
 
+export const RegisterRequest = Schema.Struct({
+  files: Schema.Array(RegisterFile),
+})
+
 export const RegisterResponse = Schema.Struct({
-  slug: EntrySlug,
+  slugs: Schema.Array(EntrySlug),
+  skipped: Schema.Array(Schema.String),
 })
 
 export class EntriesApi extends HttpApiGroup.make('entries')
@@ -49,7 +65,12 @@ export class EntriesApi extends HttpApiGroup.make('entries')
   .prefix('/entries') {}
 
 export class ArtifactsApi extends HttpApiGroup.make('artifacts')
-  .add(HttpApiEndpoint.post('presign', '/presign', { success: PresignResponse }))
+  .add(
+    HttpApiEndpoint.post('presign', '/presign', {
+      payload: PresignRequest,
+      success: PresignResponse,
+    }),
+  )
   .add(
     HttpApiEndpoint.post('register', '/register', {
       payload: RegisterRequest,

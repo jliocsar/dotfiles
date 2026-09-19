@@ -108,11 +108,13 @@ export const Layout = (props: {
       <script src="/vendor/htmx/htmx.min.js" defer />
       <script src="/vendor/basecoat/basecoat.min.js" defer />
       <script src="/vendor/basecoat/tabs.min.js" defer />
+      <script src="/vendor/basecoat/toast.min.js" defer />
       <script src="/assets/editor.js" type="module" />
     </head>
     <body class="text-[13px] antialiased" hx-boost="true">
       {props.children}
       {props.guest === true ? null : <CommandPalette />}
+      <div id="toaster" class="toaster" />
     </body>
   </html>
 )

@@ -37,11 +37,17 @@ export interface EntriesShape {
   readonly recent: (limit: number) => Effect.Effect<readonly Entry[]>
   readonly targets: Effect.Effect<readonly MentionTarget[]>
   readonly existing: (slugs: readonly string[]) => Effect.Effect<ReadonlySet<string>>
+  /** Which of `titles` a live or archived entry of `type` already uses. */
+  readonly takenTitles: (
+    type: EntryType,
+    titles: readonly string[],
+  ) => Effect.Effect<ReadonlySet<string>>
   readonly bySlug: (slug: EntrySlug) => Effect.Effect<Entry, EntryNotFound>
   /** Live meeting notes keyed by the calendar event they were created from. */
   readonly byEventIds: (eventIds: readonly string[]) => Effect.Effect<ReadonlyMap<string, Entry>>
   readonly create: (input: EntryCreate) => Effect.Effect<Entry>
-  readonly createArtifact: (input: ArtifactInput) => Effect.Effect<Entry>
+  /** One transaction; inputs whose title an artifact already has are skipped, not inserted. */
+  readonly createArtifacts: (inputs: readonly ArtifactInput[]) => Effect.Effect<ArtifactBatch>
   readonly put: (input: EntryPut) => Effect.Effect<Entry, EntryNotFound | VersionConflict>
   readonly setMeeting: (input: MeetingPut) => Effect.Effect<Entry, EntryNotFound>
   /** Replaces the whole set. Not an edit: neither `version` nor `updated_at` move (§3.7). */
@@ -56,6 +62,11 @@ export interface ArtifactInput {
   readonly objectKey: string
   readonly mime: string
   readonly bytes: number
+}
+
+export interface ArtifactBatch {
+  readonly created: readonly Entry[]
+  readonly skipped: readonly ArtifactInput[]
 }
 
 export interface EntryCreate {
@@ -86,6 +97,9 @@ export const ENTRY_COLUMNS = [
 ].join(', ')
 
 const slugSet = (rows: readonly { readonly slug: string }[]) => new Set(rows.map((row) => row.slug))
+
+const titleSet = (rows: readonly { readonly title: string }[]) =>
+  new Set(rows.map((row) => row.title))
 
 const orNotFound = (ref: EntryId | EntrySlug) =>
   Option.match({
@@ -187,6 +201,17 @@ const queries = (sql: SqlClient.SqlClient, Entry: CipherShape['Entry']) => {
     Effect.orDie,
   )
 
+  const selectTakenTitles = flow(
+    SqlSchema.findAll({
+      Request: Schema.Struct({ type: EntryType, titles: Schema.Array(Schema.String) }),
+      Result: Schema.Struct({ title: Schema.String }),
+      execute: ({ type, titles }) => sql`
+        SELECT title FROM entries WHERE type = ${type} AND ${sql.in('title', titles)}
+      `,
+    }),
+    Effect.orDie,
+  )
+
   const selectByEventIds = flow(
     SqlSchema.findAll({
       Request: Schema.Array(Schema.String),
@@ -233,6 +258,7 @@ const queries = (sql: SqlClient.SqlClient, Entry: CipherShape['Entry']) => {
     selectRecent,
     selectTargets,
     selectExisting,
+    selectTakenTitles,
     selectByEventIds,
     selectBySlug,
     selectById,
@@ -245,6 +271,7 @@ const creators = (
   sql: SqlClient.SqlClient,
   cipher: CipherShape,
   uniqueSlug: (base: string, suffix: string) => Effect.Effect<EntrySlug>,
+  takenTitles: EntriesShape['takenTitles'],
 ) => {
   const blank = Effect.fn('Entries.blank')(function* (type: EntryType, title: string) {
     const now = yield* DateTime.now
@@ -293,22 +320,28 @@ const creators = (
     Effect.catchTag('SqlError', Effect.die),
   )
 
-  const createArtifact = Effect.fn('Entries.createArtifact')(
-    function* (input: ArtifactInput) {
-      const entry = yield* blank('artifact', input.title)
+  // Re-checks titles here, not only at presign: another tab may have won the name meanwhile.
+  const createArtifacts = Effect.fn('Entries.createArtifacts')(
+    function* (inputs: readonly ArtifactInput[]) {
+      const taken = yield* takenTitles(
+        'artifact',
+        inputs.map((input) => input.title),
+      )
+      const skipped = inputs.filter((input) => taken.has(input.title))
+      const fresh = inputs.filter((input) => !taken.has(input.title))
+      const created = yield* Effect.forEach(fresh, (input) =>
+        Effect.flatMap(blank('artifact', input.title), (entry) =>
+          insert({ ...entry, objectKey: input.objectKey, mime: input.mime, bytes: input.bytes }),
+        ),
+      )
 
-      return yield* insert({
-        ...entry,
-        objectKey: input.objectKey,
-        mime: input.mime,
-        bytes: input.bytes,
-      })
+      return { created, skipped } satisfies ArtifactBatch
     },
     sql.withTransaction,
     Effect.catchTag('SqlError', Effect.die),
   )
 
-  return { create, createArtifact }
+  return { create, createArtifacts }
 }
 
 export class Entries extends Context.Service<Entries, EntriesShape>()('app/Entries', {
@@ -322,6 +355,7 @@ export class Entries extends Context.Service<Entries, EntriesShape>()('app/Entri
       selectRecent,
       selectTargets,
       selectExisting,
+      selectTakenTitles,
       selectByEventIds,
       selectBySlug,
       selectById,
@@ -355,6 +389,13 @@ export class Entries extends Context.Service<Entries, EntriesShape>()('app/Entri
 
     const existing = flow(selectExisting, Effect.map(slugSet))
 
+    const takenTitles = Effect.fn('Entries.takenTitles')(
+      (type: EntryType, titles: readonly string[]) =>
+        titles.length === 0
+          ? Effect.succeed(new Set<string>())
+          : Effect.map(selectTakenTitles({ type, titles }), titleSet),
+    )
+
     const bySlug = Effect.fn('Entries.bySlug')((slug: EntrySlug) =>
       Effect.flatMap(selectBySlug(slug), orNotFound(slug)),
     )
@@ -377,7 +418,7 @@ export class Entries extends Context.Service<Entries, EntriesShape>()('app/Entri
           ),
     )
 
-    const { create, createArtifact } = creators(sql, cipher, uniqueSlug)
+    const { create, createArtifacts } = creators(sql, cipher, uniqueSlug, takenTitles)
 
     const put = Effect.fn('Entries.put')(
       function* (input: EntryPut) {
@@ -506,10 +547,11 @@ export class Entries extends Context.Service<Entries, EntriesShape>()('app/Entri
       recent,
       targets,
       existing,
+      takenTitles,
       bySlug,
       byEventIds,
       create,
-      createArtifact,
+      createArtifacts,
       put,
       setMeeting,
       setTags,

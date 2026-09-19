@@ -38,20 +38,40 @@ const ArtifactsHandlers = HttpApiBuilder.group(
     const entries = yield* Entries
     const objects = yield* ObjectStore
 
+    // Conflicts are caught before any bytes move; register re-checks and drops late losers' objects.
     return handlers
-      .handle('presign', () =>
-        Effect.map(objects.newKey, (key) => ({ key, url: objects.uploadUrl(key) })),
+      .handle('presign', ({ payload }) =>
+        Effect.gen(function* () {
+          const taken = yield* entries.takenTitles('artifact', payload.titles)
+          const skipped = payload.titles.filter((title) => taken.has(title))
+          const fresh = payload.titles.filter((title) => !taken.has(title))
+          const targets = yield* Effect.forEach(fresh, (title) =>
+            Effect.map(objects.newKey, (key) => ({ title, key, url: objects.uploadUrl(key) })),
+          )
+
+          return { targets, skipped }
+        }),
       )
       .handle('register', ({ payload }) =>
-        Effect.map(
-          entries.createArtifact({
-            objectKey: payload.key,
-            title: payload.title,
-            mime: payload.mime,
-            bytes: payload.bytes,
-          }),
-          (entry) => ({ slug: entry.slug }),
-        ),
+        Effect.gen(function* () {
+          const batch = yield* entries.createArtifacts(
+            payload.files.map((file) => ({
+              objectKey: file.key,
+              title: file.title,
+              mime: file.mime,
+              bytes: file.bytes,
+            })),
+          )
+
+          yield* Effect.forEach(batch.skipped, (input) => objects.remove(input.objectKey), {
+            discard: true,
+          })
+
+          return {
+            slugs: batch.created.map((entry) => entry.slug),
+            skipped: batch.skipped.map((input) => input.title),
+          }
+        }),
       )
   }),
 )

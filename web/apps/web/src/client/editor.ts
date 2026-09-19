@@ -13,9 +13,7 @@ import * as Ref from 'effect/Ref'
 import * as Schema from 'effect/Schema'
 import * as Stream from 'effect/Stream'
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient'
-import * as HttpBody from 'effect/unstable/http/HttpBody'
 import * as HttpClient from 'effect/unstable/http/HttpClient'
-import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse'
 import * as HttpApiClient from 'effect/unstable/httpapi/HttpApiClient'
 
 import { Api } from '../api.ts'
@@ -25,6 +23,7 @@ import { serializeTasks } from '../tasks.ts'
 import type { Task } from '../tasks.ts'
 import { mountCommand } from './command.tsx'
 import { capture, editorHost, inputsHost, mountMentions, swallow } from './mentions.tsx'
+import { mountUpload, reportUploads } from './upload.ts'
 
 type EditorStatus = 'saving' | 'saved' | 'conflict' | 'error'
 
@@ -136,30 +135,6 @@ const saveEndpoint = Effect.flatMap(HttpClient.HttpClient, (httpClient) =>
     httpClient,
   }),
 )
-
-const uploadEndpoints = Effect.flatMap(HttpClient.HttpClient, (httpClient) =>
-  Effect.all({
-    presign: HttpApiClient.endpoint(Api, {
-      group: 'artifacts',
-      endpoint: 'presign',
-      httpClient,
-    }),
-    register: HttpApiClient.endpoint(Api, {
-      group: 'artifacts',
-      endpoint: 'register',
-      httpClient,
-    }),
-  }),
-)
-
-const FALLBACK_MIME = 'application/octet-stream'
-
-const mimeOf = (file: File) => (file.type === '' ? FALLBACK_MIME : file.type)
-
-const putObject = (url: string, file: File) =>
-  HttpClient.put(url, {
-    body: HttpBody.raw(file, { contentType: mimeOf(file) }),
-  }).pipe(Effect.flatMap(HttpClientResponse.filterStatusOk))
 
 const entryElements = (root: HTMLElement): Option.Option<EntryElements> =>
   Option.all({
@@ -497,54 +472,6 @@ const mountEntry = (root: HTMLElement) =>
     Option.map(entryElements(root), mountTitle),
   ]).pipe(Option.getOrElse(() => Effect.void))
 
-const upload = Effect.fn('upload')(function* (input: HTMLInputElement) {
-  const file = Option.fromUndefinedOr(input.files?.[0])
-  const label = Option.fromNullishOr(
-    input.closest('[data-new]')?.querySelector<HTMLElement>('[data-upload-label]'),
-  )
-
-  const setLabel = (text: string) =>
-    Effect.sync(() => {
-      Option.map(label, (element) => {
-        element.textContent = text
-      })
-    })
-
-  if (Option.isNone(file)) {
-    return
-  }
-
-  const { presign, register } = yield* uploadEndpoints
-
-  yield* Effect.gen(function* () {
-    yield* setLabel('Uploading…')
-
-    const target = yield* presign({})
-
-    yield* putObject(target.url, file.value)
-
-    const created = yield* register({
-      payload: {
-        key: target.key,
-        title: file.value.name,
-        mime: mimeOf(file.value),
-        bytes: file.value.size,
-      },
-    })
-
-    yield* Effect.sync(() => {
-      window.location.assign(`/e/${created.slug}`)
-    })
-  }).pipe(
-    Effect.catchCause((cause) =>
-      Effect.andThen(Effect.logWarning('upload failed', cause), setLabel('Upload failed')),
-    ),
-  )
-})
-
-const mountUpload = (input: HTMLInputElement) =>
-  Stream.fromEventListener(input, 'change').pipe(Stream.runForEach(() => upload(input)))
-
 const copyShareUrl = Effect.fn('copyShareUrl')(function* (button: HTMLElement) {
   const url = Option.fromNullishOr(
     button.closest<HTMLElement>('[data-share-url]')?.dataset['shareUrl'],
@@ -702,7 +629,7 @@ const mountAll = Effect.gen(function* () {
     Arr.fromIterable(document.querySelectorAll<HTMLElement>('[data-editor]')),
   )
   const uploads = yield* Effect.sync(() =>
-    Arr.fromIterable(document.querySelectorAll<HTMLInputElement>('[data-upload]')),
+    Arr.fromIterable(document.querySelectorAll<HTMLDialogElement>('dialog[data-upload]')),
   )
   const copies = yield* Effect.sync(() =>
     Arr.fromIterable(document.querySelectorAll<HTMLElement>('[data-copy]')),
@@ -715,6 +642,7 @@ const mountAll = Effect.gen(function* () {
   )
 
   yield* refold
+  yield* Effect.forkScoped(reportUploads)
 
   yield* Effect.sync(() => {
     document.querySelector<HTMLElement>('[data-share-panel][data-open]')?.showPopover()
