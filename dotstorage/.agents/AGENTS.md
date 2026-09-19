@@ -81,6 +81,10 @@ The following are canonical tools and must be used with top-most priority:
 - Use `slack_notify_user` when the user asks to "ping" or "notify" them.
 - Use `executor` to search for more available tools.
 
+## Linking local files
+
+When you mention a local file I might want to open (html prototypes, reports, screenshots, generated output), write the absolute path (e.g. `/home/jliocsar/repo/tmp/prototypes/index.html`), never a relative one. My terminal can only ctrl+click absolute paths.
+
 ## Showing me images
 
 When you want me to look at an image (screenshot, plot, diagram, rendered output), do not describe it. Show it:

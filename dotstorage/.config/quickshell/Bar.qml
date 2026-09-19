@@ -27,11 +27,11 @@ PanelWindow {
 
     PwObjectTracker { objects: [bar.sink] }
 
-    // `qs ipc call bar toggle calendar|claude|docker|wifi` — keybind-friendly popup toggles.
+    // `qs ipc call bar toggle calendar|claude|docker|wifi|power` — keybind-friendly popup toggles.
     IpcHandler {
         target: "bar"
         function toggle(name: string): void {
-            const popup = { calendar, claude: claudePopup, docker: dockerPopup, wifi: wifiPopup }[name];
+            const popup = { calendar, claude: claudePopup, docker: dockerPopup, wifi: wifiPopup, power: powerPopup }[name];
             if (popup) popup.visible = !popup.visible;
         }
     }
@@ -165,6 +165,19 @@ PanelWindow {
             color: powered ? Theme.barFg : Theme.dim
             tooltip: connectedDevices.map(device => device.name).join("\n")
             onClicked: Quickshell.execDetached(["io.elementary.settings", "settings://network/bluetooth"])
+        }
+
+        Indicator {
+            id: powerIndicator
+            icon: powerPopup.active.glyph
+            tooltip: powerPopup.active.label
+            active: powerPopup.visible
+            onClicked: powerPopup.visible = !powerPopup.visible
+
+            PowerProfilePopup {
+                id: powerPopup
+                anchorItem: powerIndicator
+            }
         }
 
         Indicator {
