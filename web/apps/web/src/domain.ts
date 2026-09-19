@@ -2,6 +2,7 @@ import * as DateTime from 'effect/DateTime'
 import * as Duration from 'effect/Duration'
 import * as Option from 'effect/Option'
 import * as Schema from 'effect/Schema'
+import * as SchemaGetter from 'effect/SchemaGetter'
 
 export type EntryType = typeof EntryType.Type
 
@@ -12,6 +13,10 @@ export type EntrySlug = typeof EntrySlug.Type
 export type Entry = typeof Entry.Type
 
 export type MentionTarget = typeof MentionTarget.Type
+
+export type Tag = typeof Tag.Type
+
+export type TagCount = typeof TagCount.Type
 
 export type ShareLinkId = typeof ShareLinkId.Type
 
@@ -61,6 +66,28 @@ export const GoogleAccountId = Schema.String.pipe(Schema.brand('GoogleAccountId'
 
 export const googleAccountId = Schema.decodeSync(GoogleAccountId)
 
+export const TAG_PATTERN = /^[a-z0-9-]{1,32}$/u
+
+export const Tag = Schema.String.check(Schema.isPattern(TAG_PATTERN)).pipe(Schema.brand('Tag'))
+
+/** What the user typed, folded into a tag when it can be: trim, lowercase, spaces to dashes. */
+export const normaliseTag = (raw: string): Option.Option<Tag> =>
+  Schema.decodeOption(Tag)(raw.trim().toLowerCase().replaceAll(/\s+/gu, '-'))
+
+/** Space-joined in the row (a `group_concat` column), sorted, never empty strings. */
+const TagList = Schema.NullOr(Schema.String).pipe(
+  Schema.decodeTo(Schema.Array(Tag), {
+    decode: SchemaGetter.transform((joined: string | null) =>
+      joined === null ? [] : joined.split(' '),
+    ),
+    encode: SchemaGetter.transform((tags: readonly string[]) =>
+      tags.length === 0 ? null : tags.join(' '),
+    ),
+  }),
+)
+
+export const TagCount = Schema.Struct({ tag: Tag, count: Schema.Int })
+
 export const Attendee = Schema.Struct({
   email: Schema.String,
   name: Schema.optionalKey(Schema.String),
@@ -88,6 +115,7 @@ export const entryFields = {
   bytes: Schema.NullOr(Schema.Int),
   version: Schema.Int,
   updatedAt: Schema.DateTimeUtcFromString,
+  tags: TagList,
 }
 
 export const ENTRY_KEYS = {

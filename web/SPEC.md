@@ -27,7 +27,8 @@ entities, backlinks, documents/posts, MDX, the CLI).
 - CLI / `$EDITOR` round-trip (post-v1)
 - `@` autocomplete in the editor (post-v1, and it's the best post-v1 item)
 - Multi-user, roles, collaborative editing
-- Tags. Sections and `@` links are the whole organisation story.
+- Folders, hierarchy, nested tags. Tags are flat labels (§3.7); sections and `@` links
+  do the rest.
 - Attachments on notes. A file is an artifact; link to it with `@slug`.
 
 ---
@@ -52,6 +53,8 @@ entries
   updated_at   TEXT NOT NULL
   version      INTEGER NOT NULL DEFAULT 1 -- conflict token, bumped every commit
 
+entry_tags   entry_id, tag                -- PK (entry_id, tag); plaintext, indexed
+
 share_links  id, entry_id, token (UNIQUE, >=128 bits), expires_at, revoked_at,
              created_at
 
@@ -60,8 +63,8 @@ google_accounts
              refresh_token (encrypted), created_at
 ```
 
-**Indexes:** `entries(type, archived_at, updated_at DESC)`, `share_links(token)`,
-`share_links(entry_id, revoked_at)`.
+**Indexes:** `entries(type, archived_at, updated_at DESC)`, `entry_tags(tag, entry_id)`,
+`share_links(token)`, `share_links(entry_id, revoked_at)`.
 
 Three nullable artifact columns is the price of keeping one table. Worth it —
 archive, share links and slugs then work uniformly with no polymorphic foreign keys.
@@ -162,7 +165,34 @@ for pages that have any rows.
 Archive from anywhere. Archived entries stay in their own section behind an
 "Archived" filter — there is no global Archive view. Delete is only offered on
 archived entries. Deleting leaves dangling `@slug` links; the resolver shows a
-"missing" page. Acceptable.
+"missing" page. Acceptable. Deleting also drops the entry's `entry_tags` rows.
+
+### 3.7 Tags
+
+Flat labels on any entry type, for filtering and nothing else. No hierarchy, no
+rename, no manage screen: a tag exists while at least one entry carries it.
+
+- A tag is a normalised string: trim, lowercase, spaces → `-`, then `[a-z0-9-]{1,32}`.
+  Anything else is rejected on input.
+- Stored in `entry_tags`, plaintext, because they are indexed and filtered — unlike
+  bodies, which are encrypted at rest. A tag name is no more sensitive than a title.
+- Color is derived, never stored: `palette[hash(tag) % palette.length]` over 10–12
+  hues tuned for light and dark. Same color everywhere, including agents.
+- Lists filter by one tag at a time, `?tag=foo`, composable with `?archived`. The
+  tags offered on a list page are the distinct tags of that section in that archived
+  state. Rows show their tags as Linear-style pills (colored dot + name).
+- The entry page shows the entry's tags as pills in the meta row, as many as fit and a
+  `+N` pill for the rest. A `Tags` button (and `+N`) opens a checklist popover: a search
+  box, the section's tags with counts most-used first, a `Create "x"` row when the
+  search text is a new tag. Each toggle commits at once, replacing the whole set
+  through `setTags`.
+- List pages filter through a `Tag ▾` action next to `Archived`: the same popover,
+  rows link to `?tag=`, the active tag reads back in the action and clears on a second
+  pick.
+- `setTags` bumps **neither** `version` nor `updated_at`. Tagging isn't editing: it
+  must not reorder the list and must not make the editor's next debounced save fail
+  with `VersionConflict`. Tags live outside the conflict token, like `set_meeting`.
+- No cap on tags per entry.
 
 ---
 
@@ -203,7 +233,8 @@ archived entries. Deleting leaves dangling `@slug` links; the resolver shows a
 | ------------------------------------------ | ----------------- | ------------------------------------------------- |
 | `/`                                        | session           | Home: the four section links and Sign out         |
 | `/login` `/logout`                         | none              | Password form; sets or clears the session cookie  |
-| `/notes` `/meetings` `/tasks` `/artifacts` | session           | Lists, `?archived`                                |
+| `/notes` `/meetings` `/tasks` `/artifacts` | session           | Lists, `?archived`, `?tag=`                       |
+| `/e/:slug/tags`                            | session           | POST, replaces the set, returns checklist + pills |
 | `/e/:slug`                                 | session           | Entry page. Type comes from the row.              |
 | `/a/:slug`                                 | session           | Artifact → 302 to a short-lived signed Tigris URL |
 | `/s/:token`                                | none              | Shared artifact → 302 to a signed URL             |
@@ -268,17 +299,19 @@ definition covers MCP validation and the service layer.
 
 | Tool                                                              | Notes                                          |
 | ----------------------------------------------------------------- | ---------------------------------------------- |
-| `list_entries({type?, archived?, limit, cursor})`                 | Summaries, never bodies                        |
+| `list_entries({type?, archived?, tag?, limit, cursor})`           | Summaries, never bodies                        |
 | `get_entry({slug\|id})`                                           | Full body and `version`                        |
-| `create_note({title?, body?})`                                    |                                                |
-| `create_task({title?, body?})`                                    |                                                |
+| `create_note({title?, body?, tags?})`                             |                                                |
+| `create_task({title?, body?, tags?})`                             |                                                |
 | `create_meeting_note()`                                           | Runs §3.2, including the "already exists" case |
 | `put_entry({id, title?, body?, expectedVersion})`                 | `expectedVersion` required                     |
 | `list_todays_meetings()`                                          | Same list as §3.3                              |
 | `set_meeting({id, eventId})`                                      | Applies §3.3                                   |
+| `list_tags({type?})`                                              | Distinct tags, optionally per section          |
+| `set_tags({id, tags})`                                            | Replaces the set; no `expectedVersion` (§3.7)  |
 | `archive_entry({id})` / `restore_entry({id})`                     | No delete tool for agents                      |
 | `presign_artifact_upload()`                                       | `{key, url}`; agent PUTs directly to Tigris    |
-| `register_artifact({key, title, mime, bytes})`                    | Creates the entry                              |
+| `register_artifact({key, title, mime, bytes, tags?})`             | Creates the entry                              |
 | `create_share_link({id, expiresIn?})` / `revoke_share_link({id})` |                                                |
 
 Enforced by the server, not by prompt: slugs immutable, no delete tool,
@@ -319,11 +352,12 @@ Enforced by the server, not by prompt: slugs immutable, no delete tool,
 | **P1**    | Google OAuth, calendar detection, Meeting Notes section, today's-meetings picker                                              |
 | **P2**    | Artifacts: presigned upload, signed serving, artifact list and page                                                           |
 | **P3**    | Share links on artifacts                                                                                                      |
+| **P3.5**  | Tags: `entry_tags`, `setTags`, list filter and row pills, entry-page picker                                                   |
 | **P4**    | MCP server, per-agent tokens                                                                                                  |
 | **P5**    | PWA polish, install, mobile capture pass                                                                                      |
 | **Later** | `@` autocomplete, FTS search, revision history, CLI, Drive/Meet transcripts, calendar writes                                  |
 
-Done: P0 except the broken-`@` page, P1, P2, P3. P4 is next; P5 waits.
+Done: P0 except the broken-`@` page, P1, P2, P3. P3.5 is in progress; P4 is next; P5 waits.
 
 ---
 

@@ -19,12 +19,12 @@ import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse'
 import * as HttpApiClient from 'effect/unstable/httpapi/HttpApiClient'
 
 import { Api } from '../api.ts'
-import { entryId, VersionConflict } from '../domain.ts'
+import { entryId, normaliseTag, VersionConflict } from '../domain.ts'
 import type { EntryId } from '../domain.ts'
 import { serializeTasks } from '../tasks.ts'
 import type { Task } from '../tasks.ts'
 import { mountCommand } from './command.tsx'
-import { editorHost, inputsHost, mountMentions } from './mentions.tsx'
+import { capture, editorHost, inputsHost, mountMentions, swallow } from './mentions.tsx'
 
 type EditorStatus = 'saving' | 'saved' | 'conflict' | 'error'
 
@@ -93,13 +93,25 @@ const IDLE_SAVE = '2 seconds'
 const CONFLICT_RETRIES = 2
 
 const saveEndpoint = Effect.flatMap(HttpClient.HttpClient, (httpClient) =>
-  HttpApiClient.endpoint(Api, { group: 'entries', endpoint: 'save', httpClient }),
+  HttpApiClient.endpoint(Api, {
+    group: 'entries',
+    endpoint: 'save',
+    httpClient,
+  }),
 )
 
 const uploadEndpoints = Effect.flatMap(HttpClient.HttpClient, (httpClient) =>
   Effect.all({
-    presign: HttpApiClient.endpoint(Api, { group: 'artifacts', endpoint: 'presign', httpClient }),
-    register: HttpApiClient.endpoint(Api, { group: 'artifacts', endpoint: 'register', httpClient }),
+    presign: HttpApiClient.endpoint(Api, {
+      group: 'artifacts',
+      endpoint: 'presign',
+      httpClient,
+    }),
+    register: HttpApiClient.endpoint(Api, {
+      group: 'artifacts',
+      endpoint: 'register',
+      httpClient,
+    }),
   }),
 )
 
@@ -108,9 +120,9 @@ const FALLBACK_MIME = 'application/octet-stream'
 const mimeOf = (file: File) => (file.type === '' ? FALLBACK_MIME : file.type)
 
 const putObject = (url: string, file: File) =>
-  HttpClient.put(url, { body: HttpBody.raw(file, { contentType: mimeOf(file) }) }).pipe(
-    Effect.flatMap(HttpClientResponse.filterStatusOk),
-  )
+  HttpClient.put(url, {
+    body: HttpBody.raw(file, { contentType: mimeOf(file) }),
+  }).pipe(Effect.flatMap(HttpClientResponse.filterStatusOk))
 
 const entryElements = (root: HTMLElement): Option.Option<EntryElements> =>
   Option.all({
@@ -142,7 +154,10 @@ const taskItem = (item: HTMLLIElement): Option.Option<TaskItem> =>
 const taskItems = (list: HTMLElement): readonly TaskItem[] =>
   Arr.getSomes(Arr.fromIterable(list.querySelectorAll('li')).map(taskItem))
 
-const readTask = (item: TaskItem): Task => ({ done: item.check.checked, text: item.text.value })
+const readTask = (item: TaskItem): Task => ({
+  done: item.check.checked,
+  text: item.text.value,
+})
 
 const taskItemOf = (target: EventTarget | null): Option.Option<TaskItem> =>
   target instanceof HTMLInputElement
@@ -240,11 +255,17 @@ const mountSaver = Effect.fn('mountSaver')(function* (
   const commit = flush.pipe(
     Effect.tapErrorTag('VersionConflict', ({ entry }) =>
       Effect.andThen(
-        Ref.update(saved, (current) => ({ ...current, version: entry.version })),
+        Ref.update(saved, (current) => ({
+          ...current,
+          version: entry.version,
+        })),
         setStatus('conflict'),
       ),
     ),
-    Effect.retry({ while: Schema.is(VersionConflict), times: CONFLICT_RETRIES }),
+    Effect.retry({
+      while: Schema.is(VersionConflict),
+      times: CONFLICT_RETRIES,
+    }),
     Effect.matchEffect({
       onFailure: (error) =>
         Effect.andThen(Effect.logWarning('save failed', error), setStatus('error')),
@@ -526,6 +547,133 @@ const copyShareUrl = Effect.fn('copyShareUrl')(function* (button: HTMLElement) {
   )
 })
 
+// Hide pills from the end until what's left plus the `+N` pill fits the row.
+const foldPills = (fold: HTMLElement) => {
+  const pills = Arr.fromIterable(fold.querySelectorAll<HTMLElement>('[data-pill]'))
+  const more = fold.querySelector<HTMLElement>('[data-fold-more]')
+
+  pills.forEach((pill) => {
+    pill.hidden = false
+  })
+
+  if (more === null) {
+    return
+  }
+
+  more.hidden = true
+
+  for (let hidden = 0; hidden < pills.length && fold.scrollWidth > fold.clientWidth; hidden++) {
+    more.hidden = false
+    more.textContent = `+${hidden + 1}`
+    const pill = pills[pills.length - 1 - hidden]
+
+    if (pill !== undefined) {
+      pill.hidden = true
+    }
+  }
+}
+
+const refold = Effect.sync(() => {
+  document.querySelectorAll<HTMLElement>('[data-fold]').forEach(foldPills)
+})
+
+// Search box over a tag list: typing filters, Enter picks the first hit or creates.
+const mountTagMenu = Effect.fn('mountTagMenu')(function* (menu: HTMLElement) {
+  const search = menu.querySelector<HTMLInputElement>('[data-tag-search]')
+  const createRow = menu.querySelector<HTMLElement>('[data-tag-create-row]')
+  const createName = menu.querySelector<HTMLElement>('[data-tag-create-name]')
+  const createForm = menu.querySelector<HTMLFormElement>('form[data-tag-create]')
+
+  if (search === null) {
+    return
+  }
+
+  const rows = () => Arr.fromIterable(menu.querySelectorAll<HTMLElement>('[data-tag-row]'))
+
+  const visibleRows = () => rows().filter((row) => !row.hasAttribute('hidden'))
+
+  const apply = Effect.sync(() => {
+    const query = search.value.trim().toLowerCase()
+    const wanted = normaliseTag(search.value)
+    const exact = rows().some((row) => Option.contains(wanted, row.dataset['tag']))
+
+    rows().forEach((row) => {
+      row.hidden = !(row.dataset['tag'] ?? '').includes(query)
+    })
+
+    if (createRow !== null && createName !== null) {
+      createRow.hidden = exact || Option.isNone(wanted)
+      createName.textContent = Option.getOrElse(wanted, () => '')
+    }
+  })
+
+  const reset = Effect.sync(() => {
+    search.value = ''
+  }).pipe(Effect.andThen(apply))
+
+  const pick = Effect.sync(() => {
+    const first = visibleRows()[0]
+
+    if (first !== undefined) {
+      first.click()
+    } else if (createRow !== null && !createRow.hasAttribute('hidden') && createForm !== null) {
+      createForm.requestSubmit()
+    }
+  })
+
+  yield* Effect.forkScoped(
+    Stream.fromEventListener(search, 'input').pipe(Stream.runForEach(() => apply)),
+  )
+  // Swallowed in the capture phase, before the browser submits the create form on its own.
+  const enters = capture(search, 'keydown', (event) => {
+    if (event instanceof KeyboardEvent && event.key === 'Enter') {
+      swallow(event)
+
+      return Option.some(undefined)
+    }
+
+    return Option.none()
+  })
+
+  yield* Effect.forkScoped(Stream.runForEach(enters, () => pick))
+  yield* Effect.forkScoped(
+    Stream.fromEventListener<ToggleEvent>(menu, 'toggle').pipe(
+      Stream.filter((event) => event.newState === 'open'),
+      Stream.runForEach(() =>
+        Effect.andThen(
+          reset,
+          Effect.sync(() => {
+            search.focus()
+          }),
+        ),
+      ),
+    ),
+  )
+  yield* Effect.forkScoped(
+    Stream.fromEventListener(menu, 'click').pipe(
+      Stream.filter(
+        (event) =>
+          event.target instanceof HTMLElement &&
+          createRow !== null &&
+          createRow.contains(event.target),
+      ),
+      Stream.runForEach(() => pick),
+    ),
+  )
+  // The checklist is swapped after every toggle; the create form clears after a create.
+  yield* Effect.forkScoped(
+    Stream.fromEventListener(menu, 'htmx:afterSwap').pipe(Stream.runForEach(() => apply)),
+  )
+
+  if (createForm !== null) {
+    yield* Effect.forkScoped(
+      Stream.fromEventListener(createForm, 'htmx:afterRequest').pipe(
+        Stream.runForEach(() => reset),
+      ),
+    )
+  }
+})
+
 const mountCopy = (button: HTMLElement) =>
   Stream.fromEventListener(button, 'click').pipe(Stream.runForEach(() => copyShareUrl(button)))
 
@@ -542,6 +690,11 @@ const mountAll = Effect.gen(function* () {
   const palettes = yield* Effect.sync(() =>
     Arr.fromIterable(document.querySelectorAll<HTMLDialogElement>('dialog[data-command]')),
   )
+  const tagMenus = yield* Effect.sync(() =>
+    Arr.fromIterable(document.querySelectorAll<HTMLElement>('[data-tag-menu]')),
+  )
+
+  yield* refold
 
   yield* Effect.sync(() => {
     document.querySelector<HTMLElement>('[data-share-panel][data-open]')?.showPopover()
@@ -549,10 +702,26 @@ const mountAll = Effect.gen(function* () {
 
   yield* Effect.all(
     [
-      Effect.forEach(roots, mountEntry, { concurrency: 'unbounded', discard: true }),
-      Effect.forEach(uploads, mountUpload, { concurrency: 'unbounded', discard: true }),
-      Effect.forEach(copies, mountCopy, { concurrency: 'unbounded', discard: true }),
-      Effect.forEach(palettes, mountCommand, { concurrency: 'unbounded', discard: true }),
+      Effect.forEach(roots, mountEntry, {
+        concurrency: 'unbounded',
+        discard: true,
+      }),
+      Effect.forEach(uploads, mountUpload, {
+        concurrency: 'unbounded',
+        discard: true,
+      }),
+      Effect.forEach(copies, mountCopy, {
+        concurrency: 'unbounded',
+        discard: true,
+      }),
+      Effect.forEach(palettes, mountCommand, {
+        concurrency: 'unbounded',
+        discard: true,
+      }),
+      Effect.forEach(tagMenus, mountTagMenu, {
+        concurrency: 'unbounded',
+        discard: true,
+      }),
     ],
     { concurrency: 'unbounded', discard: true },
   )
@@ -589,7 +758,20 @@ const main = Effect.gen(function* () {
 
   yield* remount
   yield* Effect.forkScoped(shortcuts)
-  yield* Stream.fromEventListener(document.body, 'htmx:afterSwap').pipe(
+  yield* Effect.forkScoped(
+    Stream.fromEventListener(window, 'resize').pipe(Stream.runForEach(() => refold)),
+  )
+  yield* Effect.forkScoped(
+    Stream.fromEventListener(document.body, 'htmx:oobAfterSwap').pipe(
+      Stream.runForEach(() => refold),
+    ),
+  )
+  // Only a boosted navigation replaces the page; fragment swaps must not rebuild the editor.
+  yield* Stream.fromEventListener<CustomEvent<{ readonly target: Element }>>(
+    document.body,
+    'htmx:afterSwap',
+  ).pipe(
+    Stream.filter((event) => event.detail.target === document.body),
     Stream.runForEach(() => remount),
   )
 })

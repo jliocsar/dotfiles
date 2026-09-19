@@ -3,16 +3,18 @@ import type { Node, Raw } from '@dotfiles/jsx'
 import * as Arr from 'effect/Array'
 import * as DateTime from 'effect/DateTime'
 import * as Effect from 'effect/Effect'
+import * as Option from 'effect/Option'
 
 import { Icon } from '../components/Icon.tsx'
 import { Layout, ThemeToggle } from '../components/Layout.tsx'
 import { Entries } from '../services/Entries.ts'
 import { Markdown } from '../services/Markdown.ts'
 import { DEFAULT_SHARE_TTL, SHARE_TTL_SHORT, sectionOf, ShareTtl } from '../domain.ts'
-import type { Entry, EntrySlug, MeetingRef, Section, ShareLink } from '../domain.ts'
+import type { Entry, EntrySlug, MeetingRef, Section, ShareLink, Tag, TagCount } from '../domain.ts'
 import { ShareLinks } from '../services/ShareLinks.ts'
 import { artifactFile, formatBytes, previewOf } from '../artifacts.ts'
 import type { ArtifactFile, Preview } from '../artifacts.ts'
+import { hueOf } from '../tags.ts'
 import { parseTasks, taskProgress } from '../tasks.ts'
 import type { Task } from '../tasks.ts'
 import { clock } from '../zone.ts'
@@ -88,6 +90,34 @@ const SHARE_TTL = [
   'has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ring',
 ].join(' ')
 
+const TAG_PILL = [
+  'inline-flex h-5 shrink-0 items-center gap-1.5 rounded-full border bg-background px-1.5',
+  'text-[11.5px] leading-none font-medium whitespace-nowrap text-foreground',
+].join(' ')
+
+const TAG_DOT = 'size-1.5 shrink-0 rounded-full bg-[oklch(var(--tag-l)_var(--tag-c)_var(--h))]'
+
+const TAG_MORE = [
+  'inline-flex h-5 shrink-0 items-center rounded-full border px-1.5 text-[11.5px] leading-none font-medium',
+  'text-muted-foreground tabular-nums transition-colors hover:bg-muted hover:text-foreground',
+].join(' ')
+
+const TAG_PANEL = [
+  'fixed inset-auto m-0 w-[240px] rounded-lg border bg-background p-0 text-[13px] shadow-lg',
+  '[position-anchor:--tags] [top:calc(anchor(bottom)+6px)]',
+].join(' ')
+
+const TAG_ROW = [
+  'group flex h-7 cursor-pointer items-center gap-2 rounded-md px-2',
+  'hover:bg-muted aria-pressed:font-medium has-checked:font-medium',
+].join(' ')
+
+const TAG_LIST = 'flex max-h-[232px] flex-col overflow-y-auto p-1'
+
+const TAG_COUNT = 'ml-auto pl-3 text-[11.5px] text-muted-foreground tabular-nums'
+
+const TAG_SEARCH = 'w-full bg-transparent outline-none placeholder:text-muted-foreground'
+
 const NO_PREVIEW =
   'flex min-h-[40vh] items-center justify-center rounded-md border border-dashed text-muted-foreground'
 
@@ -156,6 +186,102 @@ export const Page = (props: {
 
 export const Dot = () => <span class="size-[3px] rounded-full bg-muted-foreground/60" />
 
+const TagDot = (props: { readonly tag: Tag }) => (
+  <i class={TAG_DOT} style={`--h:${hueOf(props.tag)}`} />
+)
+
+export const TagPill = (props: { readonly tag: Tag }) => (
+  <span class={TAG_PILL} data-pill>
+    <TagDot tag={props.tag} />
+    {props.tag}
+  </span>
+)
+
+const TagSearch = (props: { readonly placeholder: string; readonly name?: string }) => (
+  <div class="flex h-[34px] items-center gap-2 border-b px-2.5">
+    <Icon name="search" class="size-3.5 shrink-0 text-muted-foreground" />
+    <input
+      class={TAG_SEARCH}
+      name={props.name}
+      placeholder={props.placeholder}
+      autocomplete="off"
+      spellcheck="false"
+      aria-label={props.placeholder}
+      data-tag-search
+    />
+  </div>
+)
+
+const listHref = (section: Section, archived: boolean, tag: Tag | undefined) => {
+  const params = new URLSearchParams()
+
+  if (tag !== undefined) {
+    params.set('tag', tag)
+  }
+
+  if (archived) {
+    params.set('archived', '')
+  }
+
+  return params.size === 0 ? section.path : `${section.path}?${params}`
+}
+
+// One tag at a time (§3.7): picking the active one again clears the filter.
+const TagMenu = (props: {
+  readonly section: Section
+  readonly archived: boolean
+  readonly tags: readonly TagCount[]
+  readonly active: Option.Option<Tag>
+}) => (
+  <>
+    <button
+      type="button"
+      class="btn [anchor-name:--tags] aria-pressed:bg-muted aria-pressed:text-foreground"
+      data-variant="ghost"
+      popovertarget="tag-menu"
+      aria-pressed={String(Option.isSome(props.active))}
+    >
+      {Option.match(props.active, {
+        onNone: () => (
+          <>
+            <Icon name="tag" />
+            Tag
+          </>
+        ),
+        onSome: (tag) => (
+          <>
+            <TagDot tag={tag} />
+            {tag}
+          </>
+        ),
+      })}
+      <Icon name="chevron-down" class="-ml-1 size-3 text-muted-foreground" />
+    </button>
+    <div id="tag-menu" popover class={`${TAG_PANEL} [left:anchor(left)]`} data-tag-menu>
+      <TagSearch placeholder="Filter by tag…" />
+      <div class={TAG_LIST}>
+        {props.tags.map(({ tag, count }) => (
+          <a
+            class={TAG_ROW}
+            href={listHref(
+              props.section,
+              props.archived,
+              Option.contains(props.active, tag) ? undefined : tag,
+            )}
+            aria-pressed={String(Option.contains(props.active, tag))}
+            data-tag-row
+            data-tag={tag}
+          >
+            <TagDot tag={tag} />
+            <span class="truncate">{tag}</span>
+            <span class={TAG_COUNT}>{count}</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </>
+)
+
 export const GroupLabel = (props: { readonly children: Node }) => (
   <div class="flex items-center justify-between pt-[22px] pb-1.5 text-[11px] leading-4 font-medium tracking-[0.08em] uppercase text-muted-foreground/60 first:pt-0">
     {props.children}
@@ -178,7 +304,16 @@ const Size = (props: { readonly entry: Entry }) =>
 
 const EntryRow = (props: { readonly entry: Entry; readonly currentYear: number }) => (
   <a class={ROW} href={`/e/${props.entry.slug}`} data-row>
-    <span class="truncate">{titleOf(props.entry)}</span>
+    <span class="flex min-w-0 items-center gap-2.5">
+      <span class="min-w-0 truncate">{titleOf(props.entry)}</span>
+      {props.entry.tags.length === 0 ? null : (
+        <span class="flex min-w-0 items-center gap-1 overflow-hidden">
+          {props.entry.tags.map((tag) => (
+            <TagPill tag={tag} />
+          ))}
+        </span>
+      )}
+    </span>
     <span class="flex items-center gap-2.5 text-xs text-muted-foreground tabular-nums">
       <Progress entry={props.entry} />
       <Size entry={props.entry} />
@@ -261,9 +396,15 @@ export const MissingPage = (props: { readonly slug: string }) => (
 export const ListPage = Effect.fn('ListPage')(function* (props: {
   readonly section: Section
   readonly archived: boolean
+  readonly tag: Option.Option<Tag>
 }) {
   const entries = yield* Entries
-  const listed = yield* entries.list(props.section.type, props.archived)
+  const listed = yield* entries.list(
+    props.section.type,
+    props.archived,
+    Option.getOrUndefined(props.tag),
+  )
+  const tags = yield* entries.distinctTags(props.section.type, props.archived)
   const currentYear = DateTime.getPartUtc(yield* DateTime.now, 'year')
   const groups = Arr.groupBy(listed, (entry) => monthOf(entry, currentYear))
 
@@ -284,6 +425,17 @@ export const ListPage = Effect.fn('ListPage')(function* (props: {
               Archived
             </a>
             <Dot />
+            {tags.length === 0 && Option.isNone(props.tag) ? null : (
+              <>
+                <TagMenu
+                  section={props.section}
+                  archived={props.archived}
+                  tags={tags}
+                  active={props.tag}
+                />
+                <Dot />
+              </>
+            )}
             <span>
               {listed.length} {props.section.noun}
               {listed.length === 1 ? '' : 's'}
@@ -310,7 +462,12 @@ export const ListPage = Effect.fn('ListPage')(function* (props: {
         }
       >
         {listed.length === 0 ? (
-          <GroupLabel>{props.archived ? 'Nothing archived' : 'Nothing yet'}</GroupLabel>
+          <GroupLabel>
+            {Option.match(props.tag, {
+              onNone: () => (props.archived ? 'Nothing archived' : 'Nothing yet'),
+              onSome: (tag) => `Nothing tagged ${tag}`,
+            })}
+          </GroupLabel>
         ) : null}
         {Object.entries(groups).map(([month, grouped]) => (
           <>
@@ -536,6 +693,107 @@ const ArtifactActions = (props: { readonly entry: Entry; readonly linkCount: num
   </>
 )
 
+// Pills fill the free width of the meta row; the client folds the overflow into `+N`.
+const TagPills = (props: { readonly entry: Entry; readonly oob?: boolean }) => (
+  <span
+    id="tag-pills"
+    class="flex min-w-0 flex-1 items-center gap-2.5"
+    hx-swap-oob={props.oob === true ? 'true' : undefined}
+  >
+    {props.entry.tags.length === 0 ? null : (
+      <>
+        <Dot />
+        <span class="flex min-w-0 items-center gap-1 overflow-hidden" data-fold>
+          {props.entry.tags.map((tag) => (
+            <TagPill tag={tag} />
+          ))}
+          <button type="button" class={TAG_MORE} popovertarget="tags-panel" data-fold-more hidden>
+            +0
+          </button>
+        </span>
+      </>
+    )}
+  </span>
+)
+
+// The checklist is its own form so a toggle posts without the search text.
+const TagOptions = (props: { readonly entry: Entry; readonly options: readonly Tag[] }) => (
+  <form
+    id="tag-options"
+    class={TAG_LIST}
+    hx-post={`/e/${props.entry.slug}/tags`}
+    hx-trigger="change"
+    hx-target="this"
+    hx-swap="outerHTML"
+  >
+    {props.options.map((tag) => (
+      <label class={TAG_ROW} data-tag-row data-tag={tag}>
+        <input
+          type="checkbox"
+          name="tag"
+          value={tag}
+          class="sr-only"
+          checked={props.entry.tags.includes(tag)}
+        />
+        <TagDot tag={tag} />
+        <span class="truncate">{tag}</span>
+        <Icon name="check" class="ml-auto size-3 opacity-0 group-has-checked:opacity-100" />
+      </label>
+    ))}
+  </form>
+)
+
+/** What `POST /e/:slug/tags` returns: the checklist, plus the meta-row pills out of band. */
+export const TagsFragment = (props: {
+  readonly entry: Entry
+  readonly options: readonly Tag[]
+}) => (
+  <>
+    <TagOptions entry={props.entry} options={props.options} />
+    <TagPills entry={props.entry} oob />
+  </>
+)
+
+const TagsPanel = (props: { readonly entry: Entry; readonly options: readonly Tag[] }) => (
+  <div id="tags-panel" popover class={`${TAG_PANEL} [right:anchor(right)]`} data-tag-menu>
+    <form
+      hx-post={`/e/${props.entry.slug}/tags`}
+      hx-target="#tag-options"
+      hx-swap="outerHTML"
+      hx-include="#tag-options"
+      data-tag-create
+    >
+      <TagSearch placeholder="Change tags…" name="create" />
+    </form>
+    <TagOptions entry={props.entry} options={props.options} />
+    <button
+      type="button"
+      class={`${TAG_ROW} mx-1 mb-1 w-[calc(100%-8px)]`}
+      data-tag-create-row
+      hidden
+    >
+      <span class="text-muted-foreground">
+        Create <b class="font-medium text-foreground" data-tag-create-name />
+      </span>
+    </button>
+    <div class="flex h-7 items-center gap-2.5 border-t px-2.5 text-[11px] text-muted-foreground">
+      <span>
+        <kbd class="kbd rounded-sm dark:bg-foreground/10">↵</kbd> toggle
+      </span>
+      <span>
+        <kbd class="kbd rounded-sm dark:bg-foreground/10">esc</kbd> close
+      </span>
+    </div>
+  </div>
+)
+
+/** Section tags first (most used), then whatever this entry alone carries. */
+export const tagOptions = (entry: Entry, section: readonly TagCount[]): readonly Tag[] => {
+  const known = section.map((row) => row.tag)
+
+  return [...known, ...entry.tags.filter((tag) => !known.includes(tag))]
+}
+
 const PREVIEWS = {
   image: (src: string, name: string) => (
     <img class="max-h-[75vh] max-w-full rounded-md" src={src} alt={name} />
@@ -638,6 +896,7 @@ export const EntryPage = Effect.fn('EntryPage')(function* (props: {
   const shares = yield* ShareLinks
   const entry = yield* entries.bySlug(props.slug)
   const links = entry.type === 'artifact' ? yield* shares.active(entry.id) : []
+  const sectionTags = yield* entries.distinctTags(entry.type, false)
   const section = sectionOf(entry.type)
   const preview = yield* markdown.render(entry.body)
   const currentYear = DateTime.getPartUtc(yield* DateTime.now, 'year')
@@ -674,9 +933,19 @@ export const EntryPage = Effect.fn('EntryPage')(function* (props: {
               {entry.meeting === null ? null : (
                 <MeetingMeta meeting={entry.meeting} zone={props.zone} />
               )}
-              <span>Edited {shortDate(entry, currentYear)}</span>
+              <span class="whitespace-nowrap">Edited {shortDate(entry, currentYear)}</span>
+              <TagPills entry={entry} />
               <div class="ml-auto flex items-center gap-1.5">
                 <span class="text-[11.5px] text-muted-foreground/60 tabular-nums" data-status />
+                <button
+                  type="button"
+                  class="btn [anchor-name:--tags] text-foreground"
+                  data-variant="ghost"
+                  popovertarget="tags-panel"
+                >
+                  <Icon name="tag" />
+                  Tags
+                </button>
                 {file === undefined ? null : (
                   <ArtifactActions entry={entry} linkCount={links.length} />
                 )}
@@ -708,6 +977,7 @@ export const EntryPage = Effect.fn('EntryPage')(function* (props: {
               open={props.openShare}
             />
           )}
+          <TagsPanel entry={entry} options={tagOptions(entry, sectionTags)} />
           <EntryBody entry={entry} file={file} preview={preview} startInSource={startInSource} />
         </Page>
       </article>

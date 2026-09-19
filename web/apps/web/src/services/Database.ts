@@ -65,6 +65,21 @@ const addMeetings = Effect.gen(function* () {
   `
 })
 
+// Plaintext on purpose: tags are filtered and grouped on, bodies are not (§3.7).
+const createEntryTags = Effect.gen(function* () {
+  const sql = yield* SqlClient.SqlClient
+
+  yield* sql`
+    CREATE TABLE entry_tags (
+      entry_id TEXT NOT NULL,
+      tag TEXT NOT NULL,
+      PRIMARY KEY (entry_id, tag)
+    )
+  `
+
+  yield* sql`CREATE INDEX entry_tags_tag ON entry_tags (tag, entry_id)`
+})
+
 const ClientLayer = SqliteClient.layerConfig({
   filename: Config.string('DATABASE_PATH').pipe(Config.withDefault('app.db')),
 })
@@ -75,5 +90,6 @@ export const DatabaseLayer = SqliteMigrator.layer({
     '2_artifacts': addArtifactColumns,
     '3_share_links': createShareLinks,
     '4_meetings': addMeetings,
+    '5_tags': createEntryTags,
   }),
 }).pipe(Layer.provideMerge(ClientLayer))
