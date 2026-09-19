@@ -8,6 +8,8 @@ PopupWindow {
     required property Item anchorItem
     default property alias content: contentColumn.data
     property int contentWidth: 300
+    property int padding: 10
+    property alias spacing: contentColumn.spacing
 
     anchor.item: anchorItem
     anchor.edges: Edges.Bottom
@@ -15,8 +17,8 @@ PopupWindow {
     anchor.margins.top: 6
     grabFocus: true
     color: "transparent"
-    implicitWidth: contentWidth + 24
-    implicitHeight: contentColumn.implicitHeight + 24
+    implicitWidth: contentWidth + padding * 2
+    implicitHeight: contentColumn.implicitHeight + padding * 2
 
     Rectangle {
         anchors.fill: parent
@@ -28,8 +30,8 @@ PopupWindow {
         Column {
             id: contentColumn
             anchors.fill: parent
-            anchors.margins: 12
-            spacing: 4
+            anchors.margins: root.padding
+            spacing: 6
         }
     }
 }

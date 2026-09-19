@@ -8,8 +8,10 @@ BarPopup {
 
     required property WifiDevice device
     property WifiNetwork pendingNetwork: null
+    readonly property WifiNetwork active: device?.networks.values.find(network => network.connected) ?? null
 
     contentWidth: 320
+    spacing: 2
 
     // Scan only while the popup is open.
     onVisibleChanged: {
@@ -37,36 +39,41 @@ BarPopup {
         }
     }
 
-    Label {
-        text: root.device?.connected ? "Wi-Fi" : "Wi-Fi  ·  not connected"
-        color: Theme.dim
-        font.weight: Font.Normal
-        height: 24
+    PopupHeader {
+        icon: "󰤨"
+        title: "Wi-Fi"
+        detail: root.active ? root.active.name : "not connected"
     }
 
     Column {
         width: parent.width
         visible: root.pendingNetwork !== null
         spacing: 6
+        topPadding: 4
+        bottomPadding: 6
 
         Label {
+            leftPadding: 4
             text: root.pendingNetwork ? "Password for " + root.pendingNetwork.name : ""
+            color: Theme.muted
+            font.pixelSize: Theme.fontSizeSmall + 1
         }
 
         Rectangle {
             width: parent.width
-            height: 30
+            height: 32
             radius: 6
-            color: Qt.rgba(1, 1, 1, 0.06)
-            border.color: Theme.border
+            color: Theme.panelAlt
+            border.width: 1
+            border.color: passwordField.activeFocus ? Theme.accent : Theme.border
 
             TextInput {
                 id: passwordField
                 anchors.fill: parent
-                anchors.margins: 8
+                anchors.margins: 10
                 verticalAlignment: TextInput.AlignVCenter
                 echoMode: TextInput.Password
-                color: Theme.white
+                color: Theme.fgStrong
                 font.family: Theme.font
                 font.pixelSize: Theme.fontSize
                 onAccepted: root.submitPassword()
@@ -83,7 +90,7 @@ BarPopup {
             required property WifiNetwork modelData
             text: (modelData.connected ? "󰄬 " : (modelData.security === WifiSecurityType.Open ? "󰦞 " : "󰌾 ")) + modelData.name
             detail: modelData.stateChanging ? "…" : Math.round(modelData.signalStrength * 100) + "%"
-            textColor: modelData.connected ? Theme.green : Theme.white
+            textColor: modelData.connected ? Theme.green : Theme.fg
             onClicked: root.pick(modelData)
 
             Connections {

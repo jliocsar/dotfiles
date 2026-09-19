@@ -11,6 +11,14 @@ Singleton {
 
     property bool focusedMaximized: false
 
+    // Keyboard layouts as niri reports them ("English (US)", "Portuguese (Brazil)").
+    property var layoutNames: []
+    property int layoutIndex: 0
+    readonly property string layoutName: layoutNames[layoutIndex] ?? ""
+    readonly property string layoutLabel: layoutName.startsWith("Portuguese") ? "br"
+        : layoutName.startsWith("English") ? "en"
+        : layoutName.slice(0, 2).toLowerCase()
+
     // window id -> {tile_width, is_floating}
     property var windows: ({})
     property int focusedId: -1
@@ -57,6 +65,13 @@ Singleton {
                         const known = root.windows[id];
                         if (known) known.width = layout.tile_size[0];
                     }
+                } else if (event.KeyboardLayoutsChanged) {
+                    root.layoutNames = event.KeyboardLayoutsChanged.keyboard_layouts.names;
+                    root.layoutIndex = event.KeyboardLayoutsChanged.keyboard_layouts.current_idx;
+                    return;
+                } else if (event.KeyboardLayoutSwitched) {
+                    root.layoutIndex = event.KeyboardLayoutSwitched.idx;
+                    return;
                 } else {
                     return;
                 }

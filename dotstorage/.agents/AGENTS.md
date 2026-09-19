@@ -95,6 +95,12 @@ Custom captions:
 IMGVIEW_ITEMS=$'Before\t/abs/a.png\nAfter\t/abs/b.png' imgview-open
 ```
 
-Paths must be absolute. Exit 3 means my terminal is focused elsewhere; the images were not shown, but I got a notification.
+Videos (mp4, webm, mkv, mov, gif) go through the same command and play in an overlay pane; don't mix images and videos in one call:
 
-Mention that in your reply and move on. Do not retry, and do not use chafa, sixel, or the raw `herdr plugin pane open` yourself.
+```sh
+imgview-open /abs/recording.mp4
+```
+
+Paths must be absolute. If my terminal is focused elsewhere the items are queued and open when I come back; the command says so on stderr and exits 0.
+
+Mention that in your reply and move on. Do not retry, and do not use chafa, sixel, mpv, or the raw `herdr plugin pane open` yourself.

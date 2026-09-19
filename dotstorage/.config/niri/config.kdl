@@ -111,9 +111,25 @@ input {
 // Settings that influence how windows are positioned and sized.
 // Find more information on the wiki:
 // https://niri-wm.github.io/niri/Configuration:-Layout
+overview {
+    backdrop-color "#191c1f"
+}
+
 layout {
     // Set gaps around windows in logical pixels.
     gaps 16
+
+    // Delta One Dark for everything else niri paints: tabbed-column strip,
+    // drag-and-drop insert hint, and the workspace background behind gaps.
+    tab-indicator {
+        active-color "#74ade8"
+        inactive-color "#878a98"
+        urgent-color "#d07277"
+    }
+    insert-hint {
+        color "#74ade880"
+    }
+    background-color "#191c1f"
 
     // When to center a column when changing focus, options are:
     // - "never", default behavior, focusing an off-screen column will keep at the left
@@ -161,7 +177,7 @@ layout {
         // off
 
         // How many logical pixels the ring extends out from the windows.
-        width 4
+        width 2
 
         // Colors can be set in a variety of ways:
         // - CSS named colors: "red"
@@ -169,13 +185,15 @@ layout {
         // - CSS-like notation: "rgb(255, 127, 0)", rgba(), hsl() and a few others.
 
         // Color of the ring on the active monitor.
-        active-color "#7fc8ff"
+        // Delta One Dark: accent / border / red.
+        active-color "#74ade8"
 
         // Color of the ring on inactive monitors.
         //
         // The focus ring only draws around the active window, so the only place
         // where you can see its inactive-color is on other monitors.
-        inactive-color "#505050"
+        inactive-color "#32363e"
+        urgent-color "#d07277"
 
         // You can also use gradients. They take precedence over solid colors.
         // Gradients are rendered the same as CSS linear-gradient(angle, from, to).
@@ -200,11 +218,11 @@ layout {
         off
 
         width 4
-        active-color "#ffc87f"
-        inactive-color "#505050"
+        active-color "#74ade8"
+        inactive-color "#32363e"
 
         // Color of the border around windows that request your attention.
-        urgent-color "#9b0000"
+        urgent-color "#d07277"
 
         // Gradients can use a few different interpolation color spaces.
         // For example, this is a pastel rainbow gradient via in="oklch longer hue".
@@ -217,7 +235,7 @@ layout {
     // You can enable drop shadows for windows.
     shadow {
         // Uncomment the next line to enable shadows.
-        // on
+        on
 
         // By default, the shadow draws only around its window, and not behind it.
         // Uncomment this setting to make the shadow draw behind its window.
@@ -239,13 +257,13 @@ layout {
         // pixels and match the CSS box-shadow properties.
 
         // Softness controls the shadow blur radius.
-        softness 30
+        softness 10
 
         // Spread expands the shadow.
-        spread 5
+        spread 1
 
         // Offset moves the shadow relative to the window.
-        offset x=0 y=5
+        offset x=0 y=0
 
         // You can also change the shadow color and opacity.
         color "#0007"
@@ -274,6 +292,9 @@ layout {
 
 // To run a shell command (with variables, pipes, etc.), use spawn-sh-at-startup:
 // spawn-sh-at-startup "qs -c ~/source/qs/MyAwesomeShell"
+
+// Wallpaper. The `theme` command restarts swaybg with the light/dark image on every flip.
+spawn-at-startup "swaybg" "-m" "fill" "-i" "/usr/share/backgrounds/odin-dark.jpg"
 
 hotkey-overlay {
     // Uncomment this line to disable the "Important Hotkeys" pop-up at startup.
@@ -416,8 +437,10 @@ binds {
     Mod+Ctrl+Up    { move-window-up; }
     Mod+Ctrl+Right { move-column-right; }
     Mod+Ctrl+H     { move-column-left; }
-    Mod+Ctrl+J     { move-column-to-workspace-down; }
-    Mod+Ctrl+K     { move-column-to-workspace-up; }
+    //Mod+Ctrl+J     { move-column-to-workspace-down; }
+    //Mod+Ctrl+K     { move-column-to-workspace-up; }
+    Mod+Ctrl+J     { move-window-down; }
+    Mod+Ctrl+K     { move-window-up; }
     Mod+Ctrl+L     { move-column-right; }
 
     // Alternative commands that move across workspaces when reaching
@@ -541,6 +564,12 @@ binds {
     // Switches focus between the current and the previous workspace.
     // Mod+Tab { focus-workspace-previous; }
 
+    // Cycle columns within the current workspace only, wrapping at the ends.
+    Alt+Tab       { focus-column-right-or-first; }
+    Alt+Shift+Tab { focus-column-left-or-last; }
+    Mod+Tab       { focus-column-right-or-first; }
+    Mod+Shift+Tab { focus-column-left-or-last; }
+
     // The following binds move the focused window in and out of a column.
     // If the window is alone, they will consume it into the nearby column to the side.
     // If the window is already in a column, they will expel it out.
@@ -600,14 +629,14 @@ binds {
     // Toggle tabbed column display mode.
     // Windows in this column will appear as vertical tabs,
     // rather than stacked on top of each other.
-    Mod+W { toggle-column-tabbed-display; }
+    //Mod+W { toggle-column-tabbed-display; }
 
     // Actions to switch layouts.
     // Note: if you uncomment these, make sure you do NOT have
     // a matching layout switch hotkey configured in xkb options above.
     // Having both at once on the same hotkey will break the switching,
     // since it will switch twice upon pressing the hotkey (once by xkb, once by niri).
-    // Mod+Space       { switch-layout "next"; }
+    Mod+Space       { switch-layout "next"; }
     // Mod+Shift+Space { switch-layout "prev"; }
 
     Print { screenshot; }

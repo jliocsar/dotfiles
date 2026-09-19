@@ -2,13 +2,16 @@ import QtQuick
 import QtQuick.Controls
 import Quickshell
 
-// Month view under the clock. Scroll or use the arrows to change month.
+// Month view under the clock. Scroll or use the arrows to change month,
+// "today" jumps back to the current one.
 BarPopup {
     id: root
 
     property date today: new Date()
     property int month: today.getMonth()
     property int year: today.getFullYear()
+    readonly property bool onCurrentMonth: month === today.getMonth() && year === today.getFullYear()
+    readonly property int cellWidth: 32
 
     function shift(months) {
         const shifted = new Date(year, month + months, 1);
@@ -16,42 +19,63 @@ BarPopup {
         year = shifted.getFullYear();
     }
 
-    onVisibleChanged: {
-        if (visible) {
-            today = new Date();
-            month = today.getMonth();
-            year = today.getFullYear();
-        }
+    function goToday() {
+        today = new Date();
+        month = today.getMonth();
+        year = today.getFullYear();
     }
 
-    contentWidth: 7 * 34
+    onVisibleChanged: if (visible) goToday()
 
-    Item {
-        width: parent.width
-        height: 28
+    contentWidth: 7 * cellWidth
+    spacing: 2
 
-        MouseArea {
-            anchors.left: parent.left
-            width: 28
-            height: parent.height
-            cursorShape: Qt.PointingHandCursor
-            onClicked: root.shift(-1)
-            Label { anchors.centerIn: parent; text: "‹"; color: Theme.dim }
-        }
+    PopupHeader {
+        icon: "󰃭" // md-calendar
+        title: Qt.formatDate(new Date(root.year, root.month, 1), "MMMM yyyy")
 
         Label {
-            anchors.centerIn: parent
-            text: Qt.formatDate(new Date(root.year, root.month, 1), "MMMM yyyy")
-            color: Theme.blue
+            anchors.verticalCenter: parent.verticalCenter
+            visible: !root.onCurrentMonth
+            text: "today"
+            color: todayMouse.containsMouse ? Theme.fgStrong : Theme.accent
+            font.pixelSize: Theme.fontSizeSmall + 1
+
+            MouseArea {
+                id: todayMouse
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.goToday()
+            }
         }
 
-        MouseArea {
-            anchors.right: parent.right
-            width: 28
-            height: parent.height
-            cursorShape: Qt.PointingHandCursor
-            onClicked: root.shift(1)
-            Label { anchors.centerIn: parent; text: "›"; color: Theme.dim }
+        Repeater {
+            model: [{ glyph: "", step: -1 }, { glyph: "", step: 1 }]
+
+            Rectangle {
+                required property var modelData
+                anchors.verticalCenter: parent.verticalCenter
+                width: 22
+                height: 22
+                radius: 11
+                color: arrowMouse.containsMouse ? Theme.hover : "transparent"
+
+                Icon {
+                    anchors.centerIn: parent
+                    text: parent.modelData.glyph
+                    font.pixelSize: 10
+                    color: arrowMouse.containsMouse ? Theme.fgStrong : Theme.muted
+                }
+
+                MouseArea {
+                    id: arrowMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.shift(parent.modelData.step)
+                }
+            }
         }
     }
 
@@ -60,9 +84,11 @@ BarPopup {
         delegate: Label {
             required property var model
             text: model.shortName
-            color: Theme.yellow
+            color: Theme.muted
+            font.pixelSize: Theme.fontSizeSmall
+            font.weight: Font.DemiBold
             horizontalAlignment: Text.AlignHCenter
-            width: 34
+            width: root.cellWidth
             height: 24
         }
     }
@@ -72,24 +98,27 @@ BarPopup {
         width: parent.width
         month: root.month
         year: root.year
-        delegate: Label {
+        delegate: Item {
             required property var model
             readonly property bool isToday: model.today
-            text: model.day
-            width: 34
+            readonly property bool inMonth: model.month === grid.month
+            width: root.cellWidth
             height: 28
-            horizontalAlignment: Text.AlignHCenter
-            color: !isToday && model.month !== grid.month ? Theme.dim : (isToday ? Theme.bg : Theme.white)
-            font.weight: isToday ? Font.Bold : Font.Normal
 
             Rectangle {
                 anchors.centerIn: parent
-                width: 26
-                height: 26
-                radius: 13
-                color: Theme.blue
+                width: 24
+                height: 24
+                radius: 12
+                color: Theme.accent
                 visible: parent.isToday
-                z: -1
+            }
+
+            Label {
+                anchors.centerIn: parent
+                text: model.day
+                color: parent.isToday ? Theme.bg : parent.inMonth ? Theme.fg : Theme.dim
+                font.weight: parent.isToday ? Font.Bold : Font.Normal
             }
         }
 

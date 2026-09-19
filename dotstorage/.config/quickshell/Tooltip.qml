@@ -14,12 +14,12 @@ PopupWindow {
     anchor.margins.top: 6
     visible: shown && text.length > 0
     color: "transparent"
-    implicitWidth: body.implicitWidth + 24
-    implicitHeight: body.implicitHeight + 16
+    implicitWidth: body.implicitWidth + 20
+    implicitHeight: body.implicitHeight + 12
 
     Rectangle {
         anchors.fill: parent
-        radius: Theme.radius
+        radius: 8
         color: Theme.bgPopup
         border.color: Theme.border
         border.width: 1
@@ -28,8 +28,7 @@ PopupWindow {
             id: body
             anchors.centerIn: parent
             text: root.text
-            font.weight: Font.Normal
-            color: Theme.fg
+            font.pixelSize: Theme.fontSizeSmall + 1
         }
     }
 }

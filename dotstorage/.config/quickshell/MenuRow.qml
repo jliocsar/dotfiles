@@ -1,36 +1,38 @@
 import QtQuick
 
-// A clickable row inside a Popup.
+// A clickable row inside a BarPopup: text on the left, muted detail on the right.
 Rectangle {
     id: root
 
     property alias text: label.text
     property alias detail: detailLabel.text
-    property color textColor: Theme.white
+    property color textColor: Theme.fg
+    property bool selected: false
     signal clicked()
 
     width: parent.width
-    implicitHeight: 30
+    implicitHeight: 32
     radius: 6
-    color: mouse.containsMouse ? Qt.rgba(1, 1, 1, 0.08) : "transparent"
+    color: selected ? Theme.selection : mouse.containsMouse ? Theme.hover : "transparent"
+    Behavior on color { ColorAnimation { duration: 80 } }
 
     Label {
         id: label
         anchors.left: parent.left
-        anchors.leftMargin: 8
+        anchors.leftMargin: 10
         anchors.verticalCenter: parent.verticalCenter
         color: root.textColor
         elide: Text.ElideRight
-        width: parent.width - 16 - (detailLabel.text ? detailLabel.implicitWidth + 8 : 0)
+        width: parent.width - 20 - (detailLabel.text ? detailLabel.implicitWidth + 8 : 0)
     }
 
     Label {
         id: detailLabel
         anchors.right: parent.right
-        anchors.rightMargin: 8
+        anchors.rightMargin: 10
         anchors.verticalCenter: parent.verticalCenter
-        color: Theme.dim
-        font.weight: Font.Normal
+        color: Theme.muted
+        font.pixelSize: Theme.fontSizeSmall + 1
     }
 
     MouseArea {

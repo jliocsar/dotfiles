@@ -3,8 +3,9 @@ import Quickshell
 import Quickshell.Wayland
 import Quickshell.Widgets
 
-// Bottom launcher pill. Reserves its height (windows stop above it) and hides while
-// the focused window is maximized (Mod+M), giving that space back.
+// Bottom launcher pill. Reserves its height (windows stop above it). While the focused
+// window is maximized (Mod+M) it gives that space back and slides below the screen edge;
+// the window stays mapped so the slide can animate, with the mask keeping it click-through.
 PanelWindow {
     id: dock
 
@@ -40,8 +41,10 @@ PanelWindow {
     margins.bottom: 6
     implicitWidth: pill.width
     implicitHeight: pill.height
+    exclusionMode: ExclusionMode.Normal
+    exclusiveZone: hidden ? 0 : pill.height
     color: "transparent"
-    visible: !hidden
+    mask: Region { item: pill }
     WlrLayershell.namespace: "qs-dock"
 
     Rectangle {
@@ -50,6 +53,8 @@ PanelWindow {
         height: icons.height + 12
         radius: 18
         color: Theme.bgPanel
+        y: dock.hidden ? height + dock.margins.bottom : 0
+        Behavior on y { NumberAnimation { duration: Theme.dockSlideMs; easing.type: Easing.InOutCubic } }
         border.color: Theme.border
         border.width: 1
 

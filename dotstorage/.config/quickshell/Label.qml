@@ -1,10 +1,9 @@
 import QtQuick
 
-// Bar text: SF Pro bold with nerd-font icon fallback, same look as the clock.
+// Default text: SF Pro, nerd-font glyphs fall through to the icon font.
 Text {
-    color: Theme.white
+    color: Theme.fg
     font.family: Theme.font
     font.pixelSize: Theme.fontSize
-    font.weight: Font.DemiBold
     verticalAlignment: Text.AlignVCenter
 }

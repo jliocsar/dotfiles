@@ -99,6 +99,13 @@ apply_wallpaper() {
     local uri="file://${wallpaper// /%20}"
     gsettings set org.gnome.desktop.background picture-uri "$uri" 2>/dev/null || true
     gsettings set org.gnome.desktop.background picture-uri-dark "$uri" 2>/dev/null || true
+
+    # niri has no wallpaper of its own; swaybg (spawned from niri's config) is
+    # restarted with the new image. Skipped outside a niri session.
+    if [[ -n "${NIRI_SOCKET:-}" ]] && command -v swaybg >/dev/null 2>&1; then
+        pkill -x swaybg 2>/dev/null || true
+        setsid swaybg -m fill -i "$wallpaper" >/dev/null 2>&1 </dev/null &
+    fi
 }
 
 # Point every Claude Code config at the custom Delta One theme for this mode.

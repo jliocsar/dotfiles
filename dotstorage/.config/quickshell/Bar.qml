@@ -5,7 +5,9 @@ import Quickshell.Services.Pipewire
 import Quickshell.Services.UPower
 import Quickshell.Services.SystemTray
 import Quickshell.Networking
+import Quickshell.Bluetooth
 import Quickshell.Widgets
+import Quickshell.Io
 
 // Top bar: nothing | clock (center) | indicators (right).
 PanelWindow {
@@ -24,6 +26,15 @@ PanelWindow {
     readonly property UPowerDevice battery: UPower.displayDevice
 
     PwObjectTracker { objects: [bar.sink] }
+
+    // `qs ipc call bar toggle calendar|claude|docker|wifi` — keybind-friendly popup toggles.
+    IpcHandler {
+        target: "bar"
+        function toggle(name: string): void {
+            const popup = { calendar, claude: claudePopup, docker: dockerPopup, wifi: wifiPopup }[name];
+            if (popup) popup.visible = !popup.visible;
+        }
+    }
 
     Rectangle {
         anchors.fill: parent
@@ -46,6 +57,7 @@ PanelWindow {
         id: clockIndicator
         anchors.centerIn: parent
         text: Qt.formatDateTime(clock.date, "ddd MMM dd   HH:mm")
+        active: calendar.visible
         onClicked: calendar.visible = !calendar.visible
     }
 
@@ -60,21 +72,30 @@ PanelWindow {
         height: parent.height
 
         Indicator {
+            id: claudeIndicator
             icon: "\uec82" // cod-claude
+            iconColor: Theme.claude
             text: ClaudeUsage.text
-            tooltip: ClaudeUsage.tooltip
             color: ClaudeUsage.level === "critical" ? Theme.red
                  : ClaudeUsage.level === "warning" ? Theme.yellow
-                 : ClaudeUsage.level === "unavailable" ? Theme.dim : Theme.white
+                 : ClaudeUsage.level === "unavailable" ? Theme.dim : Theme.barFg
+            active: claudePopup.visible
+            onClicked: claudePopup.visible = !claudePopup.visible
+
+            ClaudePopup {
+                id: claudePopup
+                anchorItem: claudeIndicator
+            }
         }
 
         Indicator {
             id: dockerIndicator
             icon: "󰡨"
-            iconSize: 18
+            iconSize: 16
+            iconColor: Theme.docker
             text: Docker.reachable ? String(Docker.containers.length) : "–"
-            color: Docker.reachable ? Theme.white : Theme.dim
-            tooltip: Docker.containers.map(container => container.name).join("\n")
+            color: Docker.reachable ? Theme.barFg : Theme.dim
+            active: dockerPopup.visible
             onClicked: dockerPopup.visible = !dockerPopup.visible
 
             DockerPopup {
@@ -89,7 +110,7 @@ PanelWindow {
         Indicator {
             icon: "󰔏"
             text: Stats.temperatureC + "°"
-            color: Stats.temperatureC >= 85 ? Theme.red : Theme.white
+            color: Stats.temperatureC >= 85 ? Theme.red : Theme.barFg
         }
 
         Indicator {
@@ -103,9 +124,9 @@ PanelWindow {
             readonly property bool muted: bar.sink?.audio?.muted ?? true
             icon: muted ? "󰖁" : volume < 0.34 ? "󰕿" : volume < 0.67 ? "󰖀" : "󰕾"
             text: muted ? "" : Math.round(volume * 100) + "%"
-            color: muted ? Theme.dim : Theme.white
+            color: muted ? Theme.dim : Theme.barFg
             tooltip: bar.sink?.description ?? ""
-            onClicked: if (bar.sink?.audio) bar.sink.audio.muted = !bar.sink.audio.muted
+            onClicked: Quickshell.execDetached(["io.elementary.settings", "settings://sound"])
 
             MouseArea {
                 anchors.fill: parent
@@ -120,13 +141,14 @@ PanelWindow {
 
         Indicator {
             id: wifiIndicator
-            readonly property WifiNetwork active: bar.wifi?.networks.values.find(network => network.connected) ?? null
-            readonly property real strength: active?.signalStrength ?? 0
+            readonly property WifiNetwork network: bar.wifi?.networks.values.find(candidate => candidate.connected) ?? null
+            readonly property real strength: network?.signalStrength ?? 0
             icon: !bar.wifi ? "󰈀"
-                : !active ? "󰤮"
+                : !network ? "󰤮"
                 : strength < 0.2 ? "󰤯" : strength < 0.4 ? "󰤟" : strength < 0.6 ? "󰤢" : strength < 0.8 ? "󰤥" : "󰤨"
-            color: active ? Theme.white : Theme.dim
-            tooltip: active ? active.name + "  " + Math.round(strength * 100) + "%" : "not connected"
+            color: network ? Theme.barFg : Theme.dim
+            tooltip: network ? network.name + "  " + Math.round(strength * 100) + "%" : "not connected"
+            active: wifiPopup.visible
             onClicked: wifiPopup.visible = !wifiPopup.visible
 
             WifiPopup {
@@ -137,13 +159,30 @@ PanelWindow {
         }
 
         Indicator {
+            readonly property var connectedDevices: Bluetooth.devices.values.filter(device => device.connected)
+            readonly property bool powered: Bluetooth.defaultAdapter?.enabled ?? false
+            icon: !powered ? "󰂲" : connectedDevices.length > 0 ? "󰂱" : "󰂯"
+            color: powered ? Theme.barFg : Theme.dim
+            tooltip: connectedDevices.map(device => device.name).join("\n")
+            onClicked: Quickshell.execDetached(["io.elementary.settings", "settings://network/bluetooth"])
+        }
+
+        Indicator {
+            text: Niri.layoutLabel
+            tooltip: Niri.layoutName
+            onClicked: Quickshell.execDetached(["niri", "msg", "action", "switch-layout", "next"])
+        }
+
+        Indicator {
             readonly property int percent: Math.round(bar.battery.percentage * 100)
             readonly property bool charging: bar.battery.state === UPowerDeviceState.Charging
                                           || bar.battery.state === UPowerDeviceState.FullyCharged
             visible: bar.battery.isLaptopBattery
             icon: charging ? "󰂄" : percent < 20 ? "󰁺" : percent < 40 ? "󰁼" : percent < 60 ? "󰁾" : percent < 80 ? "󰂀" : "󰁹"
             text: percent + "%"
-            color: charging ? Theme.green : percent <= 10 ? Theme.red : percent <= 25 ? Theme.yellow : Theme.white
+            // Only the icon carries the level colour; the value stays neutral unless critical.
+            iconColor: charging || percent >= 80 ? Theme.green : percent >= 20 ? Theme.yellow : Theme.red
+            color: iconColor === Theme.red ? Theme.red : Theme.barFg
             tooltip: charging
                 ? (bar.battery.timeToFull > 0 ? Math.round(bar.battery.timeToFull / 60) + " min to full" : "charged")
                 : (bar.battery.timeToEmpty > 0 ? Math.round(bar.battery.timeToEmpty / 60) + " min left" : "")
