@@ -787,9 +787,9 @@ const TagsPanel = (props: { readonly entry: Entry; readonly options: readonly Ta
   </div>
 )
 
-/** Section tags first (most used), then whatever this entry alone carries. */
-export const tagOptions = (entry: Entry, section: readonly TagCount[]): readonly Tag[] => {
-  const known = section.map((row) => row.tag)
+/** Every tag in use (most used first), then whatever this entry alone carries. */
+export const tagOptions = (entry: Entry, inUse: readonly TagCount[]): readonly Tag[] => {
+  const known = inUse.map((row) => row.tag)
 
   return [...known, ...entry.tags.filter((tag) => !known.includes(tag))]
 }
@@ -896,7 +896,7 @@ export const EntryPage = Effect.fn('EntryPage')(function* (props: {
   const shares = yield* ShareLinks
   const entry = yield* entries.bySlug(props.slug)
   const links = entry.type === 'artifact' ? yield* shares.active(entry.id) : []
-  const sectionTags = yield* entries.distinctTags(entry.type, false)
+  const knownTags = yield* entries.distinctTags(undefined, false)
   const section = sectionOf(entry.type)
   const preview = yield* markdown.render(entry.body)
   const currentYear = DateTime.getPartUtc(yield* DateTime.now, 'year')
@@ -977,7 +977,7 @@ export const EntryPage = Effect.fn('EntryPage')(function* (props: {
               open={props.openShare}
             />
           )}
-          <TagsPanel entry={entry} options={tagOptions(entry, sectionTags)} />
+          <TagsPanel entry={entry} options={tagOptions(entry, knownTags)} />
           <EntryBody entry={entry} file={file} preview={preview} startInSource={startInSource} />
         </Page>
       </article>

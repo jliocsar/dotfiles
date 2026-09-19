@@ -183,8 +183,8 @@ rename, no manage screen: a tag exists while at least one entry carries it.
   state. Rows show their tags as Linear-style pills (colored dot + name).
 - The entry page shows the entry's tags as pills in the meta row, as many as fit and a
   `+N` pill for the rest. A `Tags` button (and `+N`) opens a checklist popover: a search
-  box, the section's tags with counts most-used first, a `Create "x"` row when the
-  search text is a new tag. Each toggle commits at once, replacing the whole set
+  box, every tag in use across all sections most-used first (a tag made in Notes is
+  ready to pick in Artifacts), a `Create "x"` row when the search text is a new tag. Each toggle commits at once, replacing the whole set
   through `setTags`.
 - List pages filter through a `Tag ▾` action next to `Archived`: the same popover,
   rows link to `?tag=`, the active tag reads back in the action and clears on a second

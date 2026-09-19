@@ -29,8 +29,11 @@ import { ObjectStore } from './ObjectStore.ts'
 
 export interface EntriesShape {
   readonly list: (type: EntryType, archived: boolean, tag?: Tag) => Effect.Effect<readonly Entry[]>
-  /** Tags carried by entries of one section, most used first (§3.7). */
-  readonly distinctTags: (type: EntryType, archived: boolean) => Effect.Effect<readonly TagCount[]>
+  /** Tags in use, most used first; one section's or every section's (§3.7). */
+  readonly distinctTags: (
+    type: EntryType | undefined,
+    archived: boolean,
+  ) => Effect.Effect<readonly TagCount[]>
   readonly recent: (limit: number) => Effect.Effect<readonly Entry[]>
   readonly targets: Effect.Effect<readonly MentionTarget[]>
   readonly existing: (slugs: readonly string[]) => Effect.Effect<ReadonlySet<string>>
@@ -134,12 +137,13 @@ const queries = (sql: SqlClient.SqlClient, Entry: CipherShape['Entry']) => {
 
   const selectDistinctTags = flow(
     SqlSchema.findAll({
-      Request: Schema.Struct({ type: EntryType, archived: Schema.Boolean }),
+      Request: Schema.Struct({ type: Schema.NullOr(EntryType), archived: Schema.Boolean }),
       Result: TagCount,
       execute: ({ type, archived }) => sql`
         SELECT tag, count(*) AS count FROM entry_tags
         JOIN entries ON entries.id = entry_tags.entry_id
-        WHERE type = ${type} AND (archived_at IS NOT NULL) = ${archived ? 1 : 0}
+        WHERE (${type} IS NULL OR type = ${type})
+          AND (archived_at IS NOT NULL) = ${archived ? 1 : 0}
         GROUP BY tag
         ORDER BY count DESC, tag
       `,
@@ -340,8 +344,9 @@ export class Entries extends Context.Service<Entries, EntriesShape>()('app/Entri
         selectByType({ type, archived, tag: tag ?? null }),
     )
 
-    const distinctTags = Effect.fn('Entries.distinctTags')((type: EntryType, archived: boolean) =>
-      selectDistinctTags({ type, archived }),
+    const distinctTags = Effect.fn('Entries.distinctTags')(
+      (type: EntryType | undefined, archived: boolean) =>
+        selectDistinctTags({ type: type ?? null, archived }),
     )
 
     const recent = Effect.fn('Entries.recent')((limit: number) => selectRecent(limit))

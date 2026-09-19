@@ -230,9 +230,9 @@ const tagsRoute = Effect.gen(function* () {
   const kept = Arr.getSomes(Arr.ensure(form.tag ?? []).map(normaliseTag))
   const created = form.create === undefined ? Option.none() : normaliseTag(form.create)
   const next = yield* entries.setTags(entry.id, [...kept, ...Option.toArray(created)])
-  const sectionTags = yield* entries.distinctTags(next.type, false)
+  const knownTags = yield* entries.distinctTags(undefined, false)
 
-  return respond(<TagsFragment entry={next} options={tagOptions(next, sectionTags)} />, 200)
+  return respond(<TagsFragment entry={next} options={tagOptions(next, knownTags)} />, 200)
 }).pipe(
   Effect.catchTag('EntryNotFound', (error) => Effect.succeed(notFound(error.ref))),
   Effect.tapError((error) => Effect.logWarning(REJECTED, error.message)),
