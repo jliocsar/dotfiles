@@ -25,6 +25,10 @@
   /* tag dots: hue comes from the tag name (tags.ts), these keep it readable per theme */
   --tag-l: 62%;
   --tag-c: 0.17;
+  /* editor cursor and selection: the one accent; the letter under the block cursor is always dark */
+  --caret: #a78bfa;
+  --caret-foreground: #0f0f0f;
+  --selection: color-mix(in oklab, var(--caret) 40%, transparent);
 }
 
 .dark {
@@ -39,6 +43,8 @@
   --ring: #ededed;
   --tag-l: 74%;
   --tag-c: 0.15;
+  --caret: #8b5cf6;
+  --selection: color-mix(in oklab, var(--caret) 35%, transparent);
 }
 
 @layer base {
@@ -55,7 +61,8 @@ a[data-missing] {
 
 .mention-pop {
   position: absolute;
-  z-index: 50;
+  /* above codemirror's sticky panels (vim status line, z-index 300) */
+  z-index: 400;
   display: flex;
   flex-direction: column;
   width: max-content;

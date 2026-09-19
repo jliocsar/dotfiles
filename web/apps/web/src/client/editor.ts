@@ -1,7 +1,7 @@
 import { markdown } from '@codemirror/lang-markdown'
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language'
 import { tags } from '@lezer/highlight'
-import { getCM, vim } from '@replit/codemirror-vim'
+import { vim } from '@replit/codemirror-vim'
 import { EditorView, minimalSetup } from 'codemirror'
 import * as Arr from 'effect/Array'
 import * as Effect from 'effect/Effect'
@@ -69,11 +69,48 @@ const STATUS_TEXT = {
   error: 'Save failed',
 } satisfies Record<EditorStatus, string>
 
-const inheritTypography = EditorView.theme({
-  '&': { outline: 'none', fontFamily: 'inherit', fontSize: 'inherit' },
-  '.cm-scroller': { fontFamily: 'inherit', lineHeight: 'inherit' },
-  '.cm-content': { padding: '0' },
+// Reads as page text and fills the page down to the vim status line, which sticks
+// a page-margin above the viewport bottom. Colours come from the site theme
+// (codemirror isn't told about dark mode); `--caret` is the one accent it has.
+const editorTheme = EditorView.theme({
+  '&': { flex: '1', outline: 'none', fontFamily: 'inherit', fontSize: 'inherit' },
+  '&.cm-focused': { outline: 'none' },
+  // The page scrolls, not the editor, so nothing (cursor at column 0 included) needs clipping.
+  '.cm-scroller': {
+    flex: '1',
+    overflow: 'visible',
+    fontFamily: 'inherit',
+    lineHeight: 'inherit',
+  },
+  '.cm-content': { padding: '0', caretColor: 'var(--caret)' },
   '.cm-line': { padding: '0' },
+  '.cm-cursor': { borderLeft: '2px solid var(--caret)', marginLeft: '-1px' },
+  // `.cm-editor` is redundant but outranks the vim plugin's own pink block cursor.
+  '&.cm-editor .cm-fat-cursor': { borderRadius: '2px', background: 'var(--caret)' },
+  // The plugin sets the letter colour inline (transparent for half-height pending cursors).
+  '&.cm-editor.cm-focused .cm-fat-cursor:not([style*="transparent"])': {
+    color: 'var(--caret-foreground) !important',
+  },
+  '&.cm-editor:not(.cm-focused) .cm-fat-cursor': { outline: '1px solid var(--caret)' },
+  '.cm-selectionBackground': { backgroundColor: 'var(--selection)' },
+  '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground': {
+    backgroundColor: 'var(--selection)',
+  },
+  '.cm-panels': {
+    bottom: '2.5rem',
+    zIndex: '1',
+    borderTop: '1px solid var(--border)',
+    backgroundColor: 'var(--muted)',
+    color: 'var(--muted-foreground)',
+  },
+  '.cm-vim-panel': {
+    alignItems: 'center',
+    minHeight: '28px',
+    padding: '0 8px',
+    fontSize: '12px',
+  },
+  '.cm-vim-panel, .cm-vim-panel *': { fontFamily: 'var(--font-mono) !important' },
+  '.cm-vim-panel input': { color: 'var(--foreground)', caretColor: 'var(--caret)' },
 })
 
 const markdownHighlight = HighlightStyle.define([
@@ -175,12 +212,6 @@ const clickedPreviewTab = (event: MouseEvent): boolean =>
   event.target instanceof HTMLElement &&
   event.target.closest('[role="tab"]')?.getAttribute('aria-controls') === 'preview'
 
-const inVimNormalMode = (view: EditorView): boolean => {
-  const mode = getCM(view)?.state.vim
-
-  return mode === undefined || mode === null || (!mode.insertMode && !mode.visualMode)
-}
-
 const inField = (target: EventTarget | null): boolean =>
   target instanceof HTMLElement &&
   (target.isContentEditable || target.matches('input, textarea, select'))
@@ -204,7 +235,6 @@ const focusRow = (step: 1 | -1) =>
 
 const SHORTCUTS: ReadonlyMap<string, Effect.Effect<void>> = new Map([
   ['n', click('[data-new]')],
-  ['Escape', click('[data-back]')],
   ['j', focusRow(1)],
   ['k', focusRow(-1)],
 ])
@@ -401,12 +431,12 @@ const mountEditor = Effect.fn('mountEditor')(function* (elements: EditorElements
         new EditorView({
           doc: source.value,
           extensions: [
-            vim(),
+            vim({ status: true }),
             minimalSetup,
             markdown(),
             syntaxHighlighting(markdownHighlight),
             EditorView.lineWrapping,
-            inheritTypography,
+            editorTheme,
             EditorView.updateListener.of((update) => {
               if (update.docChanged) {
                 Queue.offerUnsafe(docChanges, undefined)
@@ -447,16 +477,6 @@ const mountEditor = Effect.fn('mountEditor')(function* (elements: EditorElements
 
   const flushes = Stream.merge(Stream.fromEventListener(view.contentDOM, 'blur'), previewClicks)
 
-  const escapes = Stream.fromEventListener<KeyboardEvent>(view.contentDOM, 'keydown').pipe(
-    Stream.filter((event) => event.key === 'Escape' && inVimNormalMode(view)),
-    Stream.runForEach(() =>
-      Effect.sync(() => {
-        view.contentDOM.blur()
-      }),
-    ),
-  )
-
-  yield* Effect.forkScoped(escapes)
   yield* saver.run(flushes)
 })
 

@@ -22,7 +22,6 @@ import { clock } from '../zone.ts'
 interface Back {
   readonly href: string
   readonly label: string
-  readonly hint?: string
 }
 
 const PROSE = [
@@ -107,8 +106,10 @@ const TAG_PANEL = [
   '[position-anchor:--tags] [top:calc(anchor(bottom)+6px)]',
 ].join(' ')
 
+// `relative` keeps each row's sr-only checkbox inside the row; otherwise it's placed
+// against the popover and makes the whole panel scroll on top of the list.
 const TAG_ROW = [
-  'group flex h-7 cursor-pointer items-center gap-2 rounded-md px-2',
+  'group relative flex h-7 cursor-pointer items-center gap-2 rounded-md px-2',
   'hover:bg-muted aria-pressed:font-medium has-checked:font-medium',
 ].join(' ')
 
@@ -153,7 +154,6 @@ const BackLink = (props: { readonly back: Back | undefined }) =>
     <a class={BACK} href={props.back.href} data-back>
       <Icon name="arrow-left" class="size-3.5" />
       {props.back.label}
-      {props.back.hint === undefined ? null : <kbd class="kbd rounded-sm">{props.back.hint}</kbd>}
     </a>
   )
 
@@ -164,9 +164,13 @@ export const Page = (props: {
   readonly actions?: Node
   readonly heading: Node
   readonly meta: Node
+  /** Stretch to the viewport bottom so a flex-1 child (the editor) can fill it. */
+  readonly fill?: boolean
   readonly children?: Node
 }) => (
-  <main class="mx-auto max-w-[1000px] px-4 pt-10 pb-24 sm:px-8">
+  <main
+    class={`mx-auto max-w-[1000px] px-4 pt-10 sm:px-8 ${props.fill === true ? 'flex min-h-dvh flex-col pb-10' : 'pb-24'}`}
+  >
     <div class="mb-10 flex h-7 items-center justify-between">
       {props.crumbs ?? <BackLink back={props.back} />}
       <div class="flex items-center gap-1">
@@ -255,7 +259,7 @@ const TagMenu = (props: {
           </>
         ),
       })}
-      <Icon name="chevron-down" class="-ml-1 size-3 text-muted-foreground" />
+      <Icon name="chevron-down" class="size-3 text-muted-foreground" />
     </button>
     <div id="tag-menu" popover class={`${TAG_PANEL} [left:anchor(left)]`} data-tag-menu>
       <TagSearch placeholder="Filter by tag…" />
@@ -849,14 +853,14 @@ const SourcePreview = (props: {
     <div
       id="source"
       role="tabpanel"
-      class="font-mono text-sm leading-[1.75]"
+      class="flex flex-1 flex-col font-mono text-sm leading-[1.75]"
       hidden={!props.startInSource}
     >
       <textarea class="min-h-[60vh] w-full resize-none bg-transparent outline-none" name="body">
         {props.body}
       </textarea>
     </div>
-    <div id="preview" role="tabpanel" class={PROSE} hidden={props.startInSource}>
+    <div id="preview" role="tabpanel" class={`${PROSE} pb-24`} hidden={props.startInSource}>
       {raw(props.preview)}
     </div>
   </>
@@ -908,7 +912,8 @@ export const EntryPage = Effect.fn('EntryPage')(function* (props: {
     <Layout title={titleOf(entry)}>
       <article data-editor data-id={entry.id} data-version={String(entry.version)}>
         <Page
-          back={{ href: section.path, label: section.label, hint: 'esc' }}
+          back={{ href: section.path, label: section.label }}
+          fill={!isTaskList && file === undefined}
           heading={
             <input
               class={TITLE_INPUT}
