@@ -10,7 +10,7 @@ BarPopup {
 
     PopupHeader {
         icon: "" // cod-claude
-        iconColor: Theme.orange
+        iconColor: Theme.claude
         title: "Claude Code"
         detail: ClaudeUsage.loading ? "refreshing…"
             : ClaudeUsage.available ? "updated " + Qt.formatTime(ClaudeUsage.updatedAt, "HH:mm")

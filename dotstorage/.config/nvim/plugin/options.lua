@@ -70,20 +70,6 @@ opt.autoread = true
 -- idk why but i like this
 opt.clipboard = 'unnamedplus'
 
-local env = vim.fn.environ()
-
-local clipboard = nil
-
-if env.TMUX then
-    clipboard = 'tmux'
-elseif env.DISPLAY then
-    clipboard = 'xsel'
-else
-    clipboard = 'wl-copy'
-end
-
-vim.g.clipboard = clipboard
-
 opt.winborder = 'single'
 
 opt.expandtab = true

@@ -28,6 +28,7 @@ BarPopup {
 
     PopupHeader {
         icon: "󰡨"
+        iconColor: Theme.docker
         title: "Docker"
         detail: Docker.reachable ? Docker.containers.length + " running" : "unreachable"
 

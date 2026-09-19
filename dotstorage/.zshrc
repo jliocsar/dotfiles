@@ -47,7 +47,7 @@ source $HOME/.dotfiles/zsh/dotfiles.zsh
 if [[ -n "$INFISICAL_PERSONAL_PROJECT_ID" ]]; then
   infisical_cache="${XDG_RUNTIME_DIR:-/tmp}/infisical-personal.env"
   if [[ -z "$(find "$infisical_cache" -mmin -60 2>/dev/null)" ]]; then
-    infisical export --projectId="$INFISICAL_PERSONAL_PROJECT_ID" --env=dev --format=dotenv-export --silent > "$infisical_cache.tmp" 2>/dev/null \
+    infisical export --projectId="$INFISICAL_PERSONAL_PROJECT_ID" --env=prod --format=dotenv-export --silent > "$infisical_cache.tmp" 2>/dev/null \
       && mv "$infisical_cache.tmp" "$infisical_cache" \
       || rm -f "$infisical_cache.tmp"
   fi
@@ -84,7 +84,3 @@ export PATH="/home/jliocsar/.local/bin:$PATH"
 
 # Supabase CLI
 export PATH="/home/jliocsar/.supabase/bin:$PATH"
-
-# Pi
-export PATH="/home/jliocsar/.local/share/mise/installs/node/24.19.0/bin:$PATH"
-
