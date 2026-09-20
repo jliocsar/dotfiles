@@ -85,6 +85,5 @@ export PATH=$PATH:$ANDROID_HOME/tools
 # Added by codebase-memory-mcp install
 export PATH="/home/jliocsar/.local/bin:$PATH"
 
-
 # Supabase CLI
 export PATH="/home/jliocsar/.supabase/bin:$PATH"

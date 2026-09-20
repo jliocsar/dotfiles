@@ -35,7 +35,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/notify"
+            "command": "~/.claude/hooks/notify.sh"
           }
         ]
       },
@@ -54,7 +54,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/protect-tmp-dir",
+            "command": "~/.claude/hooks/protect-tmp-dir.sh",
             "timeout": 5
           }
         ]
@@ -64,7 +64,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/block-secrets",
+            "command": "~/.claude/hooks/block-secrets.sh",
             "timeout": 10
           }
         ]
@@ -114,7 +114,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/slopblock",
+            "command": "~/.claude/hooks/slopblock.sh",
             "timeout": 5
           }
         ]
