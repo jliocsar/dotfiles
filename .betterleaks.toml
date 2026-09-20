@@ -1,0 +1,9 @@
+# Default rules plus filters for known false positives in this repo.
+# Placeholder creds in docs (user:pass@localhost) and a perl var named *_password.
+filter = '''
+finding["match"] contains "localhost"
+|| finding["match"] contains "nmcli"
+'''
+
+[extend]
+useDefault = true

@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+# Blocks commits that would add a secret to history. Scans the staged diff only.
+# Fails closed: no betterleaks, no commit. (`mise install`)
+set -eu
+
+command -v betterleaks >/dev/null || { echo "pre-commit: betterleaks not installed, refusing to commit"; exit 1; }
+
+betterleaks git --no-banner --redact -v --pre-commit --staged . || {
+  echo "pre-commit: secret detected in staged changes, commit blocked."
+  exit 1
+}

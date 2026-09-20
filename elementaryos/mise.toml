@@ -10,6 +10,7 @@ lazydocker = "latest"
 mermaid-ascii = "latest"
 nub = "latest"
 infisical = "latest"
+"github:betterleaks/betterleaks" = { version = "latest", asset_pattern = "betterleaks_{{version}}_linux_x64.tar.gz" }
 # Not bare `hunkdiff`: the registry alias is aqua and ships the bin as hunkdiff-linux-x64.
 "npm:hunkdiff" = "latest"
 "npm:@plannotator/tot" = "latest"

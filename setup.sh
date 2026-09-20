@@ -66,6 +66,9 @@ if [[ $? != 0 ]]; then
   exit 1
 fi
 
+# Repo-tracked hooks (pre-push secret scan). core.hooksPath isn't cloned, so set it here.
+git -C $HOME/.dotfiles config core.hooksPath .githooks
+
 # Install all tools and run setup tasks
 cd $HOME/.dotfiles/elementaryos
 

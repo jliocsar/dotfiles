@@ -1,0 +1,24 @@
+#!/usr/bin/env sh
+# Blocks pushes that would publish a secret. Scans only the commits the remote
+# doesn't have yet. Fails closed: no betterleaks, no push. (`mise install betterleaks`)
+set -eu
+
+command -v betterleaks >/dev/null || { echo "pre-push: betterleaks not installed, refusing to push"; exit 1; }
+
+zero=0000000000000000000000000000000000000000
+while read -r local_ref local_sha remote_ref remote_sha; do
+  # Deleting a remote branch pushes nothing.
+  [ "$local_sha" = "$zero" ] && continue
+
+  if [ "$remote_sha" = "$zero" ]; then
+    # New branch: everything reachable locally that no remote already has.
+    range="$local_sha --not --remotes"
+  else
+    range="$remote_sha..$local_sha"
+  fi
+
+  betterleaks git --no-banner --redact -v --log-opts="$range" . || {
+    echo "pre-push: secret detected, push blocked. run: betterleaks git --log-opts='$range' ."
+    exit 1
+  }
+done

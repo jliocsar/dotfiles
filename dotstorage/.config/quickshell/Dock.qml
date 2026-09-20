@@ -4,8 +4,9 @@ import Quickshell.Wayland
 import Quickshell.Widgets
 
 // Bottom launcher pill. Reserves its height (windows stop above it). While the focused
-// window is maximized (Mod+M) it gives that space back and slides below the screen edge;
-// the window stays mapped so the slide can animate, with the mask keeping it click-through.
+// window is maximized (Mod+M) it gives that space back and slides below the screen edge.
+// The window stays mapped, masked down to a 2px strip on the screen edge: resting the
+// cursor there peeks the dock back over the maximized window until the cursor leaves.
 PanelWindow {
     id: dock
 
@@ -35,16 +36,18 @@ PanelWindow {
         "io.elementary.monitor"
     ]
 
-    readonly property bool hidden: Niri.focusedMaximized
+    readonly property int edgeGap: 6
+    property bool peeking: false
+    readonly property bool hidden: Niri.focusedMaximized && !peeking
 
     anchors.bottom: true
-    margins.bottom: 6
     implicitWidth: pill.width
-    implicitHeight: pill.height
+    // The gap below the pill is part of the surface so the peek strip sits on the screen edge.
+    implicitHeight: pill.height + edgeGap
     exclusionMode: ExclusionMode.Normal
-    exclusiveZone: hidden ? 0 : pill.height
+    exclusiveZone: Niri.focusedMaximized ? 0 : pill.height + edgeGap
     color: "transparent"
-    mask: Region { item: pill }
+    mask: Region { item: dock.hidden ? peekStrip : dock.peeking ? dock.contentItem : pill }
     // Blur follows the pill (ext-background-effect), so it slides out with it instead of
     // niri blurring the whole surface rect. Regions are rect unions with no rounded-rect
     // shape, so the pill is a cross of two rects plus a circle in each corner.
@@ -64,7 +67,26 @@ PanelWindow {
         ]
     }
     WlrLayershell.namespace: "qs-dock"
-    visible: !hidden || slide.running
+
+    // Hover covers the whole surface so the dock stays peeked while the cursor rides the edge.
+    HoverHandler {
+        id: hover
+        parent: dock.contentItem
+        onHoveredChanged: if (!hovered) dock.peeking = false
+    }
+    // Rest on the edge for a beat before peeking, so scrolling to the bottom of a
+    // maximized window doesn't summon the dock.
+    Timer {
+        interval: 200
+        running: hover.hovered && Niri.focusedMaximized && !dock.peeking
+        onTriggered: dock.peeking = true
+    }
+    Item {
+        id: peekStrip
+        anchors.bottom: parent.bottom
+        width: parent.width
+        height: 2
+    }
 
     Rectangle {
         id: pill
@@ -72,7 +94,7 @@ PanelWindow {
         height: icons.height + 12
         radius: 18
         color: Theme.bgPanel
-        y: dock.hidden ? height + dock.margins.bottom : 0
+        y: dock.hidden ? dock.height : 0
         Behavior on y { NumberAnimation { id: slide; duration: Theme.dockSlideMs; easing.type: Easing.InOutCubic } }
         border.color: Theme.border
         border.width: 1
@@ -115,7 +137,7 @@ PanelWindow {
                         anchor.margins.top: 0
                         anchor.margins.bottom: 10
                         text: launcher.entry?.name ?? ""
-                        shown: mouse.containsMouse
+                        shown: mouse.containsMouse && !slide.running
                     }
                 }
             }

@@ -57,4 +57,9 @@ cmake="$(mise -C "$HOME/.dotfiles/elementaryos" which cmake)"
 sudo "$cmake" --install quickshell/build
 
 rm -rf quickshell wayland-shim
+
+# quickshell replaces waybar as the bar; the niri task installs waybar and its unit is
+# enabled system-wide, so mask it or both bars come up at login.
+systemctl --user mask waybar
+systemctl --user enable quickshell
 echo "[system] Done: $(/usr/local/bin/qs --version -v | head -3)"
