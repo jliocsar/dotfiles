@@ -121,7 +121,7 @@ overview {
 blur {
     passes 3
     offset 3.0
-    noise 0.02
+    noise 0.05
     saturation 1.2
 }
 
@@ -202,7 +202,7 @@ layout {
         // off
 
         // How many logical pixels the ring extends out from the windows.
-        width 2
+        width 1
 
         // Colors can be set in a variety of ways:
         // - CSS named colors: "red"
@@ -240,11 +240,11 @@ layout {
     border {
         // The settings are the same as for the focus ring.
         // If you enable the border, you probably want to disable the focus ring.
-        off
+        on
 
-        width 4
+        width 1
         active-color "#74ade8"
-        inactive-color "#32363e"
+        inactive-color "#3a3f47"
 
         // Color of the border around windows that request your attention.
         urgent-color "#d07277"
@@ -319,7 +319,8 @@ layout {
 // spawn-sh-at-startup "qs -c ~/source/qs/MyAwesomeShell"
 
 // Wallpaper. The `theme` command restarts swaybg with the light/dark image on every flip.
-spawn-at-startup "swaybg" "-m" "fill" "-i" "/usr/share/backgrounds/odin-dark.jpg"
+//spawn-at-startup "swaybg" "-m" "fill" "-i" "/usr/share/backgrounds/odin-dark.jpg"
+spawn-at-startup "swaybg" "-m" "fill" "-i" ""
 
 hotkey-overlay {
     // Uncomment this line to disable the "Important Hotkeys" pop-up at startup.
@@ -389,9 +390,17 @@ window-rule {
 
 // Example: enable rounded corners for all windows.
 
+// Rounded corners everywhere, plus frosted glass behind translucent windows
+// (ghostty runs at background-opacity 0.9). Opaque windows are unaffected.
 window-rule {
     geometry-corner-radius 12
     clip-to-geometry true
+    // GTK clients (ghostty) report CSD, so niri would draw the focus ring
+    // behind the window and it'd tint translucent backgrounds blue.
+    draw-border-with-background false
+    background-effect {
+        blur true
+    }
 }
 
 binds {

@@ -5,6 +5,7 @@ keybind = ctrl+shift+k=toggle_tab_overview
 # Delta's bundled theme. Background is Delta's editor bg, not Zed's terminal bg.
 theme = light:Delta One Light,dark:Delta One Dark
 background = 191c1f
+background-opacity = 0.8
 #background = fafafa
 # Zenbones
 #theme = light:Zenbones Light,dark:Zenbones Dark
