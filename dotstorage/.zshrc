@@ -1,15 +1,19 @@
 export ZSH="$HOME/.oh-my-zsh"
 export EDITOR="nvim"
 
-if [[ -z "$(herdr session list --json | jq '.sessions[0].name')" ]]; then
-  exec herdr
-elif [[ -z "$HERDR_ENV" ]]; then
-  echo "herdr is already running"
-fi
-
 # mise — manages tool installs + PATH (node, bun, rust, gcloud, flyctl, neovim, ...).
 # Full path because ~/.local/bin isn't on PATH yet at this point in the file.
 eval "$($HOME/.local/bin/mise activate zsh)"
+
+# herdr must come after mise: on a fresh login (ssh) PATH doesn't have it yet,
+# and `exec` of a missing command kills the shell.
+if command -v herdr >/dev/null 2>&1; then
+  if [[ -z "$(herdr session list --json 2>/dev/null | jq -r '.sessions[0].name // empty')" ]]; then
+    exec herdr
+  elif [[ -z "$HERDR_ENV" ]]; then
+    echo "herdr is already running"
+  fi
+fi
 
 # Theme
 ZSH_THEME="lambda"
