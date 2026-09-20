@@ -66,9 +66,9 @@ const TaskRow = (props: { readonly open: OpenTask }) => (
 
 const SignOut = () => (
   <form method="post" action="/logout" hx-boost="false">
-    <button type="submit" class="btn" data-variant="ghost">
+    <button type="submit" class="btn" data-variant="ghost" aria-label="Sign out">
       <Icon name="log-out" />
-      Sign out
+      <span class="hidden sm:inline">Sign out</span>
     </button>
   </form>
 )
@@ -96,7 +96,7 @@ export const HomePage = Effect.fn('HomePage')(function* (props: {
       <Page
         crumbs={
           <nav
-            class="flex h-7 items-center gap-2.5 text-xs font-medium text-muted-foreground"
+            class="flex h-7 items-center gap-2 text-xs font-medium whitespace-nowrap text-muted-foreground sm:gap-2.5"
             aria-label="Sections"
           >
             {NAV.map((section, index) => (
@@ -108,7 +108,7 @@ export const HomePage = Effect.fn('HomePage')(function* (props: {
                 >
                   <Icon
                     name={section.type}
-                    class={section.type === 'artifact' ? 'size-3.5 shrink-0' : 'size-4 shrink-0'}
+                    class={`hidden shrink-0 sm:block ${section.type === 'artifact' ? 'size-3.5' : 'size-4'}`}
                   />
                   {section.label}
                 </a>
@@ -119,10 +119,15 @@ export const HomePage = Effect.fn('HomePage')(function* (props: {
         actions={<SignOut />}
         heading={heading}
         meta={
-          <span class="flex items-center gap-1.5">
+          <button
+            type="button"
+            class="flex items-center gap-1.5 transition-colors hover:text-foreground"
+            data-search
+          >
             <kbd class="kbd rounded-sm">ctrl k</kbd>
+            <Icon name="search" class="hidden size-3.5 pointer-coarse:block" />
             jump anywhere
-          </span>
+          </button>
         }
       >
         <div class="grid grid-cols-1 items-start gap-x-10 sm:grid-cols-2">

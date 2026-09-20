@@ -270,6 +270,8 @@ a[data-missing] {
   margin: 0;
   padding: 0;
   border-top: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 
 .command-scopes .mention-tabs span {
@@ -367,5 +369,20 @@ a[data-missing] {
 @media (prefers-reduced-motion: reduce) {
   .command-slab {
     transition: none;
+  }
+}
+
+/* Touch: no keyboard, so shortcut hints go; text fields sit at 16px so iOS doesn't zoom into them. */
+@media (pointer: coarse) {
+  .kbd,
+  .command-hint,
+  .command > footer {
+    display: none;
+  }
+
+  input:not([type='checkbox']):not([type='radio']),
+  textarea,
+  .cm-content {
+    font-size: max(16px, 1em);
   }
 }

@@ -72,13 +72,13 @@ const TITLE_INPUT = 'w-full bg-transparent outline-none placeholder:text-muted-f
 const NEW_BUTTON = 'btn ml-auto border-transparent'
 
 const SHARE_PANEL = [
-  'fixed inset-auto m-0 w-[400px] rounded-lg border bg-background p-1 text-xs text-muted-foreground shadow-lg',
-  '[position-anchor:--share] [top:calc(anchor(bottom)+6px)] [right:anchor(right)]',
+  'fixed inset-auto m-0 w-[400px] max-w-[calc(100vw-2rem)] rounded-lg border bg-background p-1 text-xs text-muted-foreground shadow-lg',
+  '[position-anchor:--share] [top:calc(anchor(bottom)+6px)] [right:anchor(right)] [position-try-fallbacks:flip-inline]',
 ].join(' ')
 
 const MEETING_PANEL = [
-  'fixed inset-auto m-0 w-[360px] rounded-lg border bg-background p-1 text-xs text-muted-foreground shadow-lg',
-  '[position-anchor:--meeting] [top:calc(anchor(bottom)+6px)] [right:anchor(right)]',
+  'fixed inset-auto m-0 w-[360px] max-w-[calc(100vw-2rem)] rounded-lg border bg-background p-1 text-xs text-muted-foreground shadow-lg',
+  '[position-anchor:--meeting] [top:calc(anchor(bottom)+6px)] [right:anchor(right)] [position-try-fallbacks:flip-inline]',
 ].join(' ')
 
 const SHARE_ROW =
@@ -104,7 +104,7 @@ const TAG_MORE = [
 
 const TAG_PANEL = [
   'fixed inset-auto m-0 w-[240px] rounded-lg border bg-background p-0 text-[13px] shadow-lg',
-  '[position-anchor:--tags] [top:calc(anchor(bottom)+6px)]',
+  '[position-anchor:--tags] [top:calc(anchor(bottom)+6px)] [position-try-fallbacks:flip-inline]',
 ].join(' ')
 
 // `relative` keeps each row's sr-only checkbox inside the row; otherwise it's placed
@@ -182,7 +182,7 @@ export const Page = (props: {
     <h1 class="mb-2.5 font-serif text-[34px] leading-[39px] font-normal tracking-[-0.01em]">
       {props.heading}
     </h1>
-    <div class="mb-6 flex min-h-[42px] items-center gap-2.5 border-b text-xs text-muted-foreground">
+    <div class="mb-6 flex min-h-[42px] flex-wrap items-center gap-x-2.5 gap-y-1 border-b py-1.5 text-xs whitespace-nowrap text-muted-foreground sm:py-0">
       {props.meta}
     </div>
     {props.children}
@@ -312,7 +312,7 @@ const EntryRow = (props: { readonly entry: Entry; readonly currentYear: number }
     <span class="flex min-w-0 items-center gap-2.5">
       <span class="min-w-0 truncate">{titleOf(props.entry)}</span>
       {props.entry.tags.length === 0 ? null : (
-        <span class="flex min-w-0 items-center gap-1 overflow-hidden">
+        <span class="hidden min-w-0 items-center gap-1 overflow-hidden sm:flex">
           {props.entry.tags.map((tag) => (
             <TagPill tag={tag} />
           ))}
@@ -445,8 +445,10 @@ export const ListPage = Effect.fn('ListPage')(function* (props: {
               {listed.length} {props.section.noun}
               {listed.length === 1 ? '' : 's'}
             </span>
-            <Dot />
-            <span>Newest first</span>
+            <span class="hidden items-center gap-2.5 sm:flex">
+              <Dot />
+              <span>Newest first</span>
+            </span>
             {props.section.type === 'artifact' ? (
               <button
                 type="button"
@@ -788,7 +790,7 @@ const TagsPanel = (props: { readonly entry: Entry; readonly options: readonly Ta
         Create <b class="font-medium text-foreground" data-tag-create-name />
       </span>
     </button>
-    <div class="flex h-7 items-center gap-2.5 border-t px-2.5 text-[11px] text-muted-foreground">
+    <div class="flex h-7 items-center gap-2.5 border-t px-2.5 text-[11px] text-muted-foreground pointer-coarse:hidden">
       <span>
         <kbd class="kbd rounded-sm dark:bg-foreground/10">↵</kbd> toggle
       </span>
@@ -948,7 +950,7 @@ export const EntryPage = Effect.fn('EntryPage')(function* (props: {
               )}
               <span class="whitespace-nowrap">Edited {shortDate(entry, currentYear)}</span>
               <TagPills entry={entry} />
-              <div class="ml-auto flex items-center gap-1.5">
+              <div class="flex w-full flex-wrap items-center gap-1.5 sm:ml-auto sm:w-auto">
                 <span class="text-[11.5px] text-muted-foreground/60 tabular-nums" data-status />
                 <button
                   type="button"

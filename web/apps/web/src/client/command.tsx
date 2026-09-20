@@ -239,6 +239,11 @@ const run = Effect.fn('runCommand')(function* (palette: Palette) {
     Option.map(Option.liftPredicate(event, wantsToggle), (hit) => claim(hit, toggle)),
   )
 
+  // Touch has no ctrl+k; anything marked `data-search` opens the palette on click.
+  const opens = capture(document, 'click', (event) =>
+    Option.map(closestData(event.target, 'search'), () => claim(event, open)),
+  )
+
   const keys = capture(palette.dialog, 'keydown', (event) =>
     Option.map(
       Option.fromUndefinedOr(event instanceof KeyboardEvent ? actions.get(event.key) : undefined),
@@ -286,6 +291,7 @@ const run = Effect.fn('runCommand')(function* (palette: Palette) {
 
   yield* Stream.mergeAll({ concurrency: 'unbounded' })([
     toggles,
+    opens,
     keys,
     clicks,
     hovers,

@@ -126,6 +126,9 @@ const markdownHighlight = HighlightStyle.define([
 
 const IDLE_SAVE = '2 seconds'
 
+// Touch screens have no real keyboard, so vim is a plain editor there.
+const TOUCH = matchMedia('(pointer: coarse)')
+
 const CONFLICT_RETRIES = 2
 
 const saveEndpoint = Effect.flatMap(HttpClient.HttpClient, (httpClient) =>
@@ -406,7 +409,7 @@ const mountEditor = Effect.fn('mountEditor')(function* (elements: EditorElements
         new EditorView({
           doc: source.value,
           extensions: [
-            vim({ status: true }),
+            ...(TOUCH.matches ? [] : [vim({ status: true })]),
             minimalSetup,
             markdown(),
             syntaxHighlighting(markdownHighlight),
