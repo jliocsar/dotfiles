@@ -320,7 +320,7 @@ layout {
 
 // Wallpaper. The `theme` command restarts swaybg with the light/dark image on every flip.
 //spawn-at-startup "swaybg" "-m" "fill" "-i" "/usr/share/backgrounds/odin-dark.jpg"
-spawn-at-startup "swaybg" "-m" "fill" "-i" ""
+spawn-at-startup "swaybg" "-m" "fill" "-i" "/home/jliocsar/Pictures/Wallpapers/macos-muted-05.png"
 
 hotkey-overlay {
     // Uncomment this line to disable the "Important Hotkeys" pop-up at startup.
