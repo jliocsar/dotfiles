@@ -194,7 +194,10 @@ function renderCallgraph(lines: string[], theme: Theme): string[] {
   const parsed = lines.map(parseDiffLine);
   const hasDiffGutter = parsed.some(({ kind }) => kind !== "context");
   return parsed.map(({ kind, content }) => {
-    const line = (hasDiffGutter ? marker[kind] : "") + styleGraphContent(content, colors);
+    // Context rows in a marked graph are usually written with two leading
+    // spaces to line up with "+ " rows; the gutter replaces that indent.
+    const body = hasDiffGutter && kind === "context" && content.startsWith("  ") ? content.slice(2) : content;
+    const line = (hasDiffGutter ? marker[kind] : "") + styleGraphContent(body, colors);
     const hex = lineBg[kind];
     return hex ? bg(hex, line) : line;
   });
