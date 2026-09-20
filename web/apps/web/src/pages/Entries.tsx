@@ -170,7 +170,7 @@ export const Page = (props: {
   readonly children?: Node
 }) => (
   <main
-    class={`mx-auto max-w-[1000px] px-4 pt-10 sm:px-8 ${props.fill === true ? 'flex min-h-dvh flex-col pb-10' : 'pb-24'}`}
+    class={`mx-auto max-w-[1000px] px-4 pt-[calc(2.5rem+env(safe-area-inset-top))] sm:px-8 ${props.fill === true ? 'flex min-h-dvh flex-col pb-[calc(2.5rem+env(safe-area-inset-bottom))]' : 'pb-[calc(6rem+env(safe-area-inset-bottom))]'}`}
   >
     <div class="mb-10 flex h-7 items-center justify-between">
       {props.crumbs ?? <BackLink back={props.back} />}

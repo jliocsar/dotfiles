@@ -140,7 +140,7 @@ export const HomePage = Effect.fn('HomePage')(function* (props: {
               <RecentRow entry={entry} currentYear={currentYear} />
             ))}
           </section>
-          <section>
+          <section class="mt-[22px] sm:mt-0">
             <GroupLabel>
               <span>Open tasks</span>
               <a
