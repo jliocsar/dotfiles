@@ -79,7 +79,7 @@ The following are canonical tools and must be used with top-most priority:
 - Use `ast-grep` for complex or large refactors.
 - Use `plannotator` for plans and diffs reviewing.
 - Use `slack_notify_user` when the user asks to "ping" or "notify" them.
-- Use `executor` to search for more available tools.
+- Use `executor` to search for more available tools such as Slack, Linear and other MCPs.
 
 ## Linking local files
 
