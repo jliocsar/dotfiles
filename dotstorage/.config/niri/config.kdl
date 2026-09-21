@@ -121,7 +121,7 @@ overview {
 blur {
     passes 3
     offset 3.0
-    noise 0.05
+    noise 0.02
     saturation 1.2
 }
 
@@ -321,6 +321,11 @@ layout {
 // Wallpaper. The `theme` command restarts swaybg with the light/dark image on every flip.
 //spawn-at-startup "swaybg" "-m" "fill" "-i" "/usr/share/backgrounds/odin-dark.jpg"
 spawn-at-startup "swaybg" "-m" "fill" "-i" "/home/jliocsar/Pictures/Wallpapers/macos-muted-05.png"
+
+// Java AWT (RuneLite etc) mis-sizes its canvas under xwayland-satellite unless told the WM is non-reparenting.
+environment {
+    _JAVA_AWT_WM_NONREPARENTING "1"
+}
 
 hotkey-overlay {
     // Uncomment this line to disable the "Important Hotkeys" pop-up at startup.

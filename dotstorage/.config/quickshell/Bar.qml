@@ -36,9 +36,12 @@ PanelWindow {
         }
     }
 
+    // Background only shows behind a maximized window; otherwise the bar floats over the wallpaper.
     Rectangle {
         anchors.fill: parent
         color: Theme.bgPanel
+        opacity: Niri.focusedMaximized ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: Theme.dockSlideMs; easing.type: Easing.InOutCubic } }
 
         Rectangle {
             anchors.bottom: parent.bottom
