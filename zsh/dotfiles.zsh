@@ -93,7 +93,9 @@ dotfiles_custom_claude() {
 
   _claude \
     --enable-auto-mode \
+    --allow-dangerously-skip-permissions \
     --permission-mode auto \
+    --model opus \
     --effort high \
     --disallowed-tools ${disallowed_tools[@]} \
     --system-prompt "$system_prompt" \

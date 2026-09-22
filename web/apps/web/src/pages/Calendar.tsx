@@ -1,3 +1,4 @@
+import { raw } from '@dotfiles/jsx'
 import type { Node } from '@dotfiles/jsx'
 import * as DateTime from 'effect/DateTime'
 import * as Effect from 'effect/Effect'
@@ -156,10 +157,30 @@ export const TodayFragment = Effect.fn('TodayFragment')(function* (props: {
   )
 })
 
+const CALENDAR_CACHE_KEY = 'calendar:today'
+
+/** Drops the cached calendar so event titles don't outlive the session. */
+export const CLEAR_CALENDAR_CACHE = `localStorage.removeItem('${CALENDAR_CACHE_KEY}')`
+
+// Stale-while-revalidate: paint today's last fetched calendar right away,
+// then htmx's load request swaps fresh HTML over it and refreshes the cache.
+const TODAY_CACHE_BOOT = `(() => {
+  const calendar = document.currentScript.previousElementSibling
+  const today = new Date().toDateString()
+  const cached = JSON.parse(localStorage.getItem('${CALENDAR_CACHE_KEY}'))
+  if (cached?.day === today) calendar.innerHTML = cached.html
+  calendar.addEventListener('htmx:afterSwap', () => {
+    localStorage.setItem('${CALENDAR_CACHE_KEY}', JSON.stringify({ day: today, html: calendar.innerHTML }))
+  })
+})()`
+
 export const TodayPlaceholder = () => (
-  <div hx-get="/calendar/today" hx-trigger="load" hx-swap="outerHTML">
-    <Empty>Loading calendar…</Empty>
-  </div>
+  <>
+    <div hx-get="/calendar/today" hx-trigger="load" hx-swap="innerHTML">
+      <Empty>Loading calendar…</Empty>
+    </div>
+    <script>{raw(TODAY_CACHE_BOOT)}</script>
+  </>
 )
 
 /** The §3.3 picker: today's events, click one to retitle and re-snapshot the note. */

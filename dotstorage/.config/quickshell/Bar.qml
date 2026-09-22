@@ -51,6 +51,21 @@ PanelWindow {
         }
     }
 
+    // Scrolling anywhere on the bar moves focus between columns. Declared before
+    // the indicators so their own wheel handlers (volume, calendar) still win.
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.NoButton
+        // Touchpads emit many tiny deltas; only act once a full notch (120) accumulates.
+        property int pendingDelta: 0
+        onWheel: wheel => {
+            pendingDelta += wheel.angleDelta.y;
+            if (Math.abs(pendingDelta) < 120) return;
+            Quickshell.execDetached(["niri", "msg", "action", pendingDelta < 0 ? "focus-column-right" : "focus-column-left"]);
+            pendingDelta = 0;
+        }
+    }
+
     SystemClock {
         id: clock
         precision: SystemClock.Minutes
@@ -214,6 +229,7 @@ PanelWindow {
                 model: SystemTray.items
 
                 IconImage {
+                    id: trayIcon
                     required property SystemTrayItem modelData
                     anchors.verticalCenter: parent.verticalCenter
                     implicitSize: 20
@@ -224,14 +240,23 @@ PanelWindow {
                         acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
                         cursorShape: Qt.PointingHandCursor
                         onClicked: mouse => {
-                            if (mouse.button === Qt.RightButton || modelData.onlyMenu) {
-                                modelData.display(bar, bar.contentItem.mapFromItem(parent, 0, parent.height).x, Theme.barHeight);
+                            // Apps that ship no Activate method (most libappindicator
+                            // ones) only ever have their menu to offer.
+                            const menuOnly = trayIcon.modelData.onlyMenu || mouse.button === Qt.RightButton;
+                            if (menuOnly && trayIcon.modelData.hasMenu) {
+                                trayMenu.visible = !trayMenu.visible;
                             } else if (mouse.button === Qt.MiddleButton) {
-                                modelData.secondaryActivate();
-                            } else {
-                                modelData.activate();
+                                trayIcon.modelData.secondaryActivate();
+                            } else if (mouse.button === Qt.LeftButton) {
+                                trayIcon.modelData.activate();
                             }
                         }
+                    }
+
+                    TrayMenu {
+                        id: trayMenu
+                        anchorItem: trayIcon
+                        item: trayIcon.modelData
                     }
                 }
             }

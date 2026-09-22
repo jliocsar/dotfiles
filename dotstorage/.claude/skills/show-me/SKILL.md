@@ -1,7 +1,6 @@
 ---
 name: show-me
 description: Help the user understand the current topic visually with concise diagrams, code-shape sketches, and focused HTML artifacts.
-disable-model-invocation: true
 ---
 
 Help the user understand the current topic of conversation visually. Skip the preamble and keep prose brief. Pick the smallest view that makes the key point clear.
@@ -16,14 +15,14 @@ on(save)
   return fresh result
 ```
 
-- Show runtime control flow as a call tree:
+- Show runtime control flow as a call graph in a `claude-code-callgraph` block. It renders natively in Claude Code with syntax colors, so never use `text` or `diff` for call trees. Conventions: an `entry` line for the root, tree glyphs for callees, a signature with `→` return type, and two spaces before a trailing `path:line`, `path (new)`, or `(external)`:
 
-```text
-submitForm
-  createSession
-    persistPrompt
-    launchAgent
-  navigateToSession
+```claude-code-callgraph
+entry  submitForm(input: FormInput) → Promise<Session>  src/routes/session.tsx:12
+├── createSession(input)  src/sessions/create.ts:4
+│   ├── persistPrompt(prompt: string)  src/sessions/persist.ts:9
+│   └── launchAgent(session: Session)  src/agents/launch.ts:40
+└── navigateToSession()  (external)
 ```
 
 - Show UI structure as a component tree, including state and module boundaries that matter:
@@ -82,17 +81,17 @@ For a file-layout change:
 +    └── stream.ts
 ```
 
-For a call-tree or call-stack change:
+For a call-graph or call-stack change, keep the `claude-code-callgraph` block and mark rows with `+ ` added, `! ` changed, `- ` removed, unmarked for context:
 
-```diff
- submitForm
-   createSession
-     persistPrompt
-+    expandSkillMention
-     launchAgent
--  navigateToSession
-+  navigateToSession
-+    subscribeToEvents
+```claude-code-callgraph
+entry  submitForm(input: FormInput) → Promise<Session>  src/routes/session.tsx:12
+  ├── createSession(input)  src/sessions/create.ts:4
++ │   ├── expandSkillMention(text: string)  src/skills/expand.ts (new)
+  │   ├── persistPrompt(prompt: string)  src/sessions/persist.ts:9
+! │   └── launchAgent(session: Session, skills: Skill[])  src/agents/launch.ts:40
+- └── navigateToSession()  (external)
++ └── navigateToSession()  src/routes/navigate.ts:3
++     └── subscribeToEvents(session: Session)  src/events/subscribe.ts:15
 ```
 
 For a state or control-flow change:

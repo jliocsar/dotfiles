@@ -4,10 +4,14 @@ Personal agent skills. Symlinked into `~/.claude/skills/` and friends.
 
 ## Vendored skills
 
-Some skills here started as copies of someone else's and were patched for this
-setup. For each one, `SKILL.md.diff` next to it is `diff -u upstream local`:
-the exact set of changes we own, so it's always clear what to carry over when
-upstream moves.
+Some skills come from someone else's repo and are patched for this setup. Those
+are split in two:
+
+- `~/.agents/skills/<skill>/` is the raw upstream copy, untouched.
+- `~/.claude/skills/<skill>/` is a real directory (not a symlink) with the
+  patched `SKILL.md`, plus `SKILL.md.diff` (`diff -u upstream local`): the
+  exact set of changes we own, so it's always clear what to carry over when
+  upstream moves.
 
 | skill     | upstream                                                                                           |
 | --------- | -------------------------------------------------------------------------------------------------- |
@@ -15,13 +19,15 @@ upstream moves.
 
 ### Updating a vendored skill
 
-1. Fetch the current upstream file, e.g.
-   `curl -sfL https://raw.githubusercontent.com/humanlayer/skills/main/plugins/show-me/skills/show-me/SKILL.md -o tmp/upstream.md`
-2. Merge: apply `SKILL.md.diff` on top of the new upstream file
-   (`patch tmp/upstream.md SKILL.md.diff`), fix any rejected hunks by hand,
-   and copy the result over `SKILL.md`.
+Run from `dotstorage/`:
+
+1. Fetch the current upstream file over the raw copy, e.g.
+   `curl -sfL https://raw.githubusercontent.com/humanlayer/skills/main/plugins/show-me/skills/show-me/SKILL.md -o .agents/skills/show-me/SKILL.md`
+2. Merge: apply the diff on top of the new upstream file
+   (`patch -o .claude/skills/show-me/SKILL.md .agents/skills/show-me/SKILL.md .claude/skills/show-me/SKILL.md.diff`),
+   and fix any rejected hunks by hand.
 3. Regenerate the diff so it stays honest:
-   `diff -u --label upstream/SKILL.md --label local/SKILL.md tmp/upstream.md show-me/SKILL.md > show-me/SKILL.md.diff`
+   `diff -u --label upstream/SKILL.md --label local/SKILL.md .agents/skills/show-me/SKILL.md .claude/skills/show-me/SKILL.md > .claude/skills/show-me/SKILL.md.diff`
 
 ### show-me
 
