@@ -11,8 +11,8 @@
     "css": "tailwindcss -i src/styles/app.css -o public/app.css --minify",
     "css:watch": "tailwindcss -i src/styles/app.css -o public/app.css --watch",
     "build": "bun run fonts && bun run css && bun run js",
-    "js": "bun build src/client/editor.ts --outdir public --minify",
-    "js:watch": "bun build src/client/editor.ts --outdir public --watch",
+    "js": "bun build src/client/editor.ts --outdir public --minify && bun build src/client/calendar.ts --outdir public --format iife --minify",
+    "js:watch": "bun build src/client/editor.ts --outdir public --watch & bun build src/client/calendar.ts --outdir public --format iife --watch",
     "deploy": "bun --env-file=.env alchemy deploy --stage prod"
   },
   "dependencies": {

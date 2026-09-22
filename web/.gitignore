@@ -4,6 +4,7 @@ apps/web/app.db*
 
 tsconfig.tsbuildinfo
 apps/web/public/editor.js
+apps/web/public/calendar.js
 apps/web/public/files
 apps/web/.env
 

@@ -9,7 +9,7 @@ import { Calendar } from '../services/Calendar.ts'
 import { Entries } from '../services/Entries.ts'
 import { parseTasks } from '../tasks.ts'
 import type { Task } from '../tasks.ts'
-import { AccountsBlock, CLEAR_CALENDAR_CACHE, Empty, TodayPlaceholder } from './Calendar.tsx'
+import { AccountsBlock, Empty, TodayPlaceholder } from './Calendar.tsx'
 import { Dot, GroupLabel, Page, ROW, shortDate, titleOf } from './Entries.tsx'
 
 interface OpenTask {
@@ -65,7 +65,7 @@ const TaskRow = (props: { readonly open: OpenTask }) => (
 )
 
 const SignOut = () => (
-  <form method="post" action="/logout" hx-boost="false" onsubmit={CLEAR_CALENDAR_CACHE}>
+  <form method="post" action="/logout" hx-boost="false" data-sign-out>
     <button type="submit" class="btn" data-variant="ghost" data-size="icon" aria-label="Sign out">
       <Icon name="log-out" />
     </button>
