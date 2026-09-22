@@ -5,36 +5,31 @@ declare const htmx: {
   ajax(verb: 'GET', path: string, context: { target: Element; swap: 'innerHTML' }): Promise<void>
 }
 
-interface CachedCalendar {
-  readonly day: string
-  readonly html: string
-}
+const CACHED_DAY_KEY = 'calendar:day'
 
-const CACHE_KEY = 'calendar:today'
+const CACHED_HTML_KEY = 'calendar:html'
 
-const today = new Date().toDateString()
-
-const readCache = (): CachedCalendar | null => JSON.parse(localStorage.getItem(CACHE_KEY) ?? 'null')
-
-const calendar = document.querySelector('[data-calendar-today]')
+const calendar = document.querySelector<HTMLElement>('[data-calendar-today]')
 
 if (calendar !== null) {
-  const cached = readCache()
+  // The server's "today" in the user's zone, so yesterday's meetings never show.
+  const today = calendar.dataset.day ?? ''
+  const cachedHtml = localStorage.getItem(CACHED_HTML_KEY)
 
-  if (cached?.day === today) {
-    calendar.innerHTML = cached.html
+  if (cachedHtml !== null && localStorage.getItem(CACHED_DAY_KEY) === today) {
+    calendar.innerHTML = cachedHtml
   }
 
   calendar.addEventListener('htmx:afterSwap', () => {
-    const cached: CachedCalendar = { day: today, html: calendar.innerHTML }
-
-    localStorage.setItem(CACHE_KEY, JSON.stringify(cached))
+    localStorage.setItem(CACHED_DAY_KEY, today)
+    localStorage.setItem(CACHED_HTML_KEY, calendar.innerHTML)
   })
 
   void htmx.ajax('GET', '/calendar/today', { target: calendar, swap: 'innerHTML' })
 }
 
 // Event titles shouldn't outlive the session.
-document
-  .querySelector('[data-sign-out]')
-  ?.addEventListener('submit', () => localStorage.removeItem(CACHE_KEY))
+document.querySelector('[data-sign-out]')?.addEventListener('submit', () => {
+  localStorage.removeItem(CACHED_DAY_KEY)
+  localStorage.removeItem(CACHED_HTML_KEY)
+})

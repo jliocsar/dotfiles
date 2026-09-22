@@ -83,7 +83,8 @@ export const HomePage = Effect.fn('HomePage')(function* (props: {
   const open = openTasksOf(lists)
   const now = yield* DateTime.now
   const currentYear = DateTime.getPartUtc(now, 'year')
-  const heading = DateTime.format(DateTime.setZone(now, props.zone), {
+  const zonedNow = DateTime.setZone(now, props.zone)
+  const heading = DateTime.format(zonedNow, {
     locale: 'en',
     weekday: 'long',
     month: 'long',
@@ -132,7 +133,7 @@ export const HomePage = Effect.fn('HomePage')(function* (props: {
         <div class="grid grid-cols-1 items-start gap-x-10 sm:grid-cols-2">
           <section>
             <GroupLabel>Calendar</GroupLabel>
-            <TodayPlaceholder />
+            <TodayPlaceholder day={DateTime.formatIsoDate(zonedNow)} />
             <GroupLabel>Recent</GroupLabel>
             {recent.length === 0 ? <Empty>Nothing yet</Empty> : null}
             {recent.map((entry) => (

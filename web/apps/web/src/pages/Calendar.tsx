@@ -157,9 +157,9 @@ export const TodayFragment = Effect.fn('TodayFragment')(function* (props: {
 })
 
 /** Filled by /assets/calendar.js, which paints the cached calendar and then fetches fresh. */
-export const TodayPlaceholder = () => (
+export const TodayPlaceholder = (props: { readonly day: string }) => (
   <>
-    <div data-calendar-today>
+    <div data-calendar-today data-day={props.day}>
       <Empty>Loading calendar…</Empty>
     </div>
     <script src="/assets/calendar.js" defer />
