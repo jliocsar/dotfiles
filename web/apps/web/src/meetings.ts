@@ -7,13 +7,11 @@ import type { CalendarEvent, Entry, EntryId } from './domain.ts'
 import { Calendar } from './services/Calendar.ts'
 import { Entries } from './services/Entries.ts'
 
-/** A calendar event paired with the live meeting note created from it, if any. */
 export interface Slot {
   readonly event: CalendarEvent
   readonly note: Entry | undefined
 }
 
-// §3.2: an event counts as "now" if it overlaps [now - grace, now + grace].
 const GRACE = '10 minutes'
 
 const millis = DateTime.toEpochMillis
@@ -21,7 +19,6 @@ const millis = DateTime.toEpochMillis
 const closestTo = (now: DateTime.Utc) => (left: CalendarEvent, right: CalendarEvent) =>
   Math.abs(millis(left.start) - millis(now)) - Math.abs(millis(right.start) - millis(now))
 
-/** Today's events in the user's zone, each with its note when one exists (§3.3). */
 export const todaysSlots = Effect.fn('todaysSlots')(function* (zone: DateTime.TimeZone) {
   const calendar = yield* Calendar
   const entries = yield* Entries
@@ -35,10 +32,6 @@ export const todaysSlots = Effect.fn('todaysSlots')(function* (zone: DateTime.Ti
   return events.map((event): Slot => ({ event, note: notes.get(event.id) }))
 })
 
-/**
- * §3.2. Opens the note for the meeting happening right now, creating it on
- * first click; falls back to a timestamp-titled meeting note.
- */
 export const newMeetingNote = Effect.fn('newMeetingNote')(function* (zone: DateTime.TimeZone) {
   const calendar = yield* Calendar
   const entries = yield* Entries
@@ -72,7 +65,6 @@ export const newMeetingNote = Effect.fn('newMeetingNote')(function* (zone: DateT
   })
 })
 
-/** §3.3. Picks one of today's events for an existing note. Unknown ids are a no-op. */
 export const attachMeeting = Effect.fn('attachMeeting')(function* (
   id: EntryId,
   eventId: string,

@@ -13,10 +13,6 @@ import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse'
 
 import type { Attendee } from '../domain.ts'
 
-/**
- * Raw Google OAuth + Calendar REST. Knows nothing about accounts or the
- * database; Calendar.ts owns those. Every call takes the token it needs.
- */
 export interface GoogleShape {
   readonly authUrl: (redirectUri: string, state: string) => string
   readonly exchange: (code: string, redirectUri: string) => Effect.Effect<Grant, GoogleError>
@@ -40,7 +36,6 @@ export interface Grant extends AccessToken {
   readonly refreshToken: string
 }
 
-/** A timed (non all-day, not cancelled, not declined) event, times still in Google's shape. */
 export interface GoogleEvent {
   readonly id: string
   readonly title: string
@@ -64,7 +59,7 @@ const CALENDAR_URL = 'https://www.googleapis.com/calendar/v3'
 
 const TokenResponse = Schema.Struct({
   access_token: Schema.String,
-  expires_in: Schema.Number,
+  expires_in: Schema.Finite,
   refresh_token: Schema.optionalKey(Schema.String),
 })
 
@@ -128,12 +123,12 @@ const linkOf = (event: RawEvent) => {
 const attendeesOf = (event: RawEvent): readonly Attendee[] =>
   (event.attendees ?? [])
     .filter((attendee) => attendee.resource !== true)
-    .map((attendee) => ({
-      email: attendee.email,
-      ...(attendee.displayName === undefined ? {} : { name: attendee.displayName }),
-    }))
+    .map((attendee): Attendee =>
+      attendee.displayName === undefined
+        ? { email: attendee.email }
+        : { email: attendee.email, name: attendee.displayName },
+    )
 
-// All-day events have `date` instead of `dateTime`; those are skipped on purpose (§3.2).
 const normalise = (event: RawEvent): GoogleEvent | undefined => {
   if (event.status === 'cancelled' || declined(event)) {
     return undefined
@@ -241,7 +236,6 @@ export class Google extends Context.Service<Google, GoogleShape>()('app/Google',
         )
         .pipe(Effect.mapError(failed))
 
-    // The primary calendar's id is the account's email; saves asking for an email scope.
     const primaryEmail = Effect.fn('Google.primaryEmail')((accessToken: string) =>
       calendarGet(accessToken, '/calendars/primary', {}).pipe(
         Effect.flatMap(HttpClientResponse.schemaBodyJson(CalendarResponse)),

@@ -10,11 +10,12 @@ import * as Struct from 'effect/Struct'
 import * as SqlClient from 'effect/unstable/sql/SqlClient'
 import * as SqlSchema from 'effect/unstable/sql/SqlSchema'
 
-import type { Entry, MeetingRef, Tag } from '../domain.ts'
+import type { Entry, EntryRef, MeetingRef, Tag } from '../domain.ts'
 import {
   EntryId,
   EntryNotFound,
   EntrySlug,
+  EntrySummary,
   EntryType,
   MentionTarget,
   TagCount,
@@ -23,13 +24,14 @@ import {
   timestampTitle,
   VersionConflict,
 } from '../domain.ts'
+import { parseTasks, serializeTasks } from '../tasks.ts'
 import { Cipher } from './Cipher.ts'
 import type { CipherShape } from './Cipher.ts'
 import { ObjectStore } from './ObjectStore.ts'
+import type { ObjectStoreShape } from './ObjectStore.ts'
 
 export interface EntriesShape {
   readonly list: (type: EntryType, archived: boolean, tag?: Tag) => Effect.Effect<readonly Entry[]>
-  /** Tags in use, most used first; one section's or every section's (§3.7). */
   readonly distinctTags: (
     type: EntryType | undefined,
     archived: boolean,
@@ -37,20 +39,19 @@ export interface EntriesShape {
   readonly recent: (limit: number) => Effect.Effect<readonly Entry[]>
   readonly targets: Effect.Effect<readonly MentionTarget[]>
   readonly existing: (slugs: readonly string[]) => Effect.Effect<ReadonlySet<string>>
-  /** Which of `titles` a live or archived entry of `type` already uses. */
   readonly takenTitles: (
     type: EntryType,
     titles: readonly string[],
   ) => Effect.Effect<ReadonlySet<string>>
   readonly bySlug: (slug: EntrySlug) => Effect.Effect<Entry, EntryNotFound>
-  /** Live meeting notes keyed by the calendar event they were created from. */
+  readonly byRef: (ref: EntryRef) => Effect.Effect<Entry, EntryNotFound>
+  readonly search: (query: EntrySearch) => Effect.Effect<SearchPage>
+  readonly usedObjectKeys: (keys: readonly string[]) => Effect.Effect<ReadonlySet<string>>
   readonly byEventIds: (eventIds: readonly string[]) => Effect.Effect<ReadonlyMap<string, Entry>>
   readonly create: (input: EntryCreate) => Effect.Effect<Entry>
-  /** One transaction; inputs whose title an artifact already has are skipped, not inserted. */
   readonly createArtifacts: (inputs: readonly ArtifactInput[]) => Effect.Effect<ArtifactBatch>
   readonly put: (input: EntryPut) => Effect.Effect<Entry, EntryNotFound | VersionConflict>
   readonly setMeeting: (input: MeetingPut) => Effect.Effect<Entry, EntryNotFound>
-  /** Replaces the whole set. Not an edit: neither `version` nor `updated_at` move (§3.7). */
   readonly setTags: (id: EntryId, tags: readonly Tag[]) => Effect.Effect<Entry, EntryNotFound>
   readonly archive: (slug: EntrySlug) => Effect.Effect<Entry, EntryNotFound>
   readonly restore: (slug: EntrySlug) => Effect.Effect<Entry, EntryNotFound>
@@ -71,17 +72,36 @@ export interface ArtifactBatch {
 
 export interface EntryCreate {
   readonly type: EntryType
-  /** Slug source when set; otherwise a wall-clock title in `zone`. */
   readonly title: Option.Option<string>
   readonly zone: DateTime.TimeZone
+  readonly body?: string
   readonly meeting?: MeetingRef
 }
 
 export interface EntryPut {
   readonly id: EntryId
-  readonly title: string
-  readonly body: string
+  readonly title?: string | undefined
+  readonly body?: string | undefined
   readonly expectedVersion: number
+}
+
+export interface SearchCursor {
+  readonly updatedAt: string
+  readonly id: EntryId
+}
+
+export interface EntrySearch {
+  readonly type: EntryType | null
+  readonly tag: Tag | null
+  readonly archived: boolean
+  readonly title: string | null
+  readonly limit: number
+  readonly after: SearchCursor | null
+}
+
+export interface SearchPage {
+  readonly entries: readonly EntrySummary[]
+  readonly next: SearchCursor | null
 }
 
 export interface MeetingPut {
@@ -90,18 +110,27 @@ export interface MeetingPut {
   readonly meeting: MeetingRef
 }
 
-// `tags` is a correlated subquery so every `FROM entries` read carries them in one round trip.
 export const ENTRY_COLUMNS = [
   'id, type, slug, title, body, meeting, object_key, mime, bytes, version, updated_at',
   "(SELECT group_concat(tag, ' ') FROM (SELECT tag FROM entry_tags WHERE entry_id = entries.id ORDER BY tag)) AS tags",
 ].join(', ')
+
+const SUMMARY_COLUMNS = [
+  'id, type, slug, title, mime, bytes, updated_at',
+  "(SELECT group_concat(tag, ' ') FROM (SELECT tag FROM entry_tags WHERE entry_id = entries.id ORDER BY tag)) AS tags",
+].join(', ')
+
+const normaliseBody = (type: EntryType, body: string) =>
+  type === 'task' ? serializeTasks(parseTasks(body)) : body
+
+const likePattern = (text: string) => `%${text.replaceAll(/[\\%_]/gu, (match) => `\\${match}`)}%`
 
 const slugSet = (rows: readonly { readonly slug: string }[]) => new Set(rows.map((row) => row.slug))
 
 const titleSet = (rows: readonly { readonly title: string }[]) =>
   new Set(rows.map((row) => row.title))
 
-const orNotFound = (ref: EntryId | EntrySlug) =>
+const orNotFound = (ref: EntryId | EntrySlug | EntryRef) =>
   Option.match({
     onNone: () => new EntryNotFound({ ref }),
     onSome: Effect.succeed<Entry>,
@@ -243,6 +272,50 @@ const queries = (sql: SqlClient.SqlClient, Entry: CipherShape['Entry']) => {
     Effect.orDie,
   )
 
+  const selectByRef = flow(
+    SqlSchema.findOneOption({
+      Request: Schema.String,
+      Result: Entry,
+      execute: (ref) => sql`SELECT ${columns} FROM entries WHERE slug = ${ref} OR id = ${ref}`,
+    }),
+    Effect.orDie,
+  )
+
+  const selectPage = flow(
+    SqlSchema.findAll({
+      Request: Schema.Struct({
+        type: Schema.NullOr(EntryType),
+        tag: Schema.NullOr(Schema.String),
+        archived: Schema.Boolean,
+        title: Schema.NullOr(Schema.String),
+        limit: Schema.Int,
+        afterUpdatedAt: Schema.NullOr(Schema.String),
+        afterId: Schema.NullOr(Schema.String),
+      }),
+      Result: EntrySummary,
+      execute: (query) => sql`
+        SELECT ${sql.literal(SUMMARY_COLUMNS)} FROM entries
+        WHERE (${query.type} IS NULL OR type = ${query.type})
+          AND (archived_at IS NOT NULL) = ${query.archived ? 1 : 0}
+          AND (${query.tag} IS NULL OR id IN (SELECT entry_id FROM entry_tags WHERE tag = ${query.tag}))
+          AND (${query.title} IS NULL OR title LIKE ${query.title} ESCAPE '\\')
+          AND (${query.afterUpdatedAt} IS NULL OR (updated_at, id) < (${query.afterUpdatedAt}, ${query.afterId}))
+        ORDER BY updated_at DESC, id DESC
+        LIMIT ${query.limit + 1}
+      `,
+    }),
+    Effect.orDie,
+  )
+
+  const selectUsedKeys = flow(
+    SqlSchema.findAll({
+      Request: Schema.Array(Schema.String),
+      Result: Schema.Struct({ object_key: Schema.String }),
+      execute: (keys) => sql`SELECT object_key FROM entries WHERE ${sql.in('object_key', keys)}`,
+    }),
+    Effect.orDie,
+  )
+
   const selectSlug = flow(
     SqlSchema.findOneOption({
       Request: Schema.String,
@@ -262,11 +335,13 @@ const queries = (sql: SqlClient.SqlClient, Entry: CipherShape['Entry']) => {
     selectByEventIds,
     selectBySlug,
     selectById,
+    selectByRef,
+    selectPage,
+    selectUsedKeys,
     selectSlug,
   }
 }
 
-// Split out of `make` only to keep that function readable; same closure otherwise.
 const creators = (
   sql: SqlClient.SqlClient,
   cipher: CipherShape,
@@ -314,13 +389,16 @@ const creators = (
         Option.getOrElse(input.title, () => timestampTitle(now, input.zone)),
       )
 
-      return yield* insert({ ...entry, meeting: input.meeting ?? null })
+      return yield* insert({
+        ...entry,
+        body: normaliseBody(input.type, input.body ?? ''),
+        meeting: input.meeting ?? null,
+      })
     },
     sql.withTransaction,
     Effect.catchTag('SqlError', Effect.die),
   )
 
-  // Re-checks titles here, not only at presign: another tab may have won the name meanwhile.
   const createArtifacts = Effect.fn('Entries.createArtifacts')(
     function* (inputs: readonly ArtifactInput[]) {
       const taken = yield* takenTitles(
@@ -344,6 +422,59 @@ const creators = (
   return { create, createArtifacts }
 }
 
+const lifecycle = (
+  sql: SqlClient.SqlClient,
+  objects: ObjectStoreShape,
+  bySlug: EntriesShape['bySlug'],
+) => {
+  const archive = Effect.fn('Entries.archive')(
+    function* (slug: EntrySlug) {
+      const entry = yield* bySlug(slug)
+      const now = yield* DateTime.now
+
+      yield* sql`
+        UPDATE entries SET archived_at = ${DateTime.formatIso(now)} WHERE id = ${entry.id}
+      `
+
+      return entry
+    },
+    sql.withTransaction,
+    Effect.catchTag('SqlError', Effect.die),
+  )
+
+  const restore = Effect.fn('Entries.restore')(
+    function* (slug: EntrySlug) {
+      const entry = yield* bySlug(slug)
+
+      yield* sql`UPDATE entries SET archived_at = NULL WHERE id = ${entry.id}`
+
+      return entry
+    },
+    sql.withTransaction,
+    Effect.catchTag('SqlError', Effect.die),
+  )
+
+  const remove = Effect.fn('Entries.remove')(
+    function* (slug: EntrySlug) {
+      const entry = yield* bySlug(slug)
+
+      if (entry.objectKey !== null) {
+        yield* objects.remove(entry.objectKey)
+      }
+
+      yield* sql`DELETE FROM share_links WHERE entry_id = ${entry.id}`
+      yield* sql`DELETE FROM entry_tags WHERE entry_id = ${entry.id}`
+      yield* sql`DELETE FROM entries WHERE id = ${entry.id}`
+
+      return entry
+    },
+    sql.withTransaction,
+    Effect.catchTag('SqlError', Effect.die),
+  )
+
+  return { archive, restore, remove }
+}
+
 export class Entries extends Context.Service<Entries, EntriesShape>()('app/Entries', {
   make: Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient
@@ -359,6 +490,9 @@ export class Entries extends Context.Service<Entries, EntriesShape>()('app/Entri
       selectByEventIds,
       selectBySlug,
       selectById,
+      selectByRef,
+      selectPage,
+      selectUsedKeys,
       selectSlug,
     } = queries(sql, cipher.Entry)
 
@@ -404,6 +538,38 @@ export class Entries extends Context.Service<Entries, EntriesShape>()('app/Entri
       Effect.flatMap(selectById(id), orNotFound(id)),
     )
 
+    const byRef = Effect.fn('Entries.byRef')((ref: EntryRef) =>
+      Effect.flatMap(selectByRef(ref), orNotFound(ref)),
+    )
+
+    const search = Effect.fn('Entries.search')(function* (query: EntrySearch) {
+      const rows = yield* selectPage({
+        type: query.type,
+        tag: query.tag,
+        archived: query.archived,
+        title: query.title === null ? null : likePattern(query.title),
+        limit: query.limit,
+        afterUpdatedAt: query.after?.updatedAt ?? null,
+        afterId: query.after?.id ?? null,
+      })
+      const entries = rows.slice(0, query.limit)
+      const last = entries.at(-1)
+
+      return {
+        entries,
+        next:
+          rows.length > query.limit && last !== undefined
+            ? { updatedAt: DateTime.formatIso(last.updatedAt), id: last.id }
+            : null,
+      } satisfies SearchPage
+    })
+
+    const usedObjectKeys = Effect.fn('Entries.usedObjectKeys')((keys: readonly string[]) =>
+      keys.length === 0
+        ? Effect.succeed(new Set<string>())
+        : Effect.map(selectUsedKeys(keys), (rows) => new Set(rows.map((row) => row.object_key))),
+    )
+
     const byEventIds = Effect.fn('Entries.byEventIds')((eventIds: readonly string[]) =>
       eventIds.length === 0
         ? Effect.succeed(new Map<string, Entry>())
@@ -428,8 +594,8 @@ export class Entries extends Context.Service<Entries, EntriesShape>()('app/Entri
           const now = yield* DateTime.now
           const next: Entry = {
             ...current,
-            title: input.title,
-            body: input.body,
+            title: input.title ?? current.title,
+            body: input.body === undefined ? current.body : normaliseBody(current.type, input.body),
             version: current.version + 1,
             updatedAt: now,
           }
@@ -450,7 +616,6 @@ export class Entries extends Context.Service<Entries, EntriesShape>()('app/Entri
       Effect.catchTag('SqlError', Effect.die),
     )
 
-    // Attaching a calendar event (§3.3): title and snapshot change, slug and body don't.
     const setMeeting = Effect.fn('Entries.setMeeting')(
       function* (input: MeetingPut) {
         const current = yield* byId(input.id)
@@ -496,50 +661,7 @@ export class Entries extends Context.Service<Entries, EntriesShape>()('app/Entri
       Effect.catchTag('SqlError', Effect.die),
     )
 
-    const archive = Effect.fn('Entries.archive')(
-      function* (slug: EntrySlug) {
-        const entry = yield* bySlug(slug)
-        const now = yield* DateTime.now
-
-        yield* sql`
-          UPDATE entries SET archived_at = ${DateTime.formatIso(now)} WHERE id = ${entry.id}
-        `
-
-        return entry
-      },
-      sql.withTransaction,
-      Effect.catchTag('SqlError', Effect.die),
-    )
-
-    const restore = Effect.fn('Entries.restore')(
-      function* (slug: EntrySlug) {
-        const entry = yield* bySlug(slug)
-
-        yield* sql`UPDATE entries SET archived_at = NULL WHERE id = ${entry.id}`
-
-        return entry
-      },
-      sql.withTransaction,
-      Effect.catchTag('SqlError', Effect.die),
-    )
-
-    const remove = Effect.fn('Entries.remove')(
-      function* (slug: EntrySlug) {
-        const entry = yield* bySlug(slug)
-
-        if (entry.objectKey !== null) {
-          yield* objects.remove(entry.objectKey)
-        }
-
-        yield* sql`DELETE FROM share_links WHERE entry_id = ${entry.id}`
-        yield* sql`DELETE FROM entry_tags WHERE entry_id = ${entry.id}`
-        yield* sql`DELETE FROM entries WHERE id = ${entry.id}`
-
-        return entry
-      },
-      sql.withTransaction,
-      Effect.catchTag('SqlError', Effect.die),
-    )
+    const { archive, restore, remove } = lifecycle(sql, objects, bySlug)
 
     return {
       list,
@@ -549,6 +671,9 @@ export class Entries extends Context.Service<Entries, EntriesShape>()('app/Entri
       existing,
       takenTitles,
       bySlug,
+      byRef,
+      search,
+      usedObjectKeys,
       byEventIds,
       create,
       createArtifacts,

@@ -4,6 +4,11 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
+  "exports": {
+    "./api": "./src/api.ts",
+    "./domain": "./src/domain.ts",
+    "./tasks": "./src/tasks.ts"
+  },
   "scripts": {
     "dev": "bun run fonts && bun run css:watch & bun run js:watch & bun run --hot src/server.ts",
     "start": "bun run src/server.ts",

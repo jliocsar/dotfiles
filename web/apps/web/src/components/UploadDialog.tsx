@@ -1,6 +1,5 @@
 import { Icon } from './Icon.tsx'
 
-// The whole dialog (backdrop included) accepts drops; `data-over` on it lights the box up.
 const DROPZONE = [
   'flex h-32 cursor-pointer flex-col items-center justify-center gap-2 rounded-md border border-dashed',
   'text-muted-foreground transition-colors hover:bg-muted group-data-over:border-foreground group-data-over:bg-muted',

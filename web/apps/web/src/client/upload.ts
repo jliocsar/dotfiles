@@ -29,7 +29,6 @@ interface Toaster extends HTMLElement {
   readonly toast: (config: ToastConfig) => HTMLElement
 }
 
-// What the page after the reload tells the user about; the list itself shows the successes.
 const UploadReport = Schema.Struct({
   skipped: Schema.Array(Schema.String),
   failed: Schema.Array(Schema.String),
@@ -75,7 +74,6 @@ const uploadElements = (dialog: HTMLDialogElement): Option.Option<UploadElements
     label: Option.fromNullOr(dialog.querySelector<HTMLElement>('[data-upload-label]')),
   }).pipe(Option.map((found) => ({ dialog, ...found })))
 
-// First of each name wins; the server treats the name as the identity.
 const uniqueByName = (files: FileList | null | undefined): readonly File[] =>
   Arr.dedupeWith(Arr.fromIterable(files ?? []), (left, right) => left.name === right.name)
 
@@ -88,18 +86,12 @@ const putTarget = (target: typeof PresignTarget.Type, byName: ReadonlyMap<string
     onNone: () => Effect.fail(target.title),
     onSome: (file) =>
       putObject(target.url, file).pipe(
-        Effect.as<typeof RegisterFile.Type>({
-          key: target.key,
-          title: target.title,
-          mime: mimeOf(file),
-          bytes: file.size,
-        }),
+        Effect.as<typeof RegisterFile.Type>({ key: target.key, title: target.title }),
         Effect.tapCause((cause) => Effect.logWarning('put failed', cause)),
         Effect.mapError(() => target.title),
       ),
   })
 
-// Names that already exist never cost a byte: presign refuses them before any PUT.
 const upload = Effect.fn('upload')(function* (files: readonly File[]) {
   const { presign, register } = yield* uploadEndpoints
   const byName = new Map(files.map((file) => [file.name, file] as const))
@@ -110,11 +102,13 @@ const upload = Effect.fn('upload')(function* (files: readonly File[]) {
     { concurrency: PUT_CONCURRENCY },
   )
   const registered =
-    stored.length === 0 ? { skipped: [] } : yield* register({ payload: { files: stored } })
+    stored.length === 0
+      ? { skipped: [], rejected: [] }
+      : yield* register({ payload: { files: stored } })
 
   return {
     skipped: [...granted.skipped, ...registered.skipped],
-    failed,
+    failed: [...failed, ...registered.rejected],
   } satisfies UploadReport
 })
 
@@ -135,7 +129,6 @@ export const mountUpload = Effect.fn('mountUpload')(function* (dialog: HTMLDialo
 
   const { input, label } = elements.value
   const busy = yield* Ref.make(false)
-  // dragenter/dragleave fire for every child crossed; only the balance says "left the window".
   const dragDepth = yield* Ref.make(0)
 
   const setLabel = (text: string) =>
@@ -214,7 +207,6 @@ export const mountUpload = Effect.fn('mountUpload')(function* (dialog: HTMLDialo
       Stream.runForEach(() => left),
     ),
   )
-  // Unhandled, the browser would navigate to the dropped file.
   yield* Effect.forkScoped(
     Stream.fromEventListener<DragEvent>(document, 'dragover').pipe(
       Stream.runForEach((event) =>
@@ -224,7 +216,6 @@ export const mountUpload = Effect.fn('mountUpload')(function* (dialog: HTMLDialo
       ),
     ),
   )
-  // The open dialog is modal, so every drop on the page lands here (backdrop included).
   yield* Effect.forkScoped(
     Stream.fromEventListener<DragEvent>(document, 'drop').pipe(
       Stream.runForEach((event) =>
@@ -251,7 +242,6 @@ export const mountUpload = Effect.fn('mountUpload')(function* (dialog: HTMLDialo
 const isToaster = (element: HTMLElement): element is Toaster =>
   Predicate.hasProperty(element, 'toast') && Predicate.isFunction(element.toast)
 
-// Basecoat attaches `toast()` after DOMContentLoaded, which is after this module runs.
 const toaster = Effect.callback<Option.Option<Toaster>>((resume) => {
   const element = document.getElementById('toaster')
 
@@ -278,7 +268,6 @@ const takeReport = Effect.sync(() => {
   return Option.fromNullOr(raw).pipe(Option.flatMap(Schema.decodeUnknownOption(ReportJson)))
 })
 
-// Shown on the page that follows an upload: the reload that refreshes the list would eat a toast.
 export const reportUploads = Effect.gen(function* () {
   const report = yield* takeReport
 

@@ -68,13 +68,9 @@ const STATUS_TEXT = {
   error: 'Save failed',
 } satisfies Record<EditorStatus, string>
 
-// Reads as page text and fills the page down to the vim status line, which sticks
-// a page-margin above the viewport bottom. Colours come from the site theme
-// (codemirror isn't told about dark mode); `--caret` is the one accent it has.
 const editorTheme = EditorView.theme({
   '&': { flex: '1', outline: 'none', fontFamily: 'inherit', fontSize: 'inherit' },
   '&.cm-focused': { outline: 'none' },
-  // The page scrolls, not the editor, so nothing (cursor at column 0 included) needs clipping.
   '.cm-scroller': {
     flex: '1',
     overflow: 'visible',
@@ -84,9 +80,7 @@ const editorTheme = EditorView.theme({
   '.cm-content': { padding: '0', caretColor: 'var(--caret)' },
   '.cm-line': { padding: '0' },
   '.cm-cursor': { borderLeft: '2px solid var(--caret)', marginLeft: '-1px' },
-  // `.cm-editor` is redundant but outranks the vim plugin's own pink block cursor.
   '&.cm-editor .cm-fat-cursor': { borderRadius: '2px', background: 'var(--caret)' },
-  // The plugin sets the letter colour inline (transparent for half-height pending cursors).
   '&.cm-editor.cm-focused .cm-fat-cursor:not([style*="transparent"])': {
     color: 'var(--caret-foreground) !important',
   },
@@ -126,7 +120,6 @@ const markdownHighlight = HighlightStyle.define([
 
 const IDLE_SAVE = '2 seconds'
 
-// Touch screens have no real keyboard, so vim is a plain editor there.
 const TOUCH = matchMedia('(pointer: coarse)')
 
 const CONFLICT_RETRIES = 2
@@ -497,7 +490,6 @@ const copyShareUrl = Effect.fn('copyShareUrl')(function* (button: HTMLElement) {
   )
 })
 
-// Hide pills from the end until what's left plus the `+N` pill fits the row.
 const foldPills = (fold: HTMLElement) => {
   const pills = Arr.fromIterable(fold.querySelectorAll<HTMLElement>('[data-pill]'))
   const more = fold.querySelector<HTMLElement>('[data-fold-more]')
@@ -527,7 +519,6 @@ const refold = Effect.sync(() => {
   document.querySelectorAll<HTMLElement>('[data-fold]').forEach(foldPills)
 })
 
-// Search box over a tag list: typing filters, Enter picks the first hit or creates.
 const mountTagMenu = Effect.fn('mountTagMenu')(function* (menu: HTMLElement) {
   const search = menu.querySelector<HTMLInputElement>('[data-tag-search]')
   const createRow = menu.querySelector<HTMLElement>('[data-tag-create-row]')
@@ -574,7 +565,6 @@ const mountTagMenu = Effect.fn('mountTagMenu')(function* (menu: HTMLElement) {
   yield* Effect.forkScoped(
     Stream.fromEventListener(search, 'input').pipe(Stream.runForEach(() => apply)),
   )
-  // Swallowed in the capture phase, before the browser submits the create form on its own.
   const enters = capture(search, 'keydown', (event) => {
     if (event instanceof KeyboardEvent && event.key === 'Enter') {
       swallow(event)
@@ -610,7 +600,6 @@ const mountTagMenu = Effect.fn('mountTagMenu')(function* (menu: HTMLElement) {
       Stream.runForEach(() => pick),
     ),
   )
-  // The checklist is swapped after every toggle; the create form clears after a create.
   yield* Effect.forkScoped(
     Stream.fromEventListener(menu, 'htmx:afterSwap').pipe(Stream.runForEach(() => apply)),
   )
@@ -717,7 +706,6 @@ const main = Effect.gen(function* () {
       Stream.runForEach(() => refold),
     ),
   )
-  // Only a boosted navigation replaces the page; fragment swaps must not rebuild the editor.
   yield* Stream.fromEventListener<CustomEvent<{ readonly target: Element }>>(
     document.body,
     'htmx:afterSwap',

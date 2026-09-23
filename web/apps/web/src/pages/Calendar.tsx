@@ -121,7 +121,6 @@ const SlotRow = (props: {
   )
 }
 
-/** Home's calendar column. Fetched with htmx after the page paints so Google's latency never blocks Home. */
 export const TodayFragment = Effect.fn('TodayFragment')(function* (props: {
   readonly zone: DateTime.TimeZone
 }) {
@@ -156,7 +155,6 @@ export const TodayFragment = Effect.fn('TodayFragment')(function* (props: {
   )
 })
 
-/** Filled by /assets/calendar.js, which paints the cached calendar and then fetches fresh. */
 export const TodayPlaceholder = (props: { readonly day: string }) => (
   <>
     <div data-calendar-today data-day={props.day}>
@@ -166,7 +164,6 @@ export const TodayPlaceholder = (props: { readonly day: string }) => (
   </>
 )
 
-/** The §3.3 picker: today's events, click one to retitle and re-snapshot the note. */
 export const MeetingPicker = Effect.fn('MeetingPicker')(function* (props: {
   readonly entry: Entry
   readonly zone: DateTime.TimeZone

@@ -14,6 +14,15 @@
         "typescript": "7.0.2",
       },
     },
+    "apps/cli": {
+      "name": "@dotfiles/cli",
+      "version": "0.0.1",
+      "dependencies": {
+        "@dotfiles/web": "workspace:*",
+        "@effect/platform-bun": "4.0.0-rc.112",
+        "effect": "4.0.0-rc.112",
+      },
+    },
     "apps/web": {
       "name": "@dotfiles/web",
       "version": "0.0.1",
@@ -168,6 +177,8 @@
     "@distilled.cloud/planetscale": ["@distilled.cloud/planetscale@1.0.0-rc.9", "", { "dependencies": { "@distilled.cloud/core": "1.0.0-rc.9" }, "peerDependencies": { "effect": ">=4.0.0-rc.112 || >=4.0.0" } }, "sha512-9lrkuQ1by+UkNsGQ8tNKaM+DEdOHYPGAhCyrDLQd7DG4Xh6JHPmrPlyTFsjHhS9thSz2WVaDVMDbsJ8zHsDNTQ=="],
 
     "@distilled.cloud/railway": ["@distilled.cloud/railway@1.0.0-rc.9", "", { "dependencies": { "@distilled.cloud/core": "1.0.0-rc.9" }, "peerDependencies": { "effect": ">=4.0.0-rc.112 || >=4.0.0" } }, "sha512-AI5SgoaPl7giY+HiYldwKihyCqhed5sjz1f8WwdRxTehswto/Rbx9vMX4FWeVgrQYXgkVK/NWcZuJJdCxSyM9Q=="],
+
+    "@dotfiles/cli": ["@dotfiles/cli@workspace:apps/cli"],
 
     "@dotfiles/jsx": ["@dotfiles/jsx@workspace:packages/jsx"],
 

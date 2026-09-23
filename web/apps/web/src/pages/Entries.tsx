@@ -107,8 +107,6 @@ const TAG_PANEL = [
   '[position-anchor:--tags] [top:calc(anchor(bottom)+6px)] [position-try-fallbacks:flip-inline]',
 ].join(' ')
 
-// `relative` keeps each row's sr-only checkbox inside the row; otherwise it's placed
-// against the popover and makes the whole panel scroll on top of the list.
 const TAG_ROW = [
   'group relative flex h-7 cursor-pointer items-center gap-2 rounded-md px-2',
   'hover:bg-muted aria-pressed:font-medium has-checked:font-medium',
@@ -160,12 +158,10 @@ const BackLink = (props: { readonly back: Back | undefined }) =>
 
 export const Page = (props: {
   readonly back?: Back
-  /** Replaces the back link on the crumbs row (home has no back). */
   readonly crumbs?: Node
   readonly actions?: Node
   readonly heading: Node
   readonly meta: Node
-  /** Stretch to the viewport bottom so a flex-1 child (the editor) can fill it. */
   readonly fill?: boolean
   readonly children?: Node
 }) => (
@@ -231,7 +227,6 @@ const listHref = (section: Section, archived: boolean, tag: Tag | undefined) => 
   return params.size === 0 ? section.path : `${section.path}?${params}`
 }
 
-// One tag at a time (§3.7): picking the active one again clears the filter.
 const TagMenu = (props: {
   readonly section: Section
   readonly archived: boolean
@@ -648,7 +643,6 @@ const MeetingMeta = (props: { readonly meeting: MeetingRef; readonly zone: DateT
   </>
 )
 
-// The list of today's events is fetched when the panel first opens, not with the page.
 const MeetingActions = (props: { readonly entry: Entry }) => (
   <>
     <button
@@ -707,7 +701,6 @@ const ArtifactActions = (props: { readonly entry: Entry; readonly linkCount: num
   </>
 )
 
-// Pills fill the free width of the meta row; the client folds the overflow into `+N`.
 const TagPills = (props: { readonly entry: Entry; readonly oob?: boolean }) => (
   <span
     id="tag-pills"
@@ -730,7 +723,6 @@ const TagPills = (props: { readonly entry: Entry; readonly oob?: boolean }) => (
   </span>
 )
 
-// The checklist is its own form so a toggle posts without the search text.
 const TagOptions = (props: { readonly entry: Entry; readonly options: readonly Tag[] }) => (
   <form
     id="tag-options"
@@ -757,7 +749,6 @@ const TagOptions = (props: { readonly entry: Entry; readonly options: readonly T
   </form>
 )
 
-/** What `POST /e/:slug/tags` returns: the checklist, plus the meta-row pills out of band. */
 export const TagsFragment = (props: {
   readonly entry: Entry
   readonly options: readonly Tag[]
@@ -801,7 +792,6 @@ const TagsPanel = (props: { readonly entry: Entry; readonly options: readonly Ta
   </div>
 )
 
-/** Every tag in use (most used first), then whatever this entry alone carries. */
 export const tagOptions = (entry: Entry, inUse: readonly TagCount[]): readonly Tag[] => {
   const known = inUse.map((row) => row.tag)
 

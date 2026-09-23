@@ -51,7 +51,6 @@ const ShareForm = Schema.Struct({
   ttl: ShareTtl,
 })
 
-// `tag` repeats once per checked box; `create` is the search text on Enter.
 const TagsForm = Schema.Struct({
   tag: Schema.optionalKey(Schema.Union([Schema.String, Schema.Array(Schema.String)])),
   create: Schema.optionalKey(Schema.String),
@@ -221,7 +220,6 @@ const listRoute = (section: Section) =>
     )
   })
 
-// Replaces the set (§3.7) and answers with the fragment, so the editor island stays put.
 const tagsRoute = Effect.gen(function* () {
   const entries = yield* Entries
   const slug = yield* slugParam

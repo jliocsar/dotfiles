@@ -3,9 +3,9 @@
 Working name: `<app>`. Single user, self-hosted, agent-writable.
 
 Supersedes `plan.md` entirely. What survived from it: one table, CodeMirror + vim,
-calendar auto-detect, share links, archive, MCP. Everything else is deleted
-(folders, dumps, front matter, `type`/`kind` two-level discriminators, tasks as
-entities, backlinks, documents/posts, MDX, the CLI).
+calendar auto-detect, share links, archive, agent access (now a CLI, not MCP).
+Everything else is deleted (folders, dumps, front matter, `type`/`kind` two-level
+discriminators, tasks as entities, backlinks, documents/posts, MDX).
 
 ---
 
@@ -15,7 +15,8 @@ entities, backlinks, documents/posts, MDX, the CLI).
 
 - One place for notes, meeting notes, task lists and artifacts, from phone and desktop.
 - Capture is one click and zero typing. The server picks the title.
-- Agents write here through MCP. That's a first-class client, not an afterthought.
+- Agents write here through the `dotfiles-web` CLI and its skill. That's a first-class
+  client, not an afterthought.
 - One Fly machine, one SQLite file, one Tigris bucket. Backup is one file plus the bucket.
 
 **Non-goals for v1**
@@ -24,7 +25,6 @@ entities, backlinks, documents/posts, MDX, the CLI).
 - Backlinks, link index
 - Due dates, recurrence, reminders (Google Calendar already nags you)
 - Writing to Google Calendar; Drive/Meet transcript ingestion (post-v1)
-- CLI / `$EDITOR` round-trip (post-v1)
 - `@` autocomplete in the editor (post-v1, and it's the best post-v1 item)
 - Multi-user, roles, collaborative editing
 - Folders, hierarchy, nested tags. Tags are flat labels (§3.7); sections and `@` links
@@ -39,7 +39,7 @@ One table. Four `type` values. A section is `SELECT … WHERE type = ?`.
 
 ```sql
 entries
-  id           TEXT PRIMARY KEY           -- ULID
+  id           TEXT PRIMARY KEY           -- UUIDv7
   type         TEXT NOT NULL              -- 'note' | 'meeting' | 'task' | 'artifact'
   slug         TEXT NOT NULL UNIQUE       -- immutable after creation
   title        TEXT NOT NULL
@@ -152,6 +152,11 @@ presigned Tigris PUT, uploads straight to the bucket, then registers the entry w
 the file's name as the title. To attach a file to a note, upload it here and link it
 with `@slug`.
 
+Register only accepts unused keys under `artifacts/`, and reads `bytes` and
+`content-type` from a HEAD on the object (falling back to the title's extension),
+never from the client. A title already used by an artifact is skipped. Objects
+uploaded but never registered are ignored.
+
 ### 3.5 Checklist
 
 A task page is a flat list of `[checkbox] [text]` rows plus a trailing empty row.
@@ -191,7 +196,8 @@ rename, no manage screen: a tag exists while at least one entry carries it.
   pick.
 - `setTags` bumps **neither** `version` nor `updated_at`. Tagging isn't editing: it
   must not reorder the list and must not make the editor's next debounced save fail
-  with `VersionConflict`. Tags live outside the conflict token, like `set_meeting`.
+  with `VersionConflict`. Tags live outside the conflict token. (`set_meeting` does
+  bump `version`: it rewrites `title`.)
 - No cap on tags per entry.
 
 ---
@@ -218,9 +224,11 @@ rename, no manage screen: a tag exists while at least one entry carries it.
 - Every commit bumps `version`. It's a conflict token, not a history counter — nothing
   displays it.
 - All writes, from any client, land in one function: `putEntry(id, patch, expectedVersion)`.
-- MCP writes must pass `expectedVersion`; a write without it is rejected. A stale one
-  returns `VersionConflict` carrying the current body, so an agent can retry without a
-  second round-trip.
+- API writes must pass `expectedVersion`; a write without it is rejected. A stale one
+  returns `VersionConflict` carrying the current entry. `title` and `body` are each
+  optional on a put; an omitted one keeps its value.
+- Task bodies are normalised to `- [ ]` / `- [x]` lines inside `putEntry`, for every
+  client.
 - SQLite in WAL mode with `busy_timeout` set is the entire concurrency story.
 - No revision history in v1. If you want it later it's an append-only `entry_revisions`
   table, coalesced to one row per ~5 minutes of editing.
@@ -238,8 +246,7 @@ rename, no manage screen: a tag exists while at least one entry carries it.
 | `/e/:slug`                                 | session           | Entry page. Type comes from the row.              |
 | `/a/:slug`                                 | session           | Artifact → 302 to a short-lived signed Tigris URL |
 | `/s/:token`                                | none              | Shared artifact → 302 to a signed URL             |
-| `/api/…`                                   | session or bearer | JSON over the service layer                       |
-| `/mcp`                                     | bearer            | MCP endpoint                                      |
+| `/api/…`                                   | session or bearer | JSON over the service layer; the CLI's API        |
 
 Every route except `/login`, `/logout`, `/s/:token` and static assets sits behind
 the session gate: pages 303 to `/login?next=`, `/api` answers 401.
@@ -289,33 +296,58 @@ entry's link answers 404. Hard-deleting the entry deletes its links.
 
 ---
 
-## 9. MCP server
+## 9. CLI and skill
 
-MCP TypeScript SDK v2 (`@modelcontextprotocol/server`), spec `2026-07-28`, Streamable
-HTTP, bearer token. One token per agent so a single one can be revoked.
+Agents reach the app through `dotfiles-web`, a CLI, plus a skill at
+`skills/dotfiles-web/SKILL.md`. Anything with a shell can use it; no MCP.
 
-Tool schemas use Standard Schema — Effect Schema implements it, so one schema
-definition covers MCP validation and the service layer.
+- `apps/cli`: Effect `unstable/cli` + `HttpApiClient.make(Api)`, sharing `api.ts` and
+  `domain.ts` with the server. `bun build --compile` → `apps/cli/dist/dotfiles-web`.
+- Talks to `/api` only. `/api` has no delete endpoint; delete stays a web action.
+- Auth: `login [--url]` prompts for the password, posts it to `/api/auth/login` (the one
+  `/api` route outside the gate) and gets the same `{issuedAt}.{hmac}` token
+  the session cookie carries, saved with the URL to `~/.config/dotfiles-web/config.json`
+  (mode `0600`). Sent as `Authorization: Bearer`; `SessionGate` accepts cookie or
+  bearer. `DOTFILES_WEB_URL` / `DOTFILES_WEB_TOKEN` override the file. Revoking a
+  machine = rotating `SESSION_SECRET`.
+- Every request sends the machine's IANA zone in `x-time-zone`; the server prefers it over
+  the `tz` cookie.
+- `ref` anywhere is a slug or an id (a UUIDv7); the server matches either.
+- Output is JSON on stdout. Errors are JSON `{error, message, …}` on stderr.
 
-| Tool                                                              | Notes                                          |
-| ----------------------------------------------------------------- | ---------------------------------------------- |
-| `list_entries({type?, archived?, tag?, limit, cursor})`           | Summaries, never bodies                        |
-| `get_entry({slug\|id})`                                           | Full body and `version`                        |
-| `create_note({title?, body?, tags?})`                             |                                                |
-| `create_task({title?, body?, tags?})`                             |                                                |
-| `create_meeting_note()`                                           | Runs §3.2, including the "already exists" case |
-| `put_entry({id, title?, body?, expectedVersion})`                 | `expectedVersion` required                     |
-| `list_todays_meetings()`                                          | Same list as §3.3                              |
-| `set_meeting({id, eventId})`                                      | Applies §3.3                                   |
-| `list_tags({type?})`                                              | Distinct tags, optionally per section          |
-| `set_tags({id, tags})`                                            | Replaces the set; no `expectedVersion` (§3.7)  |
-| `archive_entry({id})` / `restore_entry({id})`                     | No delete tool for agents                      |
-| `presign_artifact_upload()`                                       | `{key, url}`; agent PUTs directly to Tigris    |
-| `register_artifact({key, title, mime, bytes, tags?})`             | Creates the entry                              |
-| `create_share_link({id, expiresIn?})` / `revoke_share_link({id})` |                                                |
+| Command                                                             | Notes                                                                                    |
+| ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `login [--url]`                                                     |                                                                                          |
+| `list [--type] [--tag] [--archived] [--title] [--limit] [--cursor]` | Summaries. Limit 50, max 200. Keyset cursor on `(updated_at, id)`; `--title` is a `LIKE` |
+| `get <ref>`                                                         | Full entry. Artifacts add a signed GET URL and active share links                        |
+| `new note\|task [--title] [--tag]… [< body]`                        | Creates, then pulls                                                                      |
+| `meeting`                                                           | Runs §3.2 (incl. "already exists"), then pulls                                           |
+| `meetings`                                                          | Today's list, as §3.3                                                                    |
+| `attach <ref> <eventId>`                                            | Applies §3.3                                                                             |
+| `pull <ref> [--dir] [--force]` / `push <slug\|file>`                | See below                                                                                |
+| `rename <ref> <title>`                                              | Title-only put; CLI fetches the version itself                                           |
+| `tags [--type]` / `tag <ref> <tags…>`                               | `tag` replaces the set                                                                   |
+| `archive <ref>` / `restore <ref>`                                   |                                                                                          |
+| `upload <file> [--title] [--tag]…` / `download <ref> [-o]`          | Presign → PUT → register in one step; duplicate title is skipped                         |
+| `share <ref> [--ttl 1h\|1d\|7d\|never]` / `unshare <linkId>`        |                                                                                          |
 
-Enforced by the server, not by prompt: slugs immutable, no delete tool,
-`expectedVersion` mandatory on writes.
+**Pull / push.** Agents never see `version`. `pull` writes `/tmp/dotfiles-web/<slug>.md`
+(or `--dir`) plus a sidecar `.<slug>.json` holding `{id, version, base}`. It refuses
+to overwrite a file that differs from `base` unless `--force`. `push` sends the
+sidecar's version; on `VersionConflict` it runs `git merge-file local base remote`:
+a clean merge is pushed silently, overlapping edits leave conflict markers in the file
+and exit 3. Artifacts can't be pulled.
+
+**Exit codes.** 0 ok, 1 unexpected, 2 usage, 3 conflict markers written, 4 not found,
+5 unpushed local changes, 6 auth (run `login`).
+
+**Skill.** `@slug` link syntax, the task body format, tag rules, the pull → edit → push
+loop, conflict handling, exit codes, and "no delete, archive instead".
+
+**Tests.** `bun test`: the API through `HttpApiClient` against a temp DB with fake
+ObjectStore and Calendar (bearer auth, create, partial put, conflict, archive,
+register rejecting a bad key), and the CLI's push/merge logic (clean merge, conflict
+markers, unpushed-changes guard).
 
 ---
 
@@ -330,7 +362,8 @@ Enforced by the server, not by prompt: slugs immutable, no delete tool,
   `BUCKET_NAME` and `AWS_ENDPOINT_URL_S3`, set as Fly secrets from the bucket's outputs.
   Objects live at `artifacts/{uuid}`; `Content-Disposition` and `Content-Type`
   are set per signed GET, so a title rename changes the download name.
-- Auth: one password → long-lived signed session cookie. Bearer tokens for MCP. No
+- Auth: one password → long-lived signed session cookie; the CLI sends the same token
+  as a bearer. No
   accounts table, no passkeys. `PASSWORD_HASH` is a `Bun.password.hash` (argon2id)
   string — in `.env` every `$` must be written `\$` because bun expands `$name`
   even inside quotes — and `SESSION_SECRET` signs the `session` cookie
@@ -353,9 +386,9 @@ Enforced by the server, not by prompt: slugs immutable, no delete tool,
 | **P2**    | Artifacts: presigned upload, signed serving, artifact list and page                                                           |
 | **P3**    | Share links on artifacts                                                                                                      |
 | **P3.5**  | Tags: `entry_tags`, `setTags`, list filter and row pills, entry-page picker                                                   |
-| **P4**    | MCP server, per-agent tokens                                                                                                  |
+| **P4**    | `dotfiles-web` CLI + skill                                                                                                    |
 | **P5**    | PWA polish, install, mobile capture pass                                                                                      |
-| **Later** | `@` autocomplete, FTS search, revision history, CLI, Drive/Meet transcripts, calendar writes                                  |
+| **Later** | `@` autocomplete, FTS search, revision history, Drive/Meet transcripts, calendar writes                                       |
 
 Done: P0 except the broken-`@` page, P1, P2, P3. P3.5 is in progress; P4 is next; P5 waits.
 
@@ -369,3 +402,42 @@ Done: P0 except the broken-`@` page, P1, P2, P3. P3.5 is in progress; P4 is next
 - Artifact dedupe by content hash: dropped from the schema until there is a use.
 - Share links default to 7 days; `Never expires` is a deliberate pick.
 - Whether `@slug` links get a distinct visual style from external links in preview.
+
+---
+
+## 13. Implementation notes
+
+The code carries no comments (lint rule `begone-slop/no-comments`); the non-obvious whys
+live here.
+
+- `apps/web/src/api.ts` is shared with the CLI: it may import `domain.ts` and `effect`,
+  never a service, or server code ends up in the binary.
+- `/api/auth/login` is the one `/api` route `SessionGate` lets through.
+- Home's calendar is stale-while-revalidate: the last fetched HTML paints at once from
+  `sessionStorage` (so event titles don't outlive the session), fresh HTML replaces it.
+  It's fetched after the page paints so Google's latency never blocks Home.
+- The `tz` cookie is set by `Layout`; the first visit reloads once to apply it. The CLI
+  sends `x-time-zone` instead, which wins.
+- Upload dialog: `dragenter`/`dragleave` fire for every child crossed, so a depth counter
+  decides "left the window". Drops are `preventDefault`ed or the browser navigates to the
+  file. Basecoat's `toast()` exists only after `DOMContentLoaded`, and the reload that
+  refreshes the list would eat a toast, so the report is stashed in `sessionStorage` and
+  shown on the next page.
+- Editor: the page scrolls, not CodeMirror, so nothing needs clipping; the
+  `.cm-editor`-prefixed cursor rule exists to outrank the vim plugin's own cursor; vim is
+  off on touch screens; only a boosted navigation rebuilds the editor, never an htmx
+  fragment swap. Enter in the tag search is swallowed in the capture phase, before the
+  browser submits the create form.
+- Tag popover rows are `relative` so each sr-only checkbox stays inside its row instead of
+  making the panel scroll.
+- Google OAuth: the `oauth_state` cookie ties the callback to the browser that started it
+  (CSRF). The primary calendar's id is the account email, which saves an email scope.
+  All-day events are skipped (§3.2).
+- Calendar: access tokens are cached in memory and refreshed a minute early; reconnecting
+  an email replaces its token; an event on two accounts shows once, the higher-priority
+  account wins.
+- Entries: `tags` is a correlated subquery so every read carries them in one round trip;
+  `createArtifacts` re-checks titles because another tab may have won the name since
+  presign.
+- CLI merge: `git merge-file` exits 0 when clean, 1–127 with that many conflicts, higher
+  on failure.

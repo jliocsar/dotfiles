@@ -65,7 +65,6 @@ const addMeetings = Effect.gen(function* () {
   `
 })
 
-// Plaintext on purpose: tags are filtered and grouped on, bodies are not (§3.7).
 const createEntryTags = Effect.gen(function* () {
   const sql = yield* SqlClient.SqlClient
 

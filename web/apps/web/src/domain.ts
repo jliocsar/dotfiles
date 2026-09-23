@@ -10,6 +10,10 @@ export type EntryId = typeof EntryId.Type
 
 export type EntrySlug = typeof EntrySlug.Type
 
+export type EntryRef = typeof EntryRef.Type
+
+export type EntrySummary = typeof EntrySummary.Type
+
 export type Entry = typeof Entry.Type
 
 export type MentionTarget = typeof MentionTarget.Type
@@ -34,7 +38,6 @@ export type Attendee = typeof Attendee.Type
 
 export type MeetingRef = typeof MeetingRef.Type
 
-/** One calendar event, already normalised from whatever Google returned. */
 export interface CalendarEvent {
   readonly accountId: GoogleAccountId
   readonly id: string
@@ -62,6 +65,10 @@ export const EntrySlug = Schema.String.pipe(Schema.brand('EntrySlug'))
 
 export const entrySlug = Schema.decodeSync(EntrySlug)
 
+export const EntryRef = Schema.String.pipe(Schema.brand('EntryRef'))
+
+export const entryRef = Schema.decodeSync(EntryRef)
+
 export const GoogleAccountId = Schema.String.pipe(Schema.brand('GoogleAccountId'))
 
 export const googleAccountId = Schema.decodeSync(GoogleAccountId)
@@ -70,11 +77,9 @@ export const TAG_PATTERN = /^[a-z0-9-]{1,32}$/u
 
 export const Tag = Schema.String.check(Schema.isPattern(TAG_PATTERN)).pipe(Schema.brand('Tag'))
 
-/** What the user typed, folded into a tag when it can be: trim, lowercase, spaces to dashes. */
 export const normaliseTag = (raw: string): Option.Option<Tag> =>
   Schema.decodeOption(Tag)(raw.trim().toLowerCase().replaceAll(/\s+/gu, '-'))
 
-/** Space-joined in the row (a `group_concat` column), sorted, never empty strings. */
 const TagList = Schema.NullOr(Schema.String).pipe(
   Schema.decodeTo(Schema.Array(Tag), {
     decode: SchemaGetter.transform((joined: string | null) =>
@@ -93,7 +98,6 @@ export const Attendee = Schema.Struct({
   name: Schema.optionalKey(Schema.String),
 })
 
-// Snapshotted from the calendar once, never re-synced (§1 MeetingRef).
 export const MeetingRef = Schema.Struct({
   accountId: Schema.NullOr(GoogleAccountId),
   eventId: Schema.optionalKey(Schema.String),
@@ -133,9 +137,30 @@ export const MentionTarget = Schema.Struct({
   updatedAt: Schema.DateTimeUtcFromString,
 }).pipe(Schema.encodeKeys({ updatedAt: 'updated_at' }))
 
+export const EntrySummary = Schema.Struct({
+  id: EntryId,
+  type: EntryType,
+  slug: EntrySlug,
+  title: Schema.String,
+  mime: Schema.NullOr(Schema.String),
+  bytes: Schema.NullOr(Schema.Int),
+  updatedAt: Schema.DateTimeUtcFromString,
+  tags: TagList,
+}).pipe(Schema.encodeKeys({ updatedAt: 'updated_at' }))
+
 export class EntryNotFound extends Schema.TaggedError<EntryNotFound>()('EntryNotFound', {
-  ref: Schema.Union([EntryId, EntrySlug]),
+  ref: Schema.Union([EntryId, EntrySlug, EntryRef]),
 }) {}
+
+export class NotAnArtifact extends Schema.TaggedError<NotAnArtifact>()('NotAnArtifact', {
+  ref: EntryRef,
+}) {}
+
+export class EventNotFound extends Schema.TaggedError<EventNotFound>()('EventNotFound', {
+  eventId: Schema.String,
+}) {}
+
+export class WrongPassword extends Schema.TaggedError<WrongPassword>()('WrongPassword', {}) {}
 
 export class VersionConflict extends Schema.TaggedError<VersionConflict>()('VersionConflict', {
   entry: Entry,
@@ -191,18 +216,20 @@ export const GoogleAccount = Schema.Struct(googleAccountFields).pipe(
   Schema.encodeKeys(GOOGLE_ACCOUNT_KEYS),
 )
 
-export const snapshotEvent = (event: CalendarEvent): MeetingRef => ({
-  accountId: event.accountId,
-  eventId: event.id,
-  start: event.start,
-  end: event.end,
-  attendees: event.attendees,
-  ...(event.link === undefined ? {} : { link: event.link }),
-})
+export const snapshotEvent = (event: CalendarEvent): MeetingRef => {
+  const snapshot: MeetingRef = {
+    accountId: event.accountId,
+    eventId: event.id,
+    start: event.start,
+    end: event.end,
+    attendees: event.attendees,
+  }
+
+  return event.link === undefined ? snapshot : { ...snapshot, link: event.link }
+}
 
 const pad = (value: number) => value.toString().padStart(2, '0')
 
-/** Default title for a fresh entry: the wall-clock time in the user's zone. */
 export const timestampTitle = (now: DateTime.Utc, zone: DateTime.TimeZone) => {
   const parts = DateTime.toParts(DateTime.setZone(now, zone))
 

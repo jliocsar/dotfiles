@@ -3,14 +3,14 @@ import * as Effect from 'effect/Effect'
 import * as Option from 'effect/Option'
 import * as HttpServerRequest from 'effect/unstable/http/HttpServerRequest'
 
-// The browser reports its IANA zone in this cookie (see Layout); server-side
-// math that needs "today" or a wall-clock title reads it. Missing → UTC.
+import { ZONE_HEADER } from './api.ts'
+
 export const ZONE_COOKIE = 'tz'
 
 export const UTC = DateTime.zoneMakeOffset(0)
 
 export const requestZone = Effect.map(HttpServerRequest.HttpServerRequest, (request) =>
-  Option.fromUndefinedOr(request.cookies[ZONE_COOKIE]).pipe(
+  Option.fromUndefinedOr(request.headers[ZONE_HEADER] ?? request.cookies[ZONE_COOKIE]).pipe(
     Option.flatMap(DateTime.zoneMakeNamed),
     Option.getOrElse((): DateTime.TimeZone => UTC),
   ),

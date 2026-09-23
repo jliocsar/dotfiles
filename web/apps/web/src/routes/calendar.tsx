@@ -16,7 +16,6 @@ import { Entries } from '../services/Entries.ts'
 import { Google } from '../services/Google.ts'
 import { requestOrigin, requestZone } from '../zone.ts'
 
-// Ties the callback to the browser that started the dance (CSRF).
 const STATE_COOKIE = 'oauth_state'
 
 const CALLBACK_PATH = '/oauth/google/callback'

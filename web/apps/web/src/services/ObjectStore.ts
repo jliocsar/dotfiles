@@ -2,6 +2,7 @@ import * as Config from 'effect/Config'
 import * as Context from 'effect/Context'
 import * as Effect from 'effect/Effect'
 import * as Layer from 'effect/Layer'
+import * as Option from 'effect/Option'
 import * as Redacted from 'effect/Redacted'
 import * as Schema from 'effect/Schema'
 
@@ -10,13 +11,21 @@ export class UploadFailed extends Schema.TaggedError<UploadFailed>()('UploadFail
   cause: Schema.Unknown,
 }) {}
 
+export interface ObjectHead {
+  readonly bytes: number
+  readonly mime: string
+}
+
 export interface ObjectStoreShape {
   readonly newKey: Effect.Effect<string>
   readonly uploadUrl: (key: string) => string
   readonly downloadUrl: (key: string, mime: string, disposition: string) => string
   readonly remove: (key: string) => Effect.Effect<void>
+  readonly head: (key: string) => Effect.Effect<Option.Option<ObjectHead>>
   readonly upload: (key: string, file: Bun.BunFile) => Effect.Effect<number, UploadFailed>
 }
+
+export const ARTIFACT_PREFIX = 'artifacts/'
 
 const UPLOAD_TTL_SECONDS = 15 * 60
 
@@ -43,7 +52,7 @@ export class ObjectStore extends Context.Service<ObjectStore, ObjectStoreShape>(
         region: 'auto',
       })
 
-      const newKey = Effect.sync(() => `artifacts/${Bun.randomUUIDv7()}`)
+      const newKey = Effect.sync(() => `${ARTIFACT_PREFIX}${Bun.randomUUIDv7()}`)
 
       const uploadUrl = (key: string) =>
         client.presign(key, { method: 'PUT', expiresIn: UPLOAD_TTL_SECONDS })
@@ -60,6 +69,18 @@ export class ObjectStore extends Context.Service<ObjectStore, ObjectStoreShape>(
         Effect.promise(() => client.delete(key)),
       )
 
+      const head = Effect.fn('ObjectStore.head')((key: string) =>
+        Effect.tryPromise(() => client.stat(key)).pipe(
+          Effect.map((stat) => Option.some({ bytes: stat.size, mime: stat.type })),
+          Effect.catchCause((cause) =>
+            Effect.as(
+              Effect.logWarning('object head failed').pipe(Effect.annotateLogs({ key, cause })),
+              Option.none<ObjectHead>(),
+            ),
+          ),
+        ),
+      )
+
       const upload = Effect.fn('ObjectStore.upload')((key: string, file: Bun.BunFile) =>
         Effect.tryPromise({
           try: () => client.write(key, file),
@@ -67,7 +88,7 @@ export class ObjectStore extends Context.Service<ObjectStore, ObjectStoreShape>(
         }),
       )
 
-      return { newKey, uploadUrl, downloadUrl, remove, upload } satisfies ObjectStoreShape
+      return { newKey, uploadUrl, downloadUrl, remove, head, upload } satisfies ObjectStoreShape
     }),
   },
 ) {

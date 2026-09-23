@@ -11,3 +11,4 @@ apps/web/.env
 apps/web/.alchemy
 
 tmp/
+apps/cli/dist

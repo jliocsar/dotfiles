@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json.schemastore.org/package",
+  "name": "@dotfiles/cli",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "bun build src/main.ts --compile --minify --outfile dist/dotfiles-web",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@dotfiles/web": "workspace:*",
+    "@effect/platform-bun": "4.0.0-rc.112",
+    "effect": "4.0.0-rc.112"
+  }
+}

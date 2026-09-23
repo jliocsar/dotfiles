@@ -6,6 +6,7 @@ import * as HttpRouter from 'effect/unstable/http/HttpRouter'
 import * as HttpServerRequest from 'effect/unstable/http/HttpServerRequest'
 import * as HttpServerResponse from 'effect/unstable/http/HttpServerResponse'
 
+import { LOGIN_PATH } from '../api.ts'
 import { LoginPage } from '../pages/Login.tsx'
 import { respond } from '../render.ts'
 import { Auth, SESSION_TTL } from '../services/Auth.ts'
@@ -26,6 +27,16 @@ const LoginForm = Schema.Struct({ password: Schema.String, next: Next })
 const NextParams = Schema.Struct({ next: Next })
 
 const seeOther = (location: string) => HttpServerResponse.redirect(location, { status: 303 })
+
+const BEARER_PREFIX = 'Bearer '
+
+const sessionToken = (request: HttpServerRequest.HttpServerRequest) => {
+  const authorization = request.headers['authorization']
+
+  return authorization !== undefined && authorization.startsWith(BEARER_PREFIX)
+    ? Option.some(authorization.slice(BEARER_PREFIX.length))
+    : Option.fromUndefinedOr(request.cookies[SESSION_COOKIE])
+}
 
 const safeNext = (next: string | undefined) =>
   next !== undefined && next.startsWith('/') && !next.startsWith('//') ? next : '/'
@@ -74,12 +85,12 @@ export const SessionGate = HttpRouter.middleware(
     return (handler) =>
       Effect.gen(function* () {
         const request = yield* HttpServerRequest.HttpServerRequest
-        const valid = yield* Option.match(Option.fromUndefinedOr(request.cookies[SESSION_COOKIE]), {
+        const valid = yield* Option.match(sessionToken(request), {
           onNone: () => Effect.succeed(false),
           onSome: auth.verify,
         })
 
-        if (valid) {
+        if (valid || request.url.split('?')[0] === LOGIN_PATH) {
           return yield* handler
         }
 

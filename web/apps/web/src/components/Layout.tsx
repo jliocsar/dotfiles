@@ -21,7 +21,6 @@ const THEME_BOOT = `(() => {
   addEventListener('DOMContentLoaded', paint)
 })()`
 
-// Server-side "today" and default titles use this zone; first visit reloads once to apply it.
 const ZONE_BOOT = `(() => {
   const zone = Intl.DateTimeFormat().resolvedOptions().timeZone
   const current = document.cookie.match(/(?:^|; )tz=([^;]*)/)?.[1]

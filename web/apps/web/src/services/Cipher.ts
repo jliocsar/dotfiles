@@ -15,7 +15,6 @@ import { entryFields, ENTRY_KEYS } from '../domain.ts'
 export interface CipherShape {
   readonly seal: (plain: string) => string
   readonly isSealed: (stored: string) => boolean
-  /** Plain string in memory, `enc:v1:…` in the database. */
   readonly Sealed: Schema.Codec<string, string>
   readonly Entry: Schema.Codec<DomainEntry, typeof DomainEntry.Encoded>
 }
