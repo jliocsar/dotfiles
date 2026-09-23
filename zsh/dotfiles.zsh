@@ -156,5 +156,5 @@ conan:query() {  # one-shot headless
 conan:compact() { conan "/compact"; }
 
 ## misc
-alias n="nvim ."
+alias n="nvim"
 alias .f="dotfiles"
