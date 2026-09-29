@@ -40,6 +40,10 @@ gsettings set org.gnome.desktop.input-sources xkb-options "['grp:alt_shift_toggl
 #gsettings set org.gnome.desktop.interface font-name 'SF Pro 9'
 #gsettings set org.gnome.desktop.interface monospace-font-name "Comic Mono 10"
 
+# GTK apps (e.g. ghostty) draw their own cursor from this key, while niri uses
+# XCURSOR_THEME=default -> elementary. Keep them in sync so the cursor doesn't swap.
+gsettings set org.gnome.desktop.interface cursor-theme 'elementary'
+
 # Rebinds window resize
 gsettings set org.gnome.desktop.wm.keybindings begin-resize "['<Super><Shift>R']"
 

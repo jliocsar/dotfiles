@@ -122,6 +122,15 @@ PanelWindow {
             }
         }
 
+        // Only while the Jagex Launcher is open; click parks it / brings it back.
+        Indicator {
+            visible: Osrs.launcherId !== -1
+            icon: "󰞇" // md-sword-cross
+            iconColor: Theme.yellow
+            tooltip: "Jagex Launcher"
+            onClicked: Osrs.toggleLauncher()
+        }
+
         Indicator { icon: "\uf4bc"; text: Stats.cpuPercent + "%" }
         Indicator { icon: "\uefc5"; text: Stats.memoryPercent + "%" }
 
