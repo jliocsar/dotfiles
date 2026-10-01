@@ -51,9 +51,11 @@ source $HOME/.dotfiles/zsh/dotfiles.zsh
 if [[ -n "$INFISICAL_PERSONAL_PROJECT_ID" ]]; then
   infisical_cache="${XDG_RUNTIME_DIR:-/tmp}/infisical-personal.env"
   if [[ -z "$(find "$infisical_cache" -mmin -60 2>/dev/null)" ]]; then
-    infisical export --projectId="$INFISICAL_PERSONAL_PROJECT_ID" --env=prod --format=dotenv-export --silent > "$infisical_cache.tmp" 2>/dev/null \
+    # stdin from /dev/null: an expired session makes infisical start an interactive
+    # login that waits on the tty forever, invisible because output is redirected.
+    timeout 10 infisical export --projectId="$INFISICAL_PERSONAL_PROJECT_ID" --env=prod --format=dotenv-export --silent < /dev/null > "$infisical_cache.tmp" 2>/dev/null \
       && mv "$infisical_cache.tmp" "$infisical_cache" \
-      || rm -f "$infisical_cache.tmp"
+      || { rm -f "$infisical_cache.tmp"; echo "infisical: fetch failed (run \`infisical login\`), using stale cache" >&2; }
   fi
   [[ -f "$infisical_cache" ]] && . "$infisical_cache"
   unset infisical_cache

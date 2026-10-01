@@ -89,7 +89,7 @@ dotfiles_custom_claude() {
     system_prompt+=$'\n'"$(cat $HOME/.dotfiles/claude/WORK_SYSTEM_PROMPT.md)"
   fi
 
-  local disallowed_tools=("Artifact" "NotebookEdit" "ScheduleWakeup" "PushNotification" "AskUserQuestion" "CronCreate" "CronList" "CronDelete" "WebFetch" "RemoteTrigger" "DesignSync" "EnterPlanMode")
+  local disallowed_tools=("Artifact" "NotebookEdit" "ScheduleWakeup" "PushNotification" "AskUserQuestion" "WebFetch" "RemoteTrigger" "DesignSync" "EnterPlanMode" "ReportFindings" "SendFeedback")
 
   _claude \
     --enable-auto-mode \

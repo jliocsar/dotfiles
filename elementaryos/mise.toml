@@ -18,3 +18,4 @@ infisical = "latest"
 "github:dmtrKovalenko/fff" = { version = "latest", asset_pattern = "fff-mcp-x86_64-unknown-linux-gnu" }
 # Monorepo with mixed tags; cli-v* only. Attestation opt-out: ente's sigstore timestamps fail to verify.
 "github:ente-io/ente" = { version = "latest", tag_regex = "^cli-v", version_prefix = "cli-v", asset_pattern = "ente-cli-v{{version}}-linux-amd64.tar.gz", github_attestations = false }
+herdr = "latest"
