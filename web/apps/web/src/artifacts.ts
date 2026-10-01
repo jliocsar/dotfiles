@@ -38,7 +38,7 @@ export const previewOf = (mime: string): Preview | undefined => {
 }
 
 export const opensInline = (mime: string): boolean =>
-  previewOf(mime) !== undefined || INLINE_TEXT.has(mime)
+  previewOf(mime) !== undefined || INLINE_TEXT.has(mime.split(';')[0]?.trim() ?? '')
 
 export const contentDisposition = (mime: string, name: string, download: boolean): string =>
   `${download || !opensInline(mime) ? 'attachment' : 'inline'}; filename*=UTF-8''${encodeURIComponent(name)}`
