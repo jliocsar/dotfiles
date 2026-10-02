@@ -37,6 +37,12 @@
       "skillPath": "skills/obsidian-markdown/SKILL.md",
       "computedHash": "0f47297035d7824e7bf0f1984e8145a59a123e2258b5d54c9ac9642f9f77e177"
     },
+    "pie": {
+      "source": "jliocsar/pie",
+      "sourceType": "github",
+      "skillPath": "skills/pie/SKILL.md",
+      "computedHash": "a47b5b20ef368b996e0fe3458a806eb32ce4a4b308aa3484db38361cd19a1d6e"
+    },
     "show-me": {
       "source": "humanlayer/skills",
       "sourceType": "github",
