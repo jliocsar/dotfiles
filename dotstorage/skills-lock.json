@@ -13,6 +13,12 @@
       "skillPath": "skills/herdr/SKILL.md",
       "computedHash": "d2ee5846631446f22067c52980d100c9355df48106a679a04aab1c7a383b5f41"
     },
+    "lx": {
+      "source": "jliocsar/lx",
+      "sourceType": "github",
+      "skillPath": "skills/lx/SKILL.md",
+      "computedHash": "4c68b177954d3d8df4de7f69b9d16f10fcf8f316cac78e738b2eaa887223cbdb"
+    },
     "obsidian-cli": {
       "source": "kepano/obsidian-skills",
       "sourceType": "github",

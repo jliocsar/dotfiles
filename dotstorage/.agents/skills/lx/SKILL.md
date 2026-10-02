@@ -1,13 +1,13 @@
 ---
 name: lx
-description: Use lx to fetch, cache, and search markdown documentation from `llms.txt` and `.md` sources. Activate when the user wants to pull docs from an `llms.txt` or `.md` URLs, query a local docs cache, run full-text or semantic search across cached docs, or expose the cache as an MCP server.
+description: Use lx to fetch, cache, and search markdown documentation from `llms.txt` corpora. Activate when the user wants to pull docs from an `llms.txt` URL, query a local docs cache, run full-text or semantic search across cached docs, or expose the cache as an MCP server.
 when_to_use: User mentions `lx`, `llms.txt`, asks to fetch/cache/search documentation locally, wants semantic search over docs, or asks to run an MCP doc server.
 allowed-tools: Bash(lx *)
 ---
 
 # lx
 
-`lx` is a fast local CLI that fetches markdown from `llms.txt` and `.md` sources, caches it in SQLite, and exposes it through full-text search, semantic (vector) search, and an MCP stdio server.
+`lx` is a fast local CLI that fetches markdown from `llms.txt` corpora, caches it in SQLite, and exposes it through full-text search, semantic (vector) search, and an MCP stdio server.
 
 ## Subcommands at a glance
 

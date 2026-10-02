@@ -299,7 +299,8 @@ entry's link answers 404. Hard-deleting the entry deletes its links.
 ## 9. CLI and skill
 
 Agents reach the app through `dotfiles-web`, a CLI, plus a skill at
-`skills/dotfiles-web/SKILL.md`. Anything with a shell can use it; no MCP.
+`skills/dotfiles-web/SKILL.md` (repo root, not `web/`). Anything with a shell can
+use it; no MCP.
 
 - `apps/cli`: Effect `unstable/cli` + `HttpApiClient.make(Api)`, sharing `api.ts` and
   `domain.ts` with the server. `bun build --compile` → `apps/cli/dist/dotfiles-web`.
