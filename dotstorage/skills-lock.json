@@ -7,6 +7,12 @@
       "skillPath": "skills/animation-vocabulary/SKILL.md",
       "computedHash": "39319fc9a33c15be08666b3685f58666f042ff36bb902b7814c0834a5ba99df4"
     },
+    "dotfiles-web": {
+      "source": "jliocsar/dotfiles",
+      "sourceType": "github",
+      "skillPath": "skills/dotfiles-web/SKILL.md",
+      "computedHash": "68cac428b5db2d46676a9e417019157190593445dc6fcf36093ac4de0ee7e335"
+    },
     "herdr": {
       "source": "herdrdev/herdr",
       "sourceType": "github",
