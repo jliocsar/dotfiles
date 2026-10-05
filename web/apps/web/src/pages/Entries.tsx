@@ -3,7 +3,6 @@ import type { Node, Raw } from '@dotfiles/jsx'
 import * as Arr from 'effect/Array'
 import * as DateTime from 'effect/DateTime'
 import * as Effect from 'effect/Effect'
-import * as Option from 'effect/Option'
 
 import { Icon } from '../components/Icon.tsx'
 import { Layout, ThemeToggle } from '../components/Layout.tsx'
@@ -15,10 +14,17 @@ import type { Entry, EntrySlug, MeetingRef, Section, ShareLink, Tag, TagCount } 
 import { ShareLinks } from '../services/ShareLinks.ts'
 import { artifactFile, formatBytes, previewOf } from '../artifacts.ts'
 import type { ArtifactFile, Preview } from '../artifacts.ts'
-import { hueOf } from '../tags.ts'
+import { hueOf, MAX_VISIBLE_TAGS } from '../tags.ts'
 import { parseTasks, taskProgress } from '../tasks.ts'
 import type { Task } from '../tasks.ts'
 import { clock } from '../zone.ts'
+
+interface TagFilter {
+  readonly section: Section
+  readonly archived: boolean
+  readonly tags: readonly TagCount[]
+  readonly active: readonly Tag[]
+}
 
 interface Back {
   readonly href: string
@@ -26,7 +32,8 @@ interface Back {
 }
 
 const PROSE = [
-  'prose prose-sm max-w-none font-mono',
+  'prose prose-sm max-w-none font-sans',
+  'prose-pre:text-[0.95em] [&_:not(pre)>code]:text-[0.95em]',
   'prose-headings:font-serif prose-headings:font-medium',
   'prose-a:underline-offset-[3px] prose-code:font-normal prose-code:rounded-sm prose-pre:rounded-md',
   'prose-code:before:content-none prose-code:after:content-none',
@@ -105,9 +112,15 @@ const TAG_PANEL = [
 ].join(' ')
 
 const TAG_ROW = [
-  'group relative flex h-7 cursor-pointer items-center gap-2 rounded-md px-2',
+  'group relative flex h-7 shrink-0 cursor-pointer items-center gap-2 rounded-md px-2',
   'hover:bg-muted aria-pressed:font-medium has-checked:font-medium',
 ].join(' ')
+
+const TAG_STRIP =
+  '-mx-4 -mt-2 mb-4 flex snap-x scroll-px-4 gap-1.5 overflow-x-auto overscroll-x-contain px-4 [scrollbar-width:none] sm:hidden'
+
+const TAG_CHIP =
+  'inline-flex h-8 shrink-0 snap-start items-center gap-1.5 rounded-full border px-3 text-xs font-medium whitespace-nowrap text-muted-foreground aria-pressed:bg-muted aria-pressed:text-foreground'
 
 const TAG_LIST = 'flex max-h-[232px] flex-col overflow-y-auto p-1'
 const TAG_COUNT = 'ml-auto pl-3 text-[11.5px] text-muted-foreground tabular-nums'
@@ -161,9 +174,9 @@ export const Page = (props: {
   readonly children?: Node
 }) => (
   <main
-    class={`mx-auto max-w-[1200px] px-4 pt-[calc(2.5rem+env(safe-area-inset-top))] sm:px-8 ${props.fill === true ? 'flex min-h-dvh flex-col pb-[calc(2.5rem+env(safe-area-inset-bottom))]' : 'pb-[calc(6rem+env(safe-area-inset-bottom))]'}`}
+    class={`mx-auto max-w-[1200px] px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] sm:px-8 sm:pt-[calc(2.5rem+env(safe-area-inset-top))] ${props.fill === true ? 'flex min-h-dvh flex-col pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:pb-[calc(2.5rem+env(safe-area-inset-bottom))]' : 'pb-[calc(4rem+env(safe-area-inset-bottom))] sm:pb-[calc(6rem+env(safe-area-inset-bottom))]'}`}
   >
-    <div class="mb-10 flex h-7 items-center justify-between">
+    <div class="mb-6 flex h-7 sm:mb-10 items-center justify-between">
       {props.crumbs ?? <BackLink back={props.back} />}
       <div class="flex items-center gap-1">
         {props.actions}
@@ -173,7 +186,7 @@ export const Page = (props: {
     <h1 class="mb-2.5 font-serif text-[34px] leading-[39px] font-normal tracking-[-0.01em]">
       {props.heading}
     </h1>
-    <div class="mb-6 flex min-h-[42px] flex-wrap items-center gap-x-2.5 gap-y-1 border-b py-1.5 text-xs whitespace-nowrap text-muted-foreground sm:py-0">
+    <div class="mb-4 flex min-h-[42px] flex-wrap sm:mb-6 items-center gap-x-2.5 gap-y-1 border-b py-1.5 text-xs whitespace-nowrap text-muted-foreground sm:py-0">
       {props.meta}
     </div>
     {props.children}
@@ -186,8 +199,8 @@ const TagDot = (props: { readonly tag: Tag }) => (
   <i class={TAG_DOT} style={`--h:${hueOf(props.tag)}`} />
 )
 
-export const TagPill = (props: { readonly tag: Tag }) => (
-  <span class={TAG_PILL} data-pill>
+export const TagPill = (props: { readonly tag: Tag; readonly hidden?: true | undefined }) => (
+  <span class={TAG_PILL} data-pill hidden={props.hidden}>
     <TagDot tag={props.tag} />
     {props.tag}
   </span>
@@ -208,12 +221,12 @@ const TagSearch = (props: { readonly placeholder: string; readonly name?: string
   </div>
 )
 
-const listHref = (section: Section, archived: boolean, tag: Tag | undefined) => {
+const listHref = (section: Section, archived: boolean, tags: readonly Tag[]) => {
   const params = new URLSearchParams()
 
-  if (tag !== undefined) {
-    params.set('tag', tag)
-  }
+  tags.forEach((tag) => {
+    params.append('tag', tag)
+  })
 
   if (archived) {
     params.set('archived', '')
@@ -222,59 +235,61 @@ const listHref = (section: Section, archived: boolean, tag: Tag | undefined) => 
   return params.size === 0 ? section.path : `${section.path}?${params}`
 }
 
-const TagMenu = (props: {
-  readonly section: Section
-  readonly archived: boolean
-  readonly tags: readonly TagCount[]
-  readonly active: Option.Option<Tag>
-}) => (
+const toggled = (tags: readonly Tag[], tag: Tag) =>
+  tags.includes(tag) ? tags.filter((other) => other !== tag) : [...tags, tag]
+
+const TagMenu = (props: TagFilter) => (
   <>
     <button
       type="button"
       class="btn [anchor-name:--tags] aria-pressed:bg-muted aria-pressed:text-foreground"
       data-variant="ghost"
       popovertarget="tag-menu"
-      aria-pressed={String(Option.isSome(props.active))}
+      aria-pressed={String(props.active.length > 0)}
     >
-      {Option.match(props.active, {
-        onNone: () => (
-          <>
-            <Icon name="tag" />
-            Tag
-          </>
-        ),
-        onSome: (tag) => (
-          <>
-            <TagDot tag={tag} />
-            {tag}
-          </>
-        ),
-      })}
+      <Icon name="tag" />
+      {props.active.length === 0 ? 'Tags' : props.active.join(', ')}
       <Icon name="chevron-down" class="size-3 text-muted-foreground" />
     </button>
     <div id="tag-menu" popover class={`${TAG_PANEL} [left:anchor(left)]`} data-tag-menu>
-      <TagSearch placeholder="Filter by tag…" />
+      <TagSearch placeholder="Filter by tags…" />
       <div class={TAG_LIST}>
         {props.tags.map(({ tag, count }) => (
           <a
             class={TAG_ROW}
-            href={listHref(
-              props.section,
-              props.archived,
-              Option.contains(props.active, tag) ? undefined : tag,
-            )}
-            aria-pressed={String(Option.contains(props.active, tag))}
+            href={listHref(props.section, props.archived, toggled(props.active, tag))}
+            aria-pressed={String(props.active.includes(tag))}
             data-tag-row
             data-tag={tag}
           >
             <TagDot tag={tag} />
             <span class="truncate">{tag}</span>
             <span class={TAG_COUNT}>{count}</span>
+            <Icon name="check" class="size-3.5 shrink-0 opacity-0 group-aria-pressed:opacity-100" />
           </a>
         ))}
       </div>
     </div>
   </>
+)
+
+const TagStrip = (props: TagFilter) => (
+  <nav class={TAG_STRIP} aria-label="Filter by tags">
+    {[
+      ...props.active,
+      ...props.tags.map(({ tag }) => tag).filter((tag) => !props.active.includes(tag)),
+    ].map((tag) => (
+      <a
+        class={TAG_CHIP}
+        href={listHref(props.section, props.archived, toggled(props.active, tag))}
+        aria-pressed={String(props.active.includes(tag))}
+      >
+        <TagDot tag={tag} />
+        {tag}
+        {props.active.includes(tag) ? <Icon name="x" class="size-3 opacity-60" /> : null}
+      </a>
+    ))}
+  </nav>
 )
 
 export const GroupLabel = (props: { readonly children: Node }) => (
@@ -391,15 +406,12 @@ export const MissingPage = (props: { readonly slug: string }) => (
 export const ListPage = Effect.fn('ListPage')(function* (props: {
   readonly section: Section
   readonly archived: boolean
-  readonly tag: Option.Option<Tag>
+  readonly tags: readonly Tag[]
 }) {
   const entries = yield* Entries
-  const listed = yield* entries.list(
-    props.section.type,
-    props.archived,
-    Option.getOrUndefined(props.tag),
-  )
+  const listed = yield* entries.list(props.section.type, props.archived, props.tags)
   const tags = yield* entries.distinctTags(props.section.type, props.archived)
+  const filter = { section: props.section, archived: props.archived, tags, active: props.tags }
   const currentYear = DateTime.getPartUtc(yield* DateTime.now, 'year')
   const groups = Arr.groupBy(listed, (entry) => monthOf(entry, currentYear))
 
@@ -420,16 +432,11 @@ export const ListPage = Effect.fn('ListPage')(function* (props: {
               Archived
             </a>
             <Dot />
-            {tags.length === 0 && Option.isNone(props.tag) ? null : (
-              <>
-                <TagMenu
-                  section={props.section}
-                  archived={props.archived}
-                  tags={tags}
-                  active={props.tag}
-                />
+            {tags.length === 0 && props.tags.length === 0 ? null : (
+              <span class="hidden items-center gap-2.5 sm:flex">
+                <TagMenu {...filter} />
                 <Dot />
-              </>
+              </span>
             )}
             <span>
               {listed.length} {props.section.noun}
@@ -464,12 +471,12 @@ export const ListPage = Effect.fn('ListPage')(function* (props: {
           </>
         }
       >
+        {tags.length === 0 && props.tags.length === 0 ? null : <TagStrip {...filter} />}
         {listed.length === 0 ? (
           <GroupLabel>
-            {Option.match(props.tag, {
-              onNone: () => (props.archived ? 'Nothing archived' : 'Nothing yet'),
-              onSome: (tag) => `Nothing tagged ${tag}`,
-            })}
+            {props.tags.length > 0
+              ? `Nothing tagged ${props.tags.join(' + ')}`
+              : `Nothing ${props.archived ? 'archived' : 'yet'}`}
           </GroupLabel>
         ) : null}
         {Object.entries(groups).map(([month, grouped]) => (
@@ -706,11 +713,17 @@ const TagPills = (props: { readonly entry: Entry; readonly oob?: boolean }) => (
       <>
         <Dot />
         <span class="flex min-w-0 items-center gap-1 overflow-hidden" data-fold>
-          {props.entry.tags.map((tag) => (
-            <TagPill tag={tag} />
+          {props.entry.tags.map((tag, index) => (
+            <TagPill tag={tag} hidden={index < MAX_VISIBLE_TAGS ? undefined : true} />
           ))}
-          <button type="button" class={TAG_MORE} popovertarget="tags-panel" data-fold-more hidden>
-            +0
+          <button
+            type="button"
+            class={TAG_MORE}
+            popovertarget="tags-panel"
+            data-fold-more
+            hidden={props.entry.tags.length > MAX_VISIBLE_TAGS ? undefined : true}
+          >
+            +{Math.max(0, props.entry.tags.length - MAX_VISIBLE_TAGS)}
           </button>
         </span>
       </>

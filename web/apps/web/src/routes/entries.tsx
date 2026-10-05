@@ -216,7 +216,12 @@ const listRoute = (section: Section) =>
       ListPage({
         section,
         archived: params['archived'] !== undefined,
-        tag: tagParam(params['tag']),
+        tags: pipe(
+          Arr.ensure(params['tag'] ?? []),
+          Arr.map((raw) => tagParam(raw)),
+          Arr.getSomes,
+          Arr.dedupe,
+        ),
       }),
     )
   })

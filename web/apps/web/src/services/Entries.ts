@@ -31,7 +31,11 @@ import { ObjectStore } from './ObjectStore.ts'
 import type { ObjectStoreShape } from './ObjectStore.ts'
 
 export interface EntriesShape {
-  readonly list: (type: EntryType, archived: boolean, tag?: Tag) => Effect.Effect<readonly Entry[]>
+  readonly list: (
+    type: EntryType,
+    archived: boolean,
+    tags: readonly Tag[],
+  ) => Effect.Effect<readonly Entry[]>
   readonly distinctTags: (
     type: EntryType | undefined,
     archived: boolean,
@@ -165,13 +169,18 @@ const queries = (sql: SqlClient.SqlClient, Entry: CipherShape['Entry']) => {
       Request: Schema.Struct({
         type: EntryType,
         archived: Schema.Boolean,
-        tag: Schema.NullOr(Schema.String),
+        everyTagJson: Schema.String,
       }),
       Result: Entry,
-      execute: ({ type, archived, tag }) => sql`
+      execute: ({ type, archived, everyTagJson }) => sql`
         SELECT ${columns} FROM entries
         WHERE type = ${type} AND (archived_at IS NOT NULL) = ${archived ? 1 : 0}
-          AND (${tag} IS NULL OR id IN (SELECT entry_id FROM entry_tags WHERE tag = ${tag}))
+          AND (json_array_length(${everyTagJson}) = 0 OR id IN (
+            SELECT entry_id FROM entry_tags
+            WHERE tag IN (SELECT value FROM json_each(${everyTagJson}))
+            GROUP BY entry_id
+            HAVING count(*) = json_array_length(${everyTagJson})
+          ))
         ORDER BY updated_at DESC
       `,
     }),
@@ -508,8 +517,8 @@ export class Entries extends Context.Service<Entries, EntriesShape>()('app/Entri
     })
 
     const list = Effect.fn('Entries.list')(
-      (type: EntryType, archived: boolean, tag: Tag | undefined) =>
-        selectByType({ type, archived, tag: tag ?? null }),
+      (type: EntryType, archived: boolean, tags: readonly Tag[]) =>
+        selectByType({ type, archived, everyTagJson: JSON.stringify(tags) }),
     )
 
     const distinctTags = Effect.fn('Entries.distinctTags')(

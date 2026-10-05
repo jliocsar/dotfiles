@@ -20,6 +20,7 @@ import * as HttpApiClient from 'effect/unstable/httpapi/HttpApiClient'
 import { Api } from '../api.ts'
 import { entryId, normaliseTag, VersionConflict } from '../domain.ts'
 import type { EntryId } from '../domain.ts'
+import { MAX_VISIBLE_TAGS } from '../tags.ts'
 import { serializeTasks } from '../tasks.ts'
 import type { Task } from '../tasks.ts'
 import { mountCommand } from './command.tsx'
@@ -493,20 +494,24 @@ const foldPills = (fold: HTMLElement) => {
   const pills = Arr.fromIterable(fold.querySelectorAll<HTMLElement>('[data-pill]'))
   const more = fold.querySelector<HTMLElement>('[data-fold-more]')
 
-  pills.forEach((pill) => {
-    pill.hidden = false
-  })
-
   if (more === null) {
     return
   }
 
-  more.hidden = true
+  pills.forEach((pill, index) => {
+    pill.hidden = index >= MAX_VISIBLE_TAGS
+  })
 
-  for (let hidden = 0; hidden < pills.length && fold.scrollWidth > fold.clientWidth; hidden++) {
+  let hidden = Math.max(0, pills.length - MAX_VISIBLE_TAGS)
+
+  more.hidden = hidden === 0
+  more.textContent = `+${hidden}`
+
+  while (hidden < pills.length && fold.scrollWidth > fold.clientWidth) {
+    hidden++
     more.hidden = false
-    more.textContent = `+${hidden + 1}`
-    const pill = pills[pills.length - 1 - hidden]
+    more.textContent = `+${hidden}`
+    const pill = pills[pills.length - hidden]
 
     if (pill !== undefined) {
       pill.hidden = true
