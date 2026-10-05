@@ -95,9 +95,7 @@ const CLOSED: State = {
 }
 
 const MENTION_BEFORE = /(?:^|[\s(])@([\w-]*)$/u
-
 const NOISE = /[^a-z0-9]+/gu
-
 const MAX_HITS = 100
 
 const RANKS: readonly Test[] = [

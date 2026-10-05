@@ -10,7 +10,6 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient'
 import { ObjectStore } from './ObjectStore.ts'
 
 const BACKUP_INTERVAL = '1 hour'
-
 const SNAPSHOT_PATH = '/tmp/backup.db'
 
 const snapshotDatabaseToBucket = Effect.fn('Backup.snapshotDatabaseToBucket')(function* () {

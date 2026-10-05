@@ -11,7 +11,6 @@ import { entryId, entrySlug } from '@dotfiles/web/domain'
 import { ConflictMarkers, NotPulled, PutResult, UnpushedChanges, pull, push } from './workspace.ts'
 
 const ID = entryId('0199aaaa-0000-7000-8000-000000000000')
-
 const SLUG = entrySlug('plan')
 
 const runtime = ManagedRuntime.make(BunServices.layer)

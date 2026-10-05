@@ -5,13 +5,9 @@ const TEXT_ESCAPES = new Map([
 ])
 
 const ATTRIBUTE_ESCAPES = new Map([...TEXT_ESCAPES, ['"', '&quot;'], ["'", '&#39;']])
-
 const TEXT_UNESCAPES = new Map([...TEXT_ESCAPES].map(([plain, entity]) => [entity, plain]))
-
 const TEXT_PATTERN = /[&<>]/gu
-
 const ESCAPED_PATTERN = /&(?:amp|lt|gt);/gu
-
 const ATTRIBUTE_PATTERN = /[&<>"']/gu
 
 export const escapeText = (value: string): string =>

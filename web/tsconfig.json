@@ -4,7 +4,8 @@
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "types": ["bun"],
     "jsx": "react-jsx",
-    "jsxImportSource": "@dotfiles/jsx"
+    "jsxImportSource": "@dotfiles/jsx",
+    "plugins": [{ "name": "@effect/language-service", "diagnostics": false }]
   },
   "include": ["apps/**/*.ts", "apps/**/*.tsx", "packages/**/*.ts"]
 }

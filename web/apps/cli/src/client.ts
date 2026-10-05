@@ -22,7 +22,6 @@ export class NotLoggedIn extends Schema.TaggedError<NotLoggedIn>()('NotLoggedIn'
 }) {}
 
 const CONFIG_FILE_MODE = 0o600
-
 const CONFIG_DIR_MODE = 0o700
 
 export const configPath = Effect.gen(function* () {

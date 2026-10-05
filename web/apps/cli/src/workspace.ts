@@ -40,9 +40,9 @@ export interface MergeResult {
   readonly text: string
 }
 
-export const DEFAULT_DIR = '/tmp/dotfiles-web'
-
 const MAX_PUSH_ATTEMPTS = 3
+
+export const DEFAULT_DIR = '/tmp/dotfiles-web'
 
 export const PutResult = Data.taggedEnum<PutResult>()
 

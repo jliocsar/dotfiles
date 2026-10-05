@@ -3,7 +3,6 @@ declare const htmx: {
 }
 
 const CACHED_DAY_KEY = 'calendar:day'
-
 const CACHED_HTML_KEY = 'calendar:html'
 
 const calendar = document.querySelector<HTMLElement>('[data-calendar-today]')

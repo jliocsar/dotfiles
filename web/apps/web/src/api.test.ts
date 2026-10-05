@@ -27,7 +27,6 @@ import { ObjectStore } from './services/ObjectStore.ts'
 import { ShareLinks } from './services/ShareLinks.ts'
 
 const PASSWORD = Bun.randomUUIDv7()
-
 const UNAUTHORIZED = 401
 
 const bucket = new Map<string, ObjectHead>()

@@ -25,13 +25,11 @@ export interface ObjectStoreShape {
   readonly upload: (key: string, file: Bun.BunFile) => Effect.Effect<number, UploadFailed>
 }
 
-export const ARTIFACT_PREFIX = 'artifacts/'
-
 const UPLOAD_TTL_SECONDS = 15 * 60
-
 const DOWNLOAD_TTL_SECONDS = 5 * 60
-
 const TIGRIS_ENDPOINT = 'https://t3.storage.dev'
+
+export const ARTIFACT_PREFIX = 'artifacts/'
 
 export class ObjectStore extends Context.Service<ObjectStore, ObjectStoreShape>()(
   'app/ObjectStore',

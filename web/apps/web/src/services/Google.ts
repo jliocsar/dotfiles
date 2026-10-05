@@ -50,11 +50,8 @@ export class GoogleError extends Schema.TaggedError<GoogleError>()('GoogleError'
 }) {}
 
 const SCOPE = 'https://www.googleapis.com/auth/calendar.readonly'
-
 const AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
-
 const TOKEN_URL = 'https://oauth2.googleapis.com/token'
-
 const CALENDAR_URL = 'https://www.googleapis.com/calendar/v3'
 
 const TokenResponse = Schema.Struct({

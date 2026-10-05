@@ -13,9 +13,9 @@ export interface AuthShape {
   readonly verify: (token: string) => Effect.Effect<boolean>
 }
 
-export const SESSION_TTL = Duration.days(365)
-
 const FAILED_LOGIN_DELAY = Duration.seconds(2)
+
+export const SESSION_TTL = Duration.days(365)
 
 const sign = (secret: string, issuedAt: string) =>
   new Bun.CryptoHasher('sha256', secret).update(issuedAt).digest('base64url')

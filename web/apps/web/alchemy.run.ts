@@ -7,9 +7,7 @@ import * as Effect from 'effect/Effect'
 import * as Layer from 'effect/Layer'
 
 const APP_NAME = 'jc-dotfiles-web'
-
 const REGION = 'gru'
-
 const PORT = 3123
 
 const Site = Fly.App('Site', { name: APP_NAME })

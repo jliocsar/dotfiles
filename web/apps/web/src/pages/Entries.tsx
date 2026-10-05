@@ -57,9 +57,7 @@ const ARCHIVED_ROW = [
 ].join(' ')
 
 const ROW_ACTION = 'btn -ml-2 aria-pressed:bg-muted aria-pressed:text-foreground'
-
 const TASK_ITEM = 'group flex h-7 items-center gap-2.5'
-
 const TASK_CHECK = 'size-3.5 shrink-0 cursor-pointer accent-foreground'
 
 const TASK_TEXT = [
@@ -68,7 +66,6 @@ const TASK_TEXT = [
 ].join(' ')
 
 const TITLE_INPUT = 'w-full bg-transparent outline-none placeholder:text-muted-foreground/60'
-
 const NEW_BUTTON = 'btn ml-auto border-transparent'
 
 const SHARE_PANEL = [
@@ -113,9 +110,7 @@ const TAG_ROW = [
 ].join(' ')
 
 const TAG_LIST = 'flex max-h-[232px] flex-col overflow-y-auto p-1'
-
 const TAG_COUNT = 'ml-auto pl-3 text-[11.5px] text-muted-foreground tabular-nums'
-
 const TAG_SEARCH = 'w-full bg-transparent outline-none placeholder:text-muted-foreground'
 
 const NO_PREVIEW =

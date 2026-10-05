@@ -41,7 +41,6 @@
         "properties": "never"
       }
     ],
-    "curly": ["error", "all"],
     "no-else-return": [
       "error",
       {

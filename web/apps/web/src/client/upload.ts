@@ -1,4 +1,5 @@
 import * as Arr from 'effect/Array'
+import { pipe } from 'effect/Function'
 import * as Effect from 'effect/Effect'
 import * as Option from 'effect/Option'
 import * as Predicate from 'effect/Predicate'
@@ -39,11 +40,8 @@ type UploadReport = typeof UploadReport.Type
 const ReportJson = Schema.fromJsonString(UploadReport)
 
 const REPORT_KEY = 'upload-report'
-
 const PUT_CONCURRENCY = 4
-
 const FALLBACK_MIME = 'application/octet-stream'
-
 const IDLE_LABEL = 'Drop files here, or click to browse'
 
 const uploadEndpoints = Effect.flatMap(HttpClient.HttpClient, (httpClient) =>
@@ -75,7 +73,10 @@ const uploadElements = (dialog: HTMLDialogElement): Option.Option<UploadElements
   }).pipe(Option.map((found) => ({ dialog, ...found })))
 
 const uniqueByName = (files: FileList | null | undefined): readonly File[] =>
-  Arr.dedupeWith(Arr.fromIterable(files ?? []), (left, right) => left.name === right.name)
+  pipe(
+    Arr.fromIterable(files ?? []),
+    Arr.dedupeWith((left, right) => left.name === right.name),
+  )
 
 const carriesFiles = (event: DragEvent) => event.dataTransfer?.types.includes('Files') === true
 

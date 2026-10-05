@@ -23,13 +23,9 @@ export interface MarkdownShape {
 }
 
 const PARSER_OPTIONS = { autolinks: true } as const
-
 const SAFE_HREF = /^(?:https?:\/\/|mailto:|\/|#)/u
-
 const TASK_PLACEHOLDER = /<li data-task="">/gu
-
 const INTERNAL_HREF = /^@([\w-]+)$/u
-
 const INTERNAL_LINK = /<a href="\/e\/([\w-]+)" data-ref>/gu
 
 const internalSlug = (href: string) => Option.fromUndefinedOr(INTERNAL_HREF.exec(href)?.[1])

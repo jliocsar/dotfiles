@@ -21,7 +21,6 @@ export interface CalendarShape {
 }
 
 const COLUMNS = 'id, email, calendar_ids, refresh_token, created_at'
-
 const TOKEN_SLACK = '1 minute'
 
 export class Calendar extends Context.Service<Calendar, CalendarShape>()('app/Calendar', {

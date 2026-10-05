@@ -9,7 +9,6 @@ export interface ArtifactFile {
 }
 
 const INLINE_TEXT: ReadonlySet<string> = new Set(['text/html', 'text/markdown', 'text/plain'])
-
 const UNITS = ['B', 'KB', 'MB', 'GB', 'TB'] as const
 
 export const artifactFile = (entry: Entry): ArtifactFile | undefined =>

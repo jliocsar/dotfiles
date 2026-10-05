@@ -1,4 +1,5 @@
 import * as Arr from 'effect/Array'
+import { pipe } from 'effect/Function'
 import * as Effect from 'effect/Effect'
 import * as Layer from 'effect/Layer'
 import * as Option from 'effect/Option'
@@ -225,7 +226,7 @@ const tagsRoute = Effect.gen(function* () {
   const slug = yield* slugParam
   const form = yield* HttpServerRequest.schemaBodyUrlParams(TagsForm)
   const entry = yield* entries.bySlug(slug)
-  const kept = Arr.getSomes(Arr.ensure(form.tag ?? []).map(normaliseTag))
+  const kept = pipe(Arr.ensure(form.tag ?? []), Arr.map(normaliseTag), Arr.getSomes)
   const created = form.create === undefined ? Option.none() : normaliseTag(form.create)
   const next = yield* entries.setTags(entry.id, [...kept, ...Option.toArray(created)])
   const knownTags = yield* entries.distinctTags(undefined, false)

@@ -17,7 +17,6 @@ import { Google } from '../services/Google.ts'
 import { requestOrigin, requestZone } from '../zone.ts'
 
 const STATE_COOKIE = 'oauth_state'
-
 const CALLBACK_PATH = '/oauth/google/callback'
 
 const STATE_COOKIE_OPTIONS = {

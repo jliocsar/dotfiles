@@ -47,7 +47,6 @@ export const Cursor = Schema.StringFromBase64Url.pipe(
 )
 
 export const LIST_LIMIT_DEFAULT = 50
-
 export const LIST_LIMIT_MAX = 200
 
 export const ListQuery = {
@@ -143,7 +142,6 @@ export const LoginRequest = Schema.Struct({ password: Schema.String })
 export const LoginResponse = Schema.Struct({ token: Schema.String })
 
 export const ZONE_HEADER = 'x-time-zone'
-
 export const LOGIN_PATH = '/api/auth/login'
 
 export class AuthApi extends HttpApiGroup.make('auth')

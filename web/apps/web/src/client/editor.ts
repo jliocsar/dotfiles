@@ -4,6 +4,7 @@ import { tags } from '@lezer/highlight'
 import { vim } from '@replit/codemirror-vim'
 import { EditorView, minimalSetup } from 'codemirror'
 import * as Arr from 'effect/Array'
+import { pipe } from 'effect/Function'
 import * as Effect from 'effect/Effect'
 import * as FiberHandle from 'effect/FiberHandle'
 import * as ManagedRuntime from 'effect/ManagedRuntime'
@@ -119,9 +120,7 @@ const markdownHighlight = HighlightStyle.define([
 ])
 
 const IDLE_SAVE = '2 seconds'
-
 const TOUCH = matchMedia('(pointer: coarse)')
-
 const CONFLICT_RETRIES = 2
 
 const saveEndpoint = Effect.flatMap(HttpClient.HttpClient, (httpClient) =>
@@ -160,7 +159,7 @@ const taskItem = (item: HTMLLIElement): Option.Option<TaskItem> =>
   }).pipe(Option.map((found) => ({ item, ...found })))
 
 const taskItems = (list: HTMLElement): readonly TaskItem[] =>
-  Arr.getSomes(Arr.fromIterable(list.querySelectorAll('li')).map(taskItem))
+  pipe(Arr.fromIterable(list.querySelectorAll('li')), Arr.map(taskItem), Arr.getSomes)
 
 const readTask = (item: TaskItem): Task => ({
   done: item.check.checked,

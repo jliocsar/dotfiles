@@ -6,7 +6,6 @@ import * as HttpServerRequest from 'effect/unstable/http/HttpServerRequest'
 import { ZONE_HEADER } from './api.ts'
 
 export const ZONE_COOKIE = 'tz'
-
 export const UTC = DateTime.zoneMakeOffset(0)
 
 export const requestZone = Effect.map(HttpServerRequest.HttpServerRequest, (request) =>

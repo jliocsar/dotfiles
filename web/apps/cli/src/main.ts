@@ -47,13 +47,9 @@ import { authedClient, makeClient, readStored, writeStored } from './client.ts'
 import { DEFAULT_DIR, PutResult, entryPath, pull, push } from './workspace.ts'
 
 const VERSION = '0.0.1'
-
 const MAX_RENAME_ATTEMPTS = 3
-
 const FALLBACK_MIME = 'application/octet-stream'
-
 const UNAUTHORIZED = 401
-
 const EXIT = { ok: 0, unexpected: 1, usage: 2, conflict: 3, notFound: 4, unpushed: 5, auth: 6 }
 
 const ListQueryParams = Schema.Struct(ListQuery)

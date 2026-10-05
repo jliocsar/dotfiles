@@ -20,13 +20,9 @@ export interface CipherShape {
 }
 
 const ALGORITHM = 'aes-256-gcm'
-
 const KEY_BYTES = 32
-
 const IV_BYTES = 12
-
 const TAG_BYTES = 16
-
 const SEALED_PREFIX = 'enc:v1:'
 
 export class UnsealFailed extends Schema.TaggedError<UnsealFailed>()('UnsealFailed', {

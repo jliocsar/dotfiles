@@ -1,9 +1,7 @@
 import type { Tag } from './domain.ts'
 
 const HUES = [20, 45, 75, 110, 150, 175, 200, 230, 260, 290, 320, 350] as const
-
 const FNV_OFFSET = 2166136261
-
 const FNV_PRIME = 16777619
 
 export const hueOf = (tag: Tag): number => {
