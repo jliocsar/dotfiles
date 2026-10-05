@@ -3,8 +3,8 @@
 @import '@fontsource/inter/latin-400.css';
 @import '@fontsource/inter/latin-500.css';
 @import '@fontsource/inter/latin-600.css';
-@import '@fontsource-variable/literata/opsz.css';
-@import '@fontsource-variable/literata/opsz-italic.css';
+@import '@fontsource-variable/merriweather/opsz.css';
+@import '@fontsource-variable/merriweather/opsz-italic.css';
 @import '@fontsource-variable/newsreader/opsz.css';
 @plugin '@tailwindcss/typography';
 
@@ -34,7 +34,7 @@
 }
 
 @theme {
-  --font-reading: 'Literata Variable', ui-serif, Georgia, serif;
+  --font-reading: 'Merriweather Variable', ui-serif, Georgia, serif;
   --text-xs: 0.8125rem;
   --text-sm: 0.9375rem;
 }

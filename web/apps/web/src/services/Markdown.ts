@@ -26,7 +26,7 @@ const PARSER_OPTIONS = { autolinks: true } as const
 const SAFE_HREF = /^(?:https?:\/\/|mailto:|\/|#)/u
 const TASK_PLACEHOLDER = /<li data-task="">/gu
 const INTERNAL_HREF = /^@([\w-]+)$/u
-const INTERNAL_LINK = /<a href="\/e\/([\w-]+)" data-ref>/gu
+const INTERNAL_LINK = /<a href="\/e\/([\w-]+)" target="_blank" data-ref>/gu
 
 const internalSlug = (href: string) => Option.fromUndefinedOr(INTERNAL_HREF.exec(href)?.[1])
 
@@ -80,41 +80,47 @@ export class Markdown extends Context.Service<Markdown, MarkdownShape>()('app/Ma
 
     const link = (children: string, href: string) =>
       Option.match(internalSlug(href), {
-        onNone: () => `<a href="${safeHref(href)}">${children}</a>`,
-        onSome: (slug) => `<a href="/e/${slug}" data-ref>${children}</a>`,
+        onNone: () =>
+          `<a href="${safeHref(href)}" target="_blank" rel="noopener noreferrer">${children}</a>`,
+        onSome: (slug) => `<a href="/e/${slug}" target="_blank" data-ref>${children}</a>`,
       })
 
     const render = Effect.fn('Markdown.render')(function* (body: string) {
       const markup = numberTasks(
-        Bun.markdown.render(body, {
-          ...PARSER_OPTIONS,
-          text: escapeText,
-          html: escapeText,
-          heading: (children, meta) => `<h${meta.level}>${children}</h${meta.level}>`,
-          paragraph: (children) => `<p>${children}</p>`,
-          blockquote: (children) => `<blockquote>${children}</blockquote>`,
-          code: (children, meta) => codeBlock(children, meta?.language),
-          codespan: (children) => `<code>${children}</code>`,
-          list: (children, meta) =>
-            meta.ordered
-              ? `<ol start="${meta.start ?? 1}">${children}</ol>`
-              : `<ul>${children}</ul>`,
-          listItem: (children, meta) =>
-            meta.checked === undefined ? `<li>${children}</li>` : taskItem(children, meta.checked),
-          hr: () => '<hr>',
-          table: (children) => `<table>${children}</table>`,
-          thead: (children) => `<thead>${children}</thead>`,
-          tbody: (children) => `<tbody>${children}</tbody>`,
-          tr: (children) => `<tr>${children}</tr>`,
-          th: (children) => `<th>${children}</th>`,
-          td: (children) => `<td>${children}</td>`,
-          strong: (children) => `<strong>${children}</strong>`,
-          emphasis: (children) => `<em>${children}</em>`,
-          strikethrough: (children) => `<del>${children}</del>`,
-          link: (children, meta) => link(children, meta.href),
-          image: (children, meta) =>
-            `<img src="${safeHref(meta.src)}" alt="${escapeAttribute(children)}">`,
-        }),
+        Bun.markdown.render(
+          body,
+          {
+            text: escapeText,
+            html: escapeText,
+            heading: (children, meta) => `<h${meta.level}>${children}</h${meta.level}>`,
+            paragraph: (children) => `<p>${children}</p>`,
+            blockquote: (children) => `<blockquote>${children}</blockquote>`,
+            code: (children, meta) => codeBlock(children, meta?.language),
+            codespan: (children) => `<code>${children}</code>`,
+            list: (children, meta) =>
+              meta.ordered
+                ? `<ol start="${meta.start ?? 1}">${children}</ol>`
+                : `<ul>${children}</ul>`,
+            listItem: (children, meta) =>
+              meta.checked === undefined
+                ? `<li>${children}</li>`
+                : taskItem(children, meta.checked),
+            hr: () => '<hr>',
+            table: (children) => `<table>${children}</table>`,
+            thead: (children) => `<thead>${children}</thead>`,
+            tbody: (children) => `<tbody>${children}</tbody>`,
+            tr: (children) => `<tr>${children}</tr>`,
+            th: (children) => `<th>${children}</th>`,
+            td: (children) => `<td>${children}</td>`,
+            strong: (children) => `<strong>${children}</strong>`,
+            emphasis: (children) => `<em>${children}</em>`,
+            strikethrough: (children) => `<del>${children}</del>`,
+            link: (children, meta) => link(children, meta.href),
+            image: (children, meta) =>
+              `<img src="${safeHref(meta.src)}" alt="${escapeAttribute(children)}">`,
+          },
+          PARSER_OPTIONS,
+        ),
       )
       const found = yield* entries.existing(internalSlugs(markup))
 

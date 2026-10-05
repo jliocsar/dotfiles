@@ -669,14 +669,15 @@ const TagsPanel = (props: { readonly entry: Entry; readonly options: readonly Ta
       </span>
     </button>
     <div class="flex h-7 items-center gap-2.5 border-t px-2.5 text-[12px] text-muted-foreground pointer-coarse:hidden">
-      <span>
+      <span class="inline-flex items-center gap-1">
         <kbd class="kbd rounded-sm dark:bg-foreground/10">
           <Icon name="corner-down-left" class="size-3" />
-        </kbd>{' '}
+        </kbd>
         toggle
       </span>
-      <span>
-        <kbd class="kbd rounded-sm dark:bg-foreground/10">esc</kbd> close
+      <span class="inline-flex items-center gap-1">
+        <kbd class="kbd rounded-sm dark:bg-foreground/10">esc</kbd>
+        close
       </span>
     </div>
   </div>
