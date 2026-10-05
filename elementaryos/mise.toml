@@ -19,3 +19,5 @@ infisical = "latest"
 # Monorepo with mixed tags; cli-v* only. Attestation opt-out: ente's sigstore timestamps fail to verify.
 "github:ente-io/ente" = { version = "latest", tag_regex = "^cli-v", version_prefix = "cli-v", asset_pattern = "ente-cli-v{{version}}-linux-amd64.tar.gz", github_attestations = false }
 herdr = "latest"
+# Pinned past minimum_release_age; flip back to "latest" once 0.9.1 ages in.
+"github:jliocsar/pie" = { version = "0.9.1", asset_pattern = "pie-linux-x64" }
