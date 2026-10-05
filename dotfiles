@@ -4,10 +4,6 @@
 # zsh
 .zshrc
 
-# Tmux
-.tmux.conf
-.config/tmux/
-
 # Herdr
 .config/herdr/config.toml
 

@@ -20,20 +20,6 @@ alias nvim:cfg="nvim ~/.config/nvim"
 ## apt
 alias update='sudo apt update -y && sudo apt upgrade -y && sudo apt autoremove -y && sudo apt autoclean -y'
 
-notes() {
-  current_tmux_window_title=$(tmux display-message -p '#W')
-
-  if [ "$current_tmux_window_title" != "notes" ]; then
-    tmux rename-window notes
-  fi
-
-  nvim $HOME/.timov/
-
-  if [ $? -eq 0 ]; then
-      tmux rename-window "$current_tmux_window_title"
-  fi
-}
-
 # dotfiles
 alias __assert_dotfiles="if [[ ! -d $HOME/.dotfiles ]]; then echo '~/.dotfiles not found'; return 1; fi"
 alias dotfiles="__assert_dotfiles && $HOME/.dotfiles/dotfiles.pl"
@@ -58,26 +44,6 @@ setup() {
   $HOME/.dotfiles/setup.sh $@
 }
 
-# Ask for a value in a tmux popup (plain readline when outside tmux). The
-# default is prefilled and editable in place; Ctrl-U clears it. Prints the
-# answer on stdout.
-dotfiles_prompt() {
-  local title=$1 default=$2
-  local answer_file=$(mktemp)
-  local reader='read -e -i "$1" -p "> " answer; printf %s "$answer" > "$2"'
-
-  if [[ -n $TMUX ]]; then
-    tmux display-popup -E -w 60 -h 3 -T " $title " \
-      "bash -c ${(q)reader} _ ${(q)default} ${(q)answer_file}"
-  else
-    bash -c "$reader" _ "$default" "$answer_file"
-  fi
-
-  local answer=$(<$answer_file)
-  rm -f $answer_file
-  print -r -- "${answer:-$default}"
-}
-
 ## claude
 alias _claude="claude"
 
@@ -89,7 +55,7 @@ dotfiles_custom_claude() {
     system_prompt+=$'\n'"$(cat $HOME/.dotfiles/claude/WORK_SYSTEM_PROMPT.md)"
   fi
 
-  local disallowed_tools=("Artifact" "NotebookEdit" "ScheduleWakeup" "PushNotification" "AskUserQuestion" "WebFetch" "RemoteTrigger" "DesignSync" "EnterPlanMode" "ReportFindings" "SendFeedback")
+  local disallowed_tools=("Artifact" "NotebookEdit" "ScheduleWakeup" "PushNotification" "AskUserQuestion" "WebFetch" "RemoteTrigger" "DesignSync" "EnterPlanMode" "ExitPlanMode" "ReportFindings" "SendFeedback")
 
   _claude \
     --enable-auto-mode \
@@ -97,6 +63,7 @@ dotfiles_custom_claude() {
     --permission-mode auto \
     --model opus \
     --effort high \
+    --plugin-dir "$HOME/Projects/claude-codemode" \
     --disallowed-tools ${disallowed_tools[@]} \
     --system-prompt "$system_prompt" \
     "$@"
@@ -126,34 +93,6 @@ alias claude:usage="claude -p '/usage'"
 alias c="claude"
 alias cw="claude@work"
 alias cm="cd ~/.dotfiles && claude && cd -"
-
-## conan — pi harness
-conan() {
-  local lock_file="/tmp/conan-the-librarian.lock"
-  if [[ -f $lock_file ]]; then
-    tmux select-window -t "conan"
-    return 0
-  fi
-
-  local previous_window_title=$(tmux display-message -p '#W')
-  tmux rename-window "conan"
-  echo "1" > $lock_file
-
-  cd "$HOME/Projects/conan/knowledge-base"
-  PI_CODING_AGENT_DIR="$HOME/Projects/conan/pi" pi --system-prompt "$(cat "$HOME/Projects/conan/pi/SYSTEM.md")" "$@"
-
-  tmux rename-window "$previous_window_title"
-  rm -f $lock_file
-  cd -
-}
-
-conan:query() {  # one-shot headless
-  cd "$HOME/Projects/conan/knowledge-base"
-  PI_CODING_AGENT_DIR="$HOME/Projects/conan/pi" pi -p --system-prompt "$(cat "$HOME/Projects/conan/pi/SYSTEM.md")" "$@"
-  cd -
-}
-
-conan:compact() { conan "/compact"; }
 
 ## misc
 alias n="nvim"

@@ -137,6 +137,13 @@ servers.just = {
     settings = {},
 }
 
+servers.taplo = {
+    cmd = { 'taplo', 'lsp', 'stdio' },
+    filetypes = { 'toml' },
+    root_markers = { '.taplo.toml', 'taplo.toml', '.git' },
+    settings = {},
+}
+
 servers.tailwind = {
     cmd = { 'tailwindcss-language-server' },
     filetypes = { 'typescript', 'typescriptreact', 'javascript', 'javascriptreact', 'html', 'css' },

@@ -75,11 +75,10 @@ Fewest files possible. Shortest working diff wins.
 The following are canonical tools and must be used with top-most priority:
 
 - Use `lx` when fetching documentation, such as remote `.md` or `llms.txt` URLs.
-- Use `fff` over `grep` / `rg` and similar tools.
+- Use `fff` over grep, rg and such.
 - Use `ast-grep` for complex or large refactors.
 - Use `plannotator` for plans and diffs reviewing.
-- Use `slack_notify_user` when the user asks to "ping" or "notify" them.
-- Use `executor` to search for more available tools such as Slack, Linear and other MCPs.
+- Use `executor` to search for MCPs such as Linear, Slack etc.
 
 ## Linking local files
 
