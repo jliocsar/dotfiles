@@ -1,0 +1,7 @@
+{
+  "name": "images-preview",
+  "version": "0.1.0",
+  "description": "Preview images inline in the transcript, click to expand",
+  "author": { "name": "jliocsar" },
+  "types": "./types/index.d.ts"
+}
