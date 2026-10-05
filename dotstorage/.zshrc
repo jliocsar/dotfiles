@@ -1,6 +1,3 @@
-export ZSH="$HOME/.oh-my-zsh"
-export EDITOR="nvim"
-
 if command -v herdr >/dev/null 2>&1; then
   if [[ -z "$(herdr session list --json 2>/dev/null | jq -r '.sessions[0].name // empty')" ]]; then
     exec herdr
@@ -9,33 +6,7 @@ if command -v herdr >/dev/null 2>&1; then
   fi
 fi
 
-# Theme
-ZSH_THEME="lambda"
-
-# Plugins
-plugins=(git fzf mise)
-
-# Zinit section
-if [ -d $HOME/.local/share/zinit ]; then
-  ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
-  [ ! -d $ZINIT_HOME ] && mkdir -p "$(dirname $ZINIT_HOME)"
-  [ ! -d $ZINIT_HOME/.git ] && git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
-  source "${ZINIT_HOME}/zinit.zsh"
-else
-  bash -c "$(curl --fail --show-error --silent --location https://raw.githubusercontent.com/zdharma-continuum/zinit/HEAD/scripts/install.sh)"
-fi
-
-# cargo (mise-managed rust may not write this; guard it)
-[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
-
-# zoxide
-eval "$(zoxide init zsh)"
-
-# bun completions
-[ -s "/home/jliocsar/.bun/_bun" ] && source "/home/jliocsar/.bun/_bun"
-
-# Extra sources
-source $ZSH/oh-my-zsh.sh
+# dotfiles
 source $HOME/.dotfiles/zsh/dotfiles.zsh
 
 # secrets
@@ -54,9 +25,6 @@ if [[ -n "$INFISICAL_PERSONAL_PROJECT_ID" ]]; then
   [[ -f "$infisical_cache" ]] && . "$infisical_cache"
   unset infisical_cache
 fi
-
-# fzf
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 # go
 export PATH="$PATH:/usr/local/go/bin"

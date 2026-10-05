@@ -1,50 +1,69 @@
-# Sourced from ~/.zshrc after oh-my-zsh. Everything custom lives here.
+# Sourced from ~/.zshrc. Everything custom lives here.
+# Env
+export ZSH="$HOME/.oh-my-zsh"
+export EDITOR="nvim"
+
+# Theme
+ZSH_THEME="lambda"
+
+# Plugins
+plugins=(git fzf mise)
+
+# zinit
+ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
+if [ ! -d "$ZINIT_HOME/.git" ]; then
+  mkdir -p "$(dirname "$ZINIT_HOME")"
+  git clone --quiet https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
+fi
+source "$ZINIT_HOME/zinit.zsh"
+
+# oh-my-zsh
+source $ZSH/oh-my-zsh.sh
+
+# zoxide
+if command -v zoxide >/dev/null; then
+  eval "$(zoxide init zsh)"
+fi
+
+# bun completions
+if [ -s "$HOME/.bun/_bun" ]; then
+  source "$HOME/.bun/_bun"
+fi
+
+# fzf
+if [ -f ~/.fzf.zsh ]; then
+  source ~/.fzf.zsh
+fi
 
 ## zinit plugins
-zinit ice depth=1
-zinit light jeffreytse/zsh-vi-mode
-zinit light zdharma-continuum/fast-syntax-highlighting
-zinit light zsh-users/zsh-autosuggestions
-zinit light zsh-users/zsh-completions
+if command -v zinit >/dev/null; then
+  zinit ice depth=1
+  zinit light jeffreytse/zsh-vi-mode
+  zinit light zdharma-continuum/fast-syntax-highlighting
+  zinit light zsh-users/zsh-autosuggestions
+  zinit light zsh-users/zsh-completions
+fi
 
 ## aliases
-## ...
+### misc
+alias n="nvim"
+alias .f="dotfiles"
 alias breathe="go clean -cache && pnpm store prune && uv cache clean && docker builder prune -af && sudo apt clean"
 
-## git
+### git
 alias gsl='git switch -'
 
-## neovim
+### neovim
 alias nvim:cfg="nvim ~/.config/nvim"
 
-## apt
+### apt
 alias update='sudo apt update -y && sudo apt upgrade -y && sudo apt autoremove -y && sudo apt autoclean -y'
 
-# dotfiles
+### dotfiles
 alias __assert_dotfiles="if [[ ! -d $HOME/.dotfiles ]]; then echo '~/.dotfiles not found'; return 1; fi"
 alias dotfiles="__assert_dotfiles && $HOME/.dotfiles/dotfiles.pl"
 
-## functions
-ginit() {
-    local repo=${1:=$(basename "$PWD")}
-
-    g init
-    ga .
-    gb -M main
-    gcmsg 'source files'
-    gh repo create jliocsar/$1 --private --source=. --push
-}
-
-bak() {
-    cp $1 $1.bak
-}
-
-setup() {
-  __assert_dotfiles
-  $HOME/.dotfiles/setup.sh $@
-}
-
-## claude
+### claude
 alias _claude="claude"
 
 dotfiles_custom_claude() {
@@ -94,6 +113,22 @@ alias c="claude"
 alias cw="claude@work"
 alias cm="cd ~/.dotfiles && claude && cd -"
 
-## misc
-alias n="nvim"
-alias .f="dotfiles"
+## functions
+ginit() {
+    local repo=${1:=$(basename "$PWD")}
+
+    g init
+    ga .
+    gb -M main
+    gcmsg 'source files'
+    gh repo create jliocsar/$1 --private --source=. --push
+}
+
+bak() {
+    cp $1 $1.bak
+}
+
+setup() {
+  __assert_dotfiles
+  $HOME/.dotfiles/setup.sh $@
+}
