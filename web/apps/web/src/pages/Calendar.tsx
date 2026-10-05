@@ -13,7 +13,7 @@ import { clock } from '../zone.ts'
 type SlotState = 'past' | 'now' | 'future'
 
 const SLOT = [
-  'relative grid h-[34px] grid-cols-[44px_8px_1fr_auto] items-center gap-x-3 -mx-2 px-2 text-[13.5px]',
+  'relative grid h-[34px] grid-cols-[44px_8px_1fr_auto] items-center gap-x-3 -mx-2 px-2 text-[14.5px]',
   "before:absolute before:inset-y-0 before:left-[57px] before:w-px before:content-['']",
 ].join(' ')
 
@@ -41,12 +41,12 @@ const SLOT_STYLE = {
 } satisfies Record<SlotState, Record<'rail' | 'time' | 'pip' | 'title', string>>
 
 const PICK_ROW = [
-  'grid h-8 w-full grid-cols-[40px_1fr_auto] items-center gap-2 rounded-md px-2 text-left text-[13px]',
+  'grid h-8 w-full grid-cols-[40px_1fr_auto] items-center gap-2 rounded-md px-2 text-left text-[14px]',
   'transition-colors hover:bg-muted aria-pressed:text-muted-foreground',
 ].join(' ')
 
 const ACCOUNT_ROW =
-  'grid h-[34px] grid-cols-[1fr_auto] items-center gap-4 -mx-2 px-2 text-[13.5px] text-muted-foreground'
+  'grid h-[34px] grid-cols-[1fr_auto] items-center gap-4 -mx-2 px-2 text-[14.5px] text-muted-foreground'
 
 const millis = DateTime.toEpochMillis
 
@@ -65,7 +65,7 @@ const untilText = (slot: Slot, now: DateTime.Utc) => {
 }
 
 export const Empty = (props: { readonly children: Node }) => (
-  <p class="h-[34px] leading-[34px] text-[13.5px] text-muted-foreground/60">{props.children}</p>
+  <p class="h-[34px] leading-[34px] text-[14.5px] text-muted-foreground/60">{props.children}</p>
 )
 
 const SlotAction = (props: {
@@ -205,7 +205,7 @@ export const MeetingPicker = Effect.fn('MeetingPicker')(function* (props: {
           </span>
           <span class="truncate text-foreground">{slot.event.title}</span>
           {slot.note === undefined || slot.note.id === props.entry.id ? null : (
-            <span class="text-[11px] text-muted-foreground/60">has a note</span>
+            <span class="text-[12px] text-muted-foreground/60">has a note</span>
           )}
         </button>
       ))}

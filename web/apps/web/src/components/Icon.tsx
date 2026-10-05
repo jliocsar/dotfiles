@@ -1,5 +1,6 @@
 const ICON = {
   'arrow-left': <path d="M19 12H5M12 19l-7-7 7-7" />,
+  'corner-down-left': <path d="m9 10-5 5 5 5M20 4v7a4 4 0 0 1-4 4H4" />,
   'arrow-up-right': <path d="M7 7h10v10M7 17 17 7" />,
   search: (
     <>

@@ -14,17 +14,20 @@ import type { Entry, EntrySlug, MeetingRef, Section, ShareLink, Tag, TagCount } 
 import { ShareLinks } from '../services/ShareLinks.ts'
 import { artifactFile, formatBytes, previewOf } from '../artifacts.ts'
 import type { ArtifactFile, Preview } from '../artifacts.ts'
-import { hueOf, MAX_VISIBLE_TAGS } from '../tags.ts'
+import { MAX_VISIBLE_TAGS } from '../tags.ts'
+import {
+  TAG_LIST,
+  TAG_PANEL,
+  TAG_ROW,
+  TagDot,
+  TagMenu,
+  TagPill,
+  TagSearch,
+  TagStrip,
+} from './Tags.tsx'
 import { parseTasks, taskProgress } from '../tasks.ts'
 import type { Task } from '../tasks.ts'
 import { clock } from '../zone.ts'
-
-interface TagFilter {
-  readonly section: Section
-  readonly archived: boolean
-  readonly tags: readonly TagCount[]
-  readonly active: readonly Tag[]
-}
 
 interface Back {
   readonly href: string
@@ -32,8 +35,8 @@ interface Back {
 }
 
 const PROSE = [
-  'prose prose-sm max-w-none font-sans',
-  'prose-pre:text-[0.95em] [&_:not(pre)>code]:text-[0.95em]',
+  'prose max-w-none font-reading',
+  'prose-pre:text-[0.9em] [&_:not(pre)>code]:text-[0.9em]',
   'prose-headings:font-serif prose-headings:font-medium',
   'prose-a:underline-offset-[3px] prose-code:font-normal prose-code:rounded-sm prose-pre:rounded-md',
   'prose-code:before:content-none prose-code:after:content-none',
@@ -52,14 +55,14 @@ const DIVIDER =
   "relative after:absolute after:inset-x-2 after:bottom-0 after:h-px after:bg-border after:content-['']"
 
 export const ROW = [
-  'grid h-[34px] grid-cols-[1fr_auto] items-center gap-4 -mx-2 px-2 rounded-md text-[13.5px]',
+  'grid h-[34px] grid-cols-[1fr_auto] items-center gap-4 -mx-2 px-2 rounded-md text-[14.5px]',
   DIVIDER,
   'transition-colors hover:bg-muted active:bg-muted',
   'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring',
 ].join(' ')
 
 const ARCHIVED_ROW = [
-  'grid h-[34px] grid-cols-[1fr_auto_auto] items-center gap-4 -mx-2 px-2 text-[13.5px] text-muted-foreground',
+  'grid h-[34px] grid-cols-[1fr_auto_auto] items-center gap-4 -mx-2 px-2 text-[14.5px] text-muted-foreground',
   DIVIDER,
 ].join(' ')
 
@@ -94,37 +97,10 @@ const SHARE_TTL = [
   'has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ring',
 ].join(' ')
 
-const TAG_PILL = [
-  'inline-flex h-5 shrink-0 items-center gap-1.5 rounded-full border bg-background px-1.5',
-  'text-[11.5px] leading-none font-medium whitespace-nowrap text-foreground',
-].join(' ')
-
-const TAG_DOT = 'size-1.5 shrink-0 rounded-full bg-[oklch(var(--tag-l)_var(--tag-c)_var(--h))]'
-
 const TAG_MORE = [
-  'inline-flex h-5 shrink-0 items-center rounded-full border px-1.5 text-[11.5px] leading-none font-medium',
+  'inline-flex h-5 shrink-0 items-center rounded-full border px-1.5 text-[12.5px] leading-none font-medium',
   'text-muted-foreground tabular-nums transition-colors hover:bg-muted hover:text-foreground',
 ].join(' ')
-
-const TAG_PANEL = [
-  'fixed inset-auto m-0 w-[240px] rounded-lg border bg-background p-0 text-[13px] shadow-lg',
-  '[position-anchor:--tags] [top:calc(anchor(bottom)+6px)] [position-try-fallbacks:flip-inline]',
-].join(' ')
-
-const TAG_ROW = [
-  'group relative flex h-7 shrink-0 cursor-pointer items-center gap-2 rounded-md px-2',
-  'hover:bg-muted aria-pressed:font-medium has-checked:font-medium',
-].join(' ')
-
-const TAG_STRIP =
-  '-mx-4 -mt-2 mb-4 flex snap-x scroll-px-4 gap-1.5 overflow-x-auto overscroll-x-contain px-4 [scrollbar-width:none] sm:hidden'
-
-const TAG_CHIP =
-  'inline-flex h-8 shrink-0 snap-start items-center gap-1.5 rounded-full border px-3 text-xs font-medium whitespace-nowrap text-muted-foreground aria-pressed:bg-muted aria-pressed:text-foreground'
-
-const TAG_LIST = 'flex max-h-[232px] flex-col overflow-y-auto p-1'
-const TAG_COUNT = 'ml-auto pl-3 text-[11.5px] text-muted-foreground tabular-nums'
-const TAG_SEARCH = 'w-full bg-transparent outline-none placeholder:text-muted-foreground'
 
 const NO_PREVIEW =
   'flex min-h-[40vh] items-center justify-center rounded-md border border-dashed text-muted-foreground'
@@ -195,105 +171,8 @@ export const Page = (props: {
 
 export const Dot = () => <span class="size-[3px] rounded-full bg-muted-foreground/60" />
 
-const TagDot = (props: { readonly tag: Tag }) => (
-  <i class={TAG_DOT} style={`--h:${hueOf(props.tag)}`} />
-)
-
-export const TagPill = (props: { readonly tag: Tag; readonly hidden?: true | undefined }) => (
-  <span class={TAG_PILL} data-pill hidden={props.hidden}>
-    <TagDot tag={props.tag} />
-    {props.tag}
-  </span>
-)
-
-const TagSearch = (props: { readonly placeholder: string; readonly name?: string }) => (
-  <div class="flex h-[34px] items-center gap-2 border-b px-2.5">
-    <Icon name="search" class="size-3.5 shrink-0 text-muted-foreground" />
-    <input
-      class={TAG_SEARCH}
-      name={props.name}
-      placeholder={props.placeholder}
-      autocomplete="off"
-      spellcheck="false"
-      aria-label={props.placeholder}
-      data-tag-search
-    />
-  </div>
-)
-
-const listHref = (section: Section, archived: boolean, tags: readonly Tag[]) => {
-  const params = new URLSearchParams()
-
-  tags.forEach((tag) => {
-    params.append('tag', tag)
-  })
-
-  if (archived) {
-    params.set('archived', '')
-  }
-
-  return params.size === 0 ? section.path : `${section.path}?${params}`
-}
-
-const toggled = (tags: readonly Tag[], tag: Tag) =>
-  tags.includes(tag) ? tags.filter((other) => other !== tag) : [...tags, tag]
-
-const TagMenu = (props: TagFilter) => (
-  <>
-    <button
-      type="button"
-      class="btn [anchor-name:--tags] aria-pressed:bg-muted aria-pressed:text-foreground"
-      data-variant="ghost"
-      popovertarget="tag-menu"
-      aria-pressed={String(props.active.length > 0)}
-    >
-      <Icon name="tag" />
-      {props.active.length === 0 ? 'Tags' : props.active.join(', ')}
-      <Icon name="chevron-down" class="size-3 text-muted-foreground" />
-    </button>
-    <div id="tag-menu" popover class={`${TAG_PANEL} [left:anchor(left)]`} data-tag-menu>
-      <TagSearch placeholder="Filter by tags…" />
-      <div class={TAG_LIST}>
-        {props.tags.map(({ tag, count }) => (
-          <a
-            class={TAG_ROW}
-            href={listHref(props.section, props.archived, toggled(props.active, tag))}
-            aria-pressed={String(props.active.includes(tag))}
-            data-tag-row
-            data-tag={tag}
-          >
-            <TagDot tag={tag} />
-            <span class="truncate">{tag}</span>
-            <span class={TAG_COUNT}>{count}</span>
-            <Icon name="check" class="size-3.5 shrink-0 opacity-0 group-aria-pressed:opacity-100" />
-          </a>
-        ))}
-      </div>
-    </div>
-  </>
-)
-
-const TagStrip = (props: TagFilter) => (
-  <nav class={TAG_STRIP} aria-label="Filter by tags">
-    {[
-      ...props.active,
-      ...props.tags.map(({ tag }) => tag).filter((tag) => !props.active.includes(tag)),
-    ].map((tag) => (
-      <a
-        class={TAG_CHIP}
-        href={listHref(props.section, props.archived, toggled(props.active, tag))}
-        aria-pressed={String(props.active.includes(tag))}
-      >
-        <TagDot tag={tag} />
-        {tag}
-        {props.active.includes(tag) ? <Icon name="x" class="size-3 opacity-60" /> : null}
-      </a>
-    ))}
-  </nav>
-)
-
 export const GroupLabel = (props: { readonly children: Node }) => (
-  <div class="flex items-center justify-between pt-[22px] pb-1.5 text-[11px] leading-4 font-medium tracking-[0.08em] uppercase text-muted-foreground/60 first:pt-0">
+  <div class="flex items-center justify-between pt-[22px] pb-1.5 text-[12px] leading-4 font-medium tracking-[0.08em] uppercase text-muted-foreground/60 first:pt-0">
     {props.children}
   </div>
 )
@@ -537,7 +416,7 @@ const ShareRow = (props: {
     >
       /s/{props.link.token}
     </code>
-    <span class="whitespace-nowrap text-[11.5px] tabular-nums">
+    <span class="whitespace-nowrap text-[12.5px] tabular-nums">
       {props.link.expiresAt === null
         ? 'Never expires'
         : `Expires ${shortDateOf(props.link.expiresAt, props.currentYear)}`}
@@ -680,7 +559,7 @@ const ArtifactActions = (props: { readonly entry: Entry; readonly linkCount: num
       <Icon name="link" />
       Share
       {props.linkCount === 0 ? null : (
-        <span class="inline-flex h-4 items-center rounded-full bg-muted px-1.5 text-[10.5px] tabular-nums">
+        <span class="inline-flex h-4 items-center rounded-full bg-muted px-1.5 text-[11.5px] tabular-nums">
           {props.linkCount}
         </span>
       )}
@@ -789,9 +668,12 @@ const TagsPanel = (props: { readonly entry: Entry; readonly options: readonly Ta
         Create <b class="font-medium text-foreground" data-tag-create-name />
       </span>
     </button>
-    <div class="flex h-7 items-center gap-2.5 border-t px-2.5 text-[11px] text-muted-foreground pointer-coarse:hidden">
+    <div class="flex h-7 items-center gap-2.5 border-t px-2.5 text-[12px] text-muted-foreground pointer-coarse:hidden">
       <span>
-        <kbd class="kbd rounded-sm dark:bg-foreground/10">↵</kbd> toggle
+        <kbd class="kbd rounded-sm dark:bg-foreground/10">
+          <Icon name="corner-down-left" class="size-3" />
+        </kbd>{' '}
+        toggle
       </span>
       <span>
         <kbd class="kbd rounded-sm dark:bg-foreground/10">esc</kbd> close
@@ -949,7 +831,7 @@ export const EntryPage = Effect.fn('EntryPage')(function* (props: {
               <span class="whitespace-nowrap">Edited {shortDate(entry, currentYear)}</span>
               <TagPills entry={entry} />
               <div class="flex w-full flex-wrap items-center gap-1.5 sm:ml-auto sm:w-auto">
-                <span class="text-[11.5px] text-muted-foreground/60 tabular-nums" data-status />
+                <span class="text-[12.5px] text-muted-foreground/60 tabular-nums" data-status />
                 <button
                   type="button"
                   class="btn [anchor-name:--tags]"

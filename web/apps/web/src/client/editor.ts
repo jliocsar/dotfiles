@@ -63,6 +63,14 @@ interface TaskItem {
   readonly text: HTMLInputElement
 }
 
+declare const htmx: {
+  ajax(
+    verb: 'GET',
+    path: string,
+    context: { source: Element; target: string; swap: 'innerHTML' },
+  ): Promise<void>
+}
+
 const STATUS_TEXT = {
   saving: 'Saving…',
   saved: 'Saved',
@@ -102,7 +110,7 @@ const editorTheme = EditorView.theme({
     alignItems: 'center',
     minHeight: '28px',
     padding: '0 8px',
-    fontSize: '12px',
+    fontSize: '13px',
   },
   '.cm-vim-panel, .cm-vim-panel *': { fontFamily: 'var(--font-mono) !important' },
   '.cm-vim-panel input': { color: 'var(--foreground)', caretColor: 'var(--caret)' },
@@ -523,6 +531,62 @@ const refold = Effect.sync(() => {
   document.querySelectorAll<HTMLElement>('[data-fold]').forEach(foldPills)
 })
 
+const pressedTags = (menu: HTMLElement) =>
+  Arr.fromIterable(menu.querySelectorAll<HTMLElement>('[data-tag-row][aria-pressed="true"]')).map(
+    (row) => row.dataset['tag'] ?? '',
+  )
+
+const filterHref = (base: string, selectedTags: readonly string[]) => {
+  const url = new URL(base, window.location.origin)
+
+  selectedTags.forEach((tag) => {
+    url.searchParams.append('tag', tag)
+  })
+
+  return `${url.pathname}${url.search}`
+}
+
+const navigate = (menu: HTMLElement, href: string) =>
+  Effect.tryPromise(() =>
+    htmx.ajax('GET', href, { source: menu, target: 'body', swap: 'innerHTML' }),
+  ).pipe(
+    Effect.orElseSucceed(() => {
+      window.location.assign(href)
+    }),
+  )
+
+const mountTagFilter = Effect.fn('mountTagFilter')(function* (menu: HTMLElement, base: string) {
+  const initialHref = filterHref(base, pressedTags(menu))
+  const toggles = capture(menu, 'click', (event) => {
+    const row =
+      event.target instanceof Element ? event.target.closest<HTMLElement>('[data-tag-row]') : null
+
+    if (row === null) {
+      return Option.none()
+    }
+
+    swallow(event)
+
+    return Option.some(row)
+  })
+
+  yield* Effect.forkScoped(
+    Stream.runForEach(toggles, (row) =>
+      Effect.sync(() => {
+        row.setAttribute('aria-pressed', String(row.getAttribute('aria-pressed') !== 'true'))
+      }),
+    ),
+  )
+  yield* Effect.forkScoped(
+    Stream.fromEventListener<ToggleEvent>(menu, 'toggle').pipe(
+      Stream.filter((event) => event.newState === 'closed'),
+      Stream.map(() => filterHref(base, pressedTags(menu))),
+      Stream.filter((href) => href !== initialHref),
+      Stream.runForEach((href) => navigate(menu, href)),
+    ),
+  )
+})
+
 const mountTagMenu = Effect.fn('mountTagMenu')(function* (menu: HTMLElement) {
   const search = menu.querySelector<HTMLInputElement>('[data-tag-search]')
   const createRow = menu.querySelector<HTMLElement>('[data-tag-create-row]')
@@ -531,6 +595,12 @@ const mountTagMenu = Effect.fn('mountTagMenu')(function* (menu: HTMLElement) {
 
   if (search === null) {
     return
+  }
+
+  const filterBase = menu.dataset['tagFilter']
+
+  if (filterBase !== undefined) {
+    yield* mountTagFilter(menu, filterBase)
   }
 
   const rows = () => Arr.fromIterable(menu.querySelectorAll<HTMLElement>('[data-tag-row]'))

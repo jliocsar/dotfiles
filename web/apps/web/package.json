@@ -12,7 +12,7 @@
   "scripts": {
     "dev": "bun run fonts && bun run css:watch & bun run js:watch & bun run --hot src/server.ts",
     "start": "bun run src/server.ts",
-    "fonts": "mkdir -p public/files && cp node_modules/@fontsource/inter/files/inter-latin-{400,500,600}-normal.woff2 node_modules/@fontsource/space-mono/files/space-mono-latin-{400,700}-normal.woff2 node_modules/@fontsource-variable/newsreader/files/newsreader-latin-opsz-normal.woff2 public/files/",
+    "fonts": "mkdir -p public/files && cp node_modules/@fontsource/inter/files/inter-latin-{400,500,600}-normal.woff2 node_modules/@fontsource-variable/literata/files/literata-latin-opsz-{normal,italic}.woff2 node_modules/@fontsource-variable/newsreader/files/newsreader-latin-opsz-normal.woff2 public/files/",
     "css": "tailwindcss -i src/styles/app.css -o public/app.css --minify",
     "css:watch": "tailwindcss -i src/styles/app.css -o public/app.css --watch",
     "build": "bun run fonts && bun run css && bun run js",
@@ -28,6 +28,7 @@
     "@dotfiles/jsx": "workspace:*",
     "@effect/platform-bun": "4.0.0-rc.112",
     "@effect/sql-sqlite-bun": "4.0.0-rc.112",
+    "@fontsource-variable/literata": "^5.3.0",
     "@fontsource-variable/newsreader": "^5.3.0",
     "@fontsource/inter": "^5.3.0",
     "@fontsource/space-mono": "^5.3.0",

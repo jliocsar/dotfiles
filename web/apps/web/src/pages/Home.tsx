@@ -21,7 +21,7 @@ interface OpenTask {
 const RECENT_LIMIT = 5
 
 const TASK_ROW = [
-  'grid h-[30px] grid-cols-[auto_1fr_auto] items-center gap-4 -mx-2 px-2 rounded-md text-[13.5px]',
+  'grid h-[30px] grid-cols-[auto_1fr_auto] items-center gap-4 -mx-2 px-2 rounded-md text-[14.5px]',
   'transition-colors hover:bg-muted',
   "relative after:absolute after:inset-x-2 after:bottom-0 after:h-px after:bg-border after:content-['']",
   'has-checked:[&_.title]:text-muted-foreground has-checked:[&_.title]:line-through',
