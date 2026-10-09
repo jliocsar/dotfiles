@@ -1,16 +1,12 @@
 keybind = ctrl+shift+k=toggle_tab_overview
+keybind = ctrl+enter=unbind
 
-# Exactly one of the backgrounds stays uncommented; the `theme` script swaps them.
-# Delta One — custom theme files in ~/.config/ghostty/themes/, palette from
-# Delta's bundled theme. Background is Delta's editor bg, not Zed's terminal bg.
+# The `theme` command rewrites the `theme` and `background` lines below from
+# its family + mode; flip `theme_family` in ~/.local/bin/theme, not these.
+# Delta One themes live in ./themes/, Zenbones ships with ghostty.
 theme = light:Delta One Light,dark:Delta One Dark
-background = 191c1f
-background-opacity = 0.8
-#background = fafafa
-# Zenbones
-#theme = light:Zenbones Light,dark:Zenbones Dark
-#background = 0c0b0a
-#background = fafafa
+background = fafafa
+background-opacity = 0.92
 
 gtk-titlebar = false
 gtk-titlebar-style = native

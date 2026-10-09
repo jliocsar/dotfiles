@@ -14,7 +14,6 @@ return {
 
         M.setup = function()
             local el = require 'el'
-            --local is_tmux = vim.fn.environ().TMUX
 
             el.setup {
                 generator = function()
@@ -22,10 +21,6 @@ return {
 
                     table.insert(segments, extensions.mode)
                     table.insert(segments, ' ')
-
-                    --if not is_tmux then
-                    --    table.insert(segments, sections.split)
-                    --end
 
                     table.insert(segments, function(_window, buffer)
                         local name = buffer.name --[[@as string]]

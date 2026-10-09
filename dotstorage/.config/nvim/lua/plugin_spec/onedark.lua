@@ -365,6 +365,9 @@ return {
     'navarasu/onedark.nvim',
     lazy = false,
     priority = 1000,
+    -- Delta One family; parked in favour of Zenbones (plugin_spec/lush.lua).
+    -- Flip both `enabled` flags, install.colorscheme in init.lua and
+    -- `theme_family` in ~/.local/bin/theme to switch.
     enabled = true,
     config = function()
         local onedark = require 'onedark'

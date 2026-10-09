@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
-# Notification hook: notify-send the session title + message; on click, raise
-# the existing Ghostty window (Wayland → Gala DesktopIntegration.FocusWindow)
-# and jump to the session's tmux pane.
-# Maps claude session_id → {sessionTitle, tmuxPaneId} via claude-session-metadata.
+# Notification hook: notify-send the session title + message.
+# Maps claude session_id → sessionTitle via claude-session-metadata.
 set -euo pipefail
 
 # Self-heal: elementary renders the notification icon from a desktop-entry, and
@@ -28,12 +26,6 @@ message="$(jq -r '.message // "Claude needs your attention"' <<<"$input")"
 
 record="$(claude-session-metadata get "$session_id" 2>/dev/null || true)"
 title="$(jq -r '.sessionTitle // empty' <<<"$record")"
-pane="$(jq -r '.tmuxPaneId // empty' <<<"$record")"
-# Fall back to the tmux pane title (then window name) when the session is untitled.
-if [ -z "$title" ] && [ -n "$pane" ]; then
-	title="$(tmux display-message -p -t "$pane" '#{pane_title}' 2>/dev/null || true)"
-	[ -n "$title" ] || title="$(tmux display-message -p -t "$pane" '#{window_name}' 2>/dev/null || true)"
-fi
 [ -n "$title" ] || title="Claude"
 
 # Fire-and-forget: no --action, so notify-send returns immediately instead of

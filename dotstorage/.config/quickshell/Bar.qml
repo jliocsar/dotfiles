@@ -20,6 +20,12 @@ PanelWindow {
     implicitHeight: Theme.barHeight
     color: "transparent"
     WlrLayershell.namespace: "qs-bar"
+    // Blur only under the solid background (maximized window). Otherwise the bar
+    // floats over the wallpaper, and a blurred 28px strip there reads as a smudge.
+    BackgroundEffect.blurRegion: Region {
+        width: Niri.focusedMaximized ? bar.width : 0
+        height: bar.height
+    }
 
     readonly property PwNode sink: Pipewire.defaultAudioSink
     readonly property WifiDevice wifi: Networking.devices.values.find(device => device.type === DeviceType.Wifi) ?? null
@@ -233,6 +239,8 @@ PanelWindow {
             spacing: 8
             leftPadding: 8
             rightPadding: 8
+            // layer.enabled: true
+            // layer.effect: BarShadow {}
 
             Repeater {
                 model: SystemTray.items

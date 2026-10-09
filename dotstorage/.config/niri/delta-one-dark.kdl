@@ -1,0 +1,35 @@
+// Delta One Dark — niri colors. The `theme` command copies this to colors.kdl,
+// which config.kdl includes. Merged into config.kdl's own layout/overview.
+overview {
+    backdrop-color "#191c1f"
+}
+
+layout {
+    // Workspace background behind gaps.
+    background-color "#191c1f"
+
+    focus-ring {
+        active-color "#74ade8"
+        // Only visible on other monitors.
+        inactive-color "#32363e"
+        urgent-color "#d07277"
+    }
+
+    border {
+        active-color "#74ade8"
+        inactive-color "#3a3f47"
+        urgent-color "#d07277"
+    }
+
+    // Tabbed-column strip.
+    tab-indicator {
+        active-color "#74ade8"
+        inactive-color "#878a98"
+        urgent-color "#d07277"
+    }
+
+    // Drag-and-drop insert hint.
+    insert-hint {
+        color "#74ade880"
+    }
+}

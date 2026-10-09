@@ -13,7 +13,7 @@ fi
 echo "[system] Installing niri build deps + desktop companions"
 # Build deps: the Ubuntu 24.04 line from niri's Getting-Started wiki.
 # xcb dev libs are for xwayland-satellite (X11 apps under niri).
-# Companions: default config spawns waybar; Mod+D fuzzel; swaylock/swayidle lock; mako notifs;
+# Companions: default config spawns waybar; Mod+D fuzzel; swaylock/swayidle lock (notifications live in quickshell);
 # portals give file pickers + screen sharing.
 sudo apt-get update
 # --no-install-recommends: xdg-desktop-portal-gnome recommends gnome-shell, which drags in gdm3.
@@ -23,7 +23,7 @@ sudo apt-get install -y --no-install-recommends \
   libpango1.0-dev libdisplay-info-dev \
   libxcb1-dev libxcb-cursor-dev libxcb-composite0-dev libxcb-randr0-dev libxcb-res0-dev \
   libxcb-xfixes0-dev libxcb-xinput-dev libxcb-xkb-dev xwayland \
-  waybar fuzzel mako-notifier swaylock swayidle swaybg \
+  waybar fuzzel swaylock swayidle swaybg \
   xdg-desktop-portal-gnome xdg-desktop-portal-gtk
 
 echo "[system] Building niri $niri_tag"

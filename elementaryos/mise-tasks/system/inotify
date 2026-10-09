@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+#MISE description="Raise inotify limits (fff-mcp + claude sessions eat the default 126k watches)"
+#MISE dir="/tmp"
+set -euo pipefail
+
+# Each fff-mcp holds ~9k watches and each claude session ~5k; a handful of
+# both exhausts the default, and then quickshell, nvim etc. silently stop
+# seeing file changes ("inotify_add_watch: No space left on device").
+conf=/etc/sysctl.d/60-inotify.conf
+wanted=$'fs.inotify.max_user_watches = 1048576\nfs.inotify.max_user_instances = 1024'
+
+if [[ -f "$conf" && "$(cat "$conf")" == "$wanted" ]]; then
+  echo "[system] inotify limits already set"
+  exit 0
+fi
+
+echo "[system] Raising inotify limits"
+printf '%s\n' "$wanted" | sudo tee "$conf" >/dev/null
+sudo sysctl --load "$conf"

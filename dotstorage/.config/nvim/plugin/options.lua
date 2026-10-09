@@ -51,11 +51,7 @@ opt.statusline = ''
 opt.undofile = true
 
 -- views can only be fully collapsed with the global statusline
-if vim.fn.environ().TMUX then
-    opt.laststatus = 0
-else
-    opt.laststatus = 3
-end
+opt.laststatus = 3
 
 opt.conceallevel = 0
 

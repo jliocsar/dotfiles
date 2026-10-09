@@ -10,6 +10,12 @@ swap_pane_up = "prefix+shift+up"
 swap_pane_right = "prefix+shift+right"
 next_workspace = "prefix+n"
 previous_workspace = "prefix+p"
+switch_workspace = "prefix+shift+1..9"
+
+# One theme family is active, the other is commented out. Flip them together
+# with `theme_family` in ~/.local/bin/theme. Dark/light needs no edits here:
+# auto_switch follows the host terminal's light/dark report (ghostty sends it
+# when the `theme` command flips the system color-scheme).
 
 # Delta One, layered over herdr's built-in one-dark/one-light. Every token below
 # comes from Delta's bundled `Delta One` theme (themes/delta-one.json in the
@@ -77,10 +83,6 @@ peach = "#ad6e25"
 #auto_switch = true
 #dark_name = "gruvbox"
 #light_name = "gruvbox-light"
-#name = "one-dark"
-#auto_switch = false
-#dark_name = "one-dark"
-#light_name = "one-light"
 
 # Zenbones Dark — zenbones.nvim tokens: bg #1c1917, fg #b4bdc3, bg1 #403833,
 # fg1 #888f94, Visual #3d4042, LineNr #685f5a, rose/leaf/wood/water/blossom/sky.
@@ -141,3 +143,49 @@ kitty_graphics = true
 
 [ui.sound]
 enabled = true
+
+# autotitle
+[[keys.command]]
+key = "prefix+R"
+type = "plugin_action"
+command = "herdr.auto-title.restart"
+description = "restart auto title"
+
+# herdr-annotate
+# Terminal annotations
+[[keys.command]]
+key = "prefix+a"
+type = "plugin_action"
+command = "annotate.capture"
+description = "annotate text"
+
+[[keys.command]]
+key = "prefix+shift+a"
+type = "plugin_action"
+command = "annotate.copy-context"
+description = "copy annotations as context"
+
+#[[keys.command]]
+#key = "prefix+ctrl+a"
+#type = "plugin_action"
+#command = "annotate.copy-archive"
+#description = "copy annotations as context and archive them"
+
+[[keys.command]]
+key = "prefix+m"
+type = "plugin_action"
+command = "annotate.manage"
+description = "manage annotations"
+
+# Document review (plannotator-tui)
+[[keys.command]]
+key = "prefix+o"
+type = "plugin_action"
+command = "annotate.open"
+description = "review documents in this folder"
+
+[[keys.command]]
+key = "prefix+shift+o"
+type = "plugin_action"
+command = "annotate.last"
+description = "review the agent's last reply"

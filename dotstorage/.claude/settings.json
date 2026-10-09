@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "fileSuggestion": {
     "type": "command",
-    "command": "$HOME/.bun/bin/bun run --env-file /dev/null $HOME/.dotfiles/claude/fff-suggest/fff-suggest.ts"
+    "command": "bun run --env-file /dev/null /home/jliocsar/.dotfiles/claude/fff-suggest/fff-suggest.ts"
   },
   "env": {
     "CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN": "0",
@@ -13,6 +13,7 @@
   "permissions": {
     "defaultMode": "auto"
   },
+  "model": "claude-fable-5-1[1m]",
   "skillOverrides": {
     "artifact-design": "off",
     "claude-api": "off",
@@ -27,7 +28,16 @@
     "security-review": "off",
     "simplify": "off",
     "update-config": "off",
-    "verify": "off"
+    "verify": "off",
+    "pdf": "off",
+    "docx": "off",
+    "pptx": "off",
+    "xlsx": "off",
+    "morning": "off",
+    "import-memory": "off",
+    "built-in-browser": "off",
+    "chrome-browser": "off",
+    "computer-use": "off"
   },
   "hooks": {
     "MessageDisplay": [
@@ -47,14 +57,6 @@
           {
             "type": "command",
             "command": "~/.claude/hooks/notify.sh"
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "sh '/home/jliocsar/Projects/tmux-manager-sidebar/agent-hooks/agent-status.sh' needs-input"
           }
         ]
       }
@@ -86,7 +88,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.dotfiles/claude/claude-session-metadata end"
+            "command": "/home/jliocsar/Projects/agents-scripts/bash/claude-session-metadata end"
           }
         ]
       }
@@ -97,12 +99,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.dotfiles/claude/claude-session-metadata start"
+            "command": "/home/jliocsar/Projects/agents-scripts/bash/claude-session-metadata start"
           }
         ]
       },
       {
-        "matcher": "*",
+        "matcher": "^(startup|resume|clear|compact|fork)$",
         "hooks": [
           {
             "type": "command",
@@ -117,36 +119,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh '/home/jliocsar/Projects/tmux-manager-sidebar/agent-hooks/agent-status.sh' idle"
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
             "command": "~/.claude/hooks/slopblock.sh",
             "timeout": 5
-          }
-        ]
-      }
-    ],
-    "SubagentStop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "sh '/home/jliocsar/Projects/tmux-manager-sidebar/agent-hooks/agent-status.sh' idle"
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "sh '/home/jliocsar/Projects/tmux-manager-sidebar/agent-hooks/agent-status.sh' working"
           }
         ]
       }
@@ -174,14 +148,14 @@
   "enableArtifact": false,
   "statusLine": {
     "type": "command",
-    "command": "/home/jliocsar/.bun/bin/bun run --env-file /dev/null /home/jliocsar/.dotfiles/claude/statusline/index.ts"
+    "command": "bun run --env-file /dev/null $HOME/.dotfiles/claude/statusline/index.ts"
   },
   "enabledPlugins": {
     "github@claude-plugins-official": false,
     "host-html@host-html": false,
-    "plannotator@plannotator": true,
     "rust-analyzer-lsp@claude-plugins-official": false,
-    "typescript-lsp@claude-plugins-official": false
+    "typescript-lsp@claude-plugins-official": false,
+    "typesafe@typesafe-ai": true
   },
   "extraKnownMarketplaces": {
     "claude-plugins-official": {
@@ -194,6 +168,12 @@
       "source": {
         "source": "github",
         "repo": "backnotprop/plannotator"
+      }
+    },
+    "typesafe-ai": {
+      "source": {
+        "source": "github",
+        "repo": "typesafe-ai/skills"
       }
     }
   },
@@ -211,6 +191,9 @@
     },
     "claude-fable-5-1": {
       "effortLevel": "xhigh"
+    },
+    "claude-opus-5-5": {
+      "effortLevel": "xhigh"
     }
   },
   "autoCompactWindow": 400000,
@@ -220,12 +203,11 @@
   "autoMemoryEnabled": false,
   "skipDangerousModePermissionPrompt": true,
   "skipWorkflowUsageWarning": true,
-  "theme": "custom:one-dark-theme",
+  "theme": "custom:delta-one-light",
   "editorMode": "vim",
   "verbose": false,
   "preferredNotifChannel": "notifications_disabled",
   "switchModelsOnFlag": false,
-  "teammateMode": "tmux",
   "skipAutoPermissionPrompt": true,
   "voiceEnabled": true
 }

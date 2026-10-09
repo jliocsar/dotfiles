@@ -8,8 +8,9 @@ return {
         dependencies = {
             'rktjmp/lush.nvim',
         },
-        -- Parked in favour of Delta One (plugin_spec/onedark.lua); flip both
-        -- `enabled` flags and the lazy `install.colorscheme` to come back.
+        -- Zenbones family; Delta One lives in plugin_spec/onedark.lua. Flip both
+        -- `enabled` flags, install.colorscheme in init.lua and `theme_family`
+        -- in ~/.local/bin/theme to switch.
         enabled = false,
         lazy = false,
         priority = 999,

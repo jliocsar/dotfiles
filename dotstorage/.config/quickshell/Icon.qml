@@ -6,4 +6,6 @@ Text {
     font.family: Theme.iconFont
     font.pixelSize: Theme.iconSize
     verticalAlignment: Text.AlignVCenter
+    // Hinted glyphs; the default distance-field text is soft at bar sizes.
+    renderType: Text.NativeRendering
 }

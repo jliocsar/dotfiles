@@ -47,7 +47,11 @@
 .config/niri/config.kdl
 .config/quickshell/
 .config/fontconfig/conf.d/60-sf-pro-nerd-fallback.conf
-.config/mako/config
+.config/fontconfig/conf.d/50-reject-nameless-woff.conf
+.config/niri/delta-one-dark.kdl
+.config/niri/delta-one-light.kdl
+.config/niri/zenbones-dark.kdl
+.config/niri/zenbones-light.kdl
 .config/systemd/user/quickshell.service
 .config/autostart/nm-applet.desktop
 .local/bin/waybar-claude-usage

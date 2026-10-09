@@ -11,4 +11,6 @@ ShellRoot {
         model: Quickshell.screens
         Dock {}
     }
+
+    Notifications {}
 }

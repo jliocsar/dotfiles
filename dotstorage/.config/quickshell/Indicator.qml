@@ -1,4 +1,5 @@
 import QtQuick
+// import QtQuick.Effects
 import Quickshell
 
 // One bar item: nerd-font icon + value label, hover pill, tooltip, click handler.
@@ -33,6 +34,8 @@ Item {
         id: row
         anchors.centerIn: parent
         spacing: Theme.iconGap
+        // layer.enabled: true
+        // layer.effect: BarShadow {}
 
         Icon {
             anchors.verticalCenter: parent.verticalCenter

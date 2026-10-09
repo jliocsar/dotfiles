@@ -111,9 +111,10 @@ input {
 // Settings that influence how windows are positioned and sized.
 // Find more information on the wiki:
 // https://niri-wm.github.io/niri/Configuration:-Layout
-overview {
-    backdrop-color "#191c1f"
-}
+// Colors (overview backdrop, focus ring, border, tab indicator, insert hint,
+// workspace background) live in <family>-<mode>.kdl next to this file. The
+// `theme` command copies the active one to colors.kdl, which niri live-reloads.
+include optional=true "colors.kdl"
 
 // Frosted glass behind the quickshell bar and its popups. The surfaces themselves
 // are semi-transparent (see quickshell/Theme.qml bgPanel / bgPopup). The dock asks
@@ -126,12 +127,10 @@ blur {
 }
 
 layer-rule {
-    match namespace="^qs-bar$"
+    match namespace="^qs-(bar|dock)$"
 
-    background-effect {
-        blur true
-    }
-
+    // The bar and dock surfaces ask for their own blur through ext-background-effect
+    // (blurRegion in Bar.qml / Dock.qml); this only covers their popups and menus.
     popups {
         geometry-corner-radius 10
         background-effect {
@@ -143,18 +142,6 @@ layer-rule {
 layout {
     // Set gaps around windows in logical pixels.
     gaps 16
-
-    // Delta One Dark for everything else niri paints: tabbed-column strip,
-    // drag-and-drop insert hint, and the workspace background behind gaps.
-    tab-indicator {
-        active-color "#74ade8"
-        inactive-color "#878a98"
-        urgent-color "#d07277"
-    }
-    insert-hint {
-        color "#74ade880"
-    }
-    background-color "#191c1f"
 
     // When to center a column when changing focus, options are:
     // - "never", default behavior, focusing an off-screen column will keep at the left
@@ -209,16 +196,7 @@ layout {
         // - RGB hex: "#rgb", "#rgba", "#rrggbb", "#rrggbbaa"
         // - CSS-like notation: "rgb(255, 127, 0)", rgba(), hsl() and a few others.
 
-        // Color of the ring on the active monitor.
-        // Delta One Dark: accent / border / red.
-        active-color "#74ade8"
-
-        // Color of the ring on inactive monitors.
-        //
-        // The focus ring only draws around the active window, so the only place
-        // where you can see its inactive-color is on other monitors.
-        inactive-color "#32363e"
-        urgent-color "#d07277"
+        // Colors come from colors.kdl (see the include above).
 
         // You can also use gradients. They take precedence over solid colors.
         // Gradients are rendered the same as CSS linear-gradient(angle, from, to).
@@ -243,11 +221,7 @@ layout {
         on
 
         width 1
-        active-color "#74ade8"
-        inactive-color "#3a3f47"
-
-        // Color of the border around windows that request your attention.
-        urgent-color "#d07277"
+        // Colors come from colors.kdl (see the include above).
 
         // Gradients can use a few different interpolation color spaces.
         // For example, this is a pastel rainbow gradient via in="oklch longer hue".
@@ -318,9 +292,9 @@ layout {
 // To run a shell command (with variables, pipes, etc.), use spawn-sh-at-startup:
 // spawn-sh-at-startup "qs -c ~/source/qs/MyAwesomeShell"
 
-// Wallpaper. The `theme` command restarts swaybg with the light/dark image on every flip.
-//spawn-at-startup "swaybg" "-m" "fill" "-i" "/usr/share/backgrounds/odin-dark.jpg"
-spawn-at-startup "swaybg" "-m" "fill" "-i" "/home/jliocsar/Pictures/Wallpapers/macos-muted-05.png"
+// Wallpaper + colors: `theme apply` starts swaybg with the current mode's image
+// and regenerates colors.kdl, so the session comes up matching the last mode.
+spawn-sh-at-startup "~/.local/bin/theme apply"
 
 // Java AWT (RuneLite etc) mis-sizes its canvas under xwayland-satellite unless told the WM is non-reparenting.
 environment {
@@ -405,6 +379,28 @@ window-rule {
     draw-border-with-background false
     background-effect {
         blur true
+    }
+}
+
+// Floating ghostty blurs the windows underneath it, not just the wallpaper.
+// Non-xray is experimental: blur vanishes during open/close anims and drags.
+window-rule {
+    match app-id=r#"^com\.mitchellh\.ghostty$"# is-floating=true
+    background-effect {
+        xray false
+    }
+}
+
+// Alt-Tab switcher with live previews, most recently used first. Scoped to the
+// current workspace; inside it, W / O / A switch to workspace / output / all windows.
+recent-windows {
+    open-delay-ms 0
+
+    binds {
+        Alt+Tab         { next-window     scope="workspace"; }
+        Alt+Shift+Tab   { previous-window scope="workspace"; }
+        Alt+grave       { next-window     scope="workspace" filter="app-id"; }
+        Alt+Shift+grave { previous-window scope="workspace" filter="app-id"; }
     }
 }
 
@@ -602,12 +598,6 @@ binds {
 
     // Switches focus between the current and the previous workspace.
     // Mod+Tab { focus-workspace-previous; }
-
-    // Cycle columns within the current workspace only, wrapping at the ends.
-    Alt+Tab       { focus-column-right-or-first; }
-    Alt+Shift+Tab { focus-column-left-or-last; }
-    Mod+Tab       { focus-column-right-or-first; }
-    Mod+Shift+Tab { focus-column-left-or-last; }
 
     // The following binds move the focused window in and out of a column.
     // If the window is alone, they will consume it into the nearby column to the side.

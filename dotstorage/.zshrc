@@ -48,3 +48,19 @@ export PATH=$PATH:$ANDROID_HOME/tools
 
 # Supabase CLI
 export PATH="/home/jliocsar/.supabase/bin:$PATH"
+
+# Bug squad manager: the /loop orchestrator, with the Slack channel server attached.
+# Subshell so MCP_PROTOCOL_NEGOTIATION doesn't leak into the shell. Extra flags go before the prompt.
+claude@work:bug-team() {
+  (
+    export MCP_PROTOCOL_NEGOTIATION=legacy
+    claude@work \
+      --name bugsquad-master \
+      --autocompact 250k \
+      --mcp-config "$HOME/.claude-work/skills/bug-squad/channel.mcp.json" \
+      --settings "$HOME/.claude-work/skills/bug-squad/manager.settings.json" \
+      --dangerously-load-development-channels server:bug-squad-slack \
+      "$@" \
+      -- "/loop 15m /bug-squad tick"
+  )
+}
