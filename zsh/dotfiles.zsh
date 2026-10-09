@@ -63,6 +63,9 @@ alias update='sudo apt update -y && sudo apt upgrade -y && sudo apt autoremove -
 alias __assert_dotfiles="if [[ ! -d $HOME/.dotfiles ]]; then echo '~/.dotfiles not found'; return 1; fi"
 alias dotfiles="__assert_dotfiles && $HOME/.dotfiles/dotfiles.pl"
 
+### herdr
+alias h="herdr"
+
 ### claude
 alias _claude="claude"
 
