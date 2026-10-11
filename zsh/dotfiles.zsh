@@ -56,8 +56,8 @@ alias gsl='git switch -'
 ### neovim
 alias nvim:cfg="nvim ~/.config/nvim"
 
-### apt
-alias update='sudo apt update -y && sudo apt upgrade -y && sudo apt autoremove -y && sudo apt autoclean -y'
+### apt + mise tools
+alias update='sudo apt update -y && sudo apt upgrade -y && sudo apt autoremove -y && sudo apt autoclean -y && mise self-update -y && mise upgrade'
 
 ### dotfiles
 alias __assert_dotfiles="if [[ ! -d $HOME/.dotfiles ]]; then echo '~/.dotfiles not found'; return 1; fi"

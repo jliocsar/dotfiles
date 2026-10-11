@@ -42,7 +42,7 @@ rm -rf quickshell
 git clone --depth 1 --branch "$quickshell_ref" https://github.com/quickshell-mirror/quickshell.git
 # The binary rpaths into the private Qt so nothing else on the box sees it.
 # Hyprland/i3/X11/greetd/pam/polkit: not used under niri.
-cmake="$(mise -C "$HOME/.dotfiles/elementaryos" which cmake)"
+cmake="$(mise which cmake)"
 "$cmake" -S quickshell -B quickshell/build -G Ninja \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_PREFIX_PATH="$qt_dir" \

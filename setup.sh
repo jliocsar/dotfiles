@@ -2,11 +2,9 @@
 
 OPT=$HOME/.local/opt
 
-if [[ -z $1 ]]; then
-  sudo apt-get update -y
-  sudo apt-get upgrade -y
-  sudo apt-get install -y git jq
-fi
+sudo apt-get update -y
+sudo apt-get upgrade -y
+sudo apt-get install -y git jq
 
 if [[ $? != 0 ]]; then
   echo "[setup] Install failed, exiting"
@@ -69,24 +67,14 @@ fi
 # Repo-tracked hooks (pre-push secret scan). core.hooksPath isn't cloned, so set it here.
 git -C $HOME/.dotfiles config core.hooksPath .githooks
 
-# Install all tools and run setup tasks
-cd $HOME/.dotfiles/elementaryos
-
-# Make [tools] available globally (not just inside this dir) by using the repo
-# config as mise's global config.
-mkdir -p $HOME/.config/mise
-ln -sf $HOME/.dotfiles/elementaryos/mise.toml $HOME/.config/mise/config.toml
-
-mise=$HOME/.local/bin/mise
-$mise trust
-
-if [[ -z $1 ]]; then
-  echo "[setup] Installing tools + running setup..."
-  $mise run setup
-else
-  $mise "$@"
+# Link mise's global config dir (config.toml + tasks/) from dotstorage by hand:
+# `dotfiles link` prompts on clobber, and mise has to work before anything else.
+if [[ -d $HOME/.config/mise && ! -L $HOME/.config/mise ]]; then
+  mv $HOME/.config/mise $HOME/.config/mise.bak
 fi
+mkdir -p $HOME/.config
+ln -sfn $HOME/.dotfiles/dotstorage/.config/mise $HOME/.config/mise
 
-# Go back to the original folder cause yes
-cd - 2&>/dev/null
+echo "[setup] Installing tools + running setup..."
+$HOME/.local/bin/mise run setup
 

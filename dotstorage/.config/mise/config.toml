@@ -1,3 +1,7 @@
+[settings]
+# update every non-pinned tool below once a day, on launch or at the shell prompt
+tool_update.global_auto = true
+
 [tools]
 cmake = "latest"
 node = "lts"
@@ -10,7 +14,7 @@ zoxide = "latest"
 claude = "latest"
 flyctl = "latest"
 pi = "latest"
-"github:vercel-labs/agent-browser" = "0.34.0"
+"github:vercel-labs/agent-browser" = "latest"
 lazydocker = "latest"
 mermaid-ascii = "latest"
 nub = "latest"
@@ -22,4 +26,4 @@ infisical = "latest"
 "github:dmtrKovalenko/fff" = { version = "latest", asset_pattern = "fff-mcp-x86_64-unknown-linux-gnu" }
 "github:ente-io/ente" = { version = "latest", tag_regex = "^cli-v", version_prefix = "cli-v", asset_pattern = "ente-cli-v{{version}}-linux-amd64.tar.gz", github_attestations = false }
 herdr = "latest"
-"github:jliocsar/pie" = { version = "0.11.0", asset_pattern = "pie-linux-x64" }
+"github:jliocsar/pie" = { version = "latest", asset_pattern = "pie-linux-x64" }
