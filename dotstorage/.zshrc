@@ -29,12 +29,6 @@ fi
 # go
 export PATH="$PATH:/usr/local/go/bin"
 
-# Amp CLI
-export PATH="/home/jliocsar/.amp/bin:$PATH"
-
-# The next line updates PATH for the Google Cloud SDK.
-if [ -f '/home/jliocsar/.local/opt/google-cloud-sdk/path.zsh.inc' ]; then . '/home/jliocsar/.local/opt/google-cloud-sdk/path.zsh.inc'; fi
-
 # The next line enables shell command completion for gcloud.
 if [ -f '/home/jliocsar/.local/opt/google-cloud-sdk/completion.zsh.inc' ]; then . '/home/jliocsar/.local/opt/google-cloud-sdk/completion.zsh.inc'; fi
 
@@ -45,9 +39,6 @@ export ANDROID_HOME=$HOME/Android/Sdk
 export PATH=$PATH:$ANDROID_HOME/emulator
 export PATH=$PATH:$ANDROID_HOME/platform-tools
 export PATH=$PATH:$ANDROID_HOME/tools
-
-# Supabase CLI
-export PATH="/home/jliocsar/.supabase/bin:$PATH"
 
 # Bug squad manager: the /loop orchestrator, with the Slack channel server attached.
 # Subshell so MCP_PROTOCOL_NEGOTIATION doesn't leak into the shell. Extra flags go before the prompt.
