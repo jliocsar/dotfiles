@@ -21,6 +21,7 @@
 .claude/themes/
 .claude/output-styles/
 .claude/settings.json
+.claude/keybindings.json
 
 # Pi
 .pi/agent/extensions/

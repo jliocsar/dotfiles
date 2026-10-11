@@ -5,7 +5,7 @@ keybind = ctrl+enter=unbind
 # its family + mode; flip `theme_family` in ~/.local/bin/theme, not these.
 # Delta One themes live in ./themes/, Zenbones ships with ghostty.
 theme = light:Delta One Light,dark:Delta One Dark
-background = fafafa
+background = 191c1f
 background-opacity = 0.92
 
 gtk-titlebar = false

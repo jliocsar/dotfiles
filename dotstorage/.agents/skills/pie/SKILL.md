@@ -24,8 +24,8 @@ shell.
 - `pie pod up` runs on the pod. It reads the VM's tags through exe.dev's reflection integration,
   fetches the config repo through exe.dev's GitHub integration, and applies the recipe: mise
   installs the tools, the home sets land in `~`, mise runs the tasks, missing repos are cloned into
-  `~/workspace`, and Claude's agents, settings, skills and MCPs are written. Re-running it is how a
-  pod picks up new config.
+  `~/workspace`, Claude's agents, settings, skills and MCPs are written, and a `## pie` block in
+  `~/.claude/CLAUDE.md` tells Claude it's on a pod. Re-running it is how a pod picks up new config.
 - Secrets never live on a pod. exe.dev integrations add them at the network edge. The config repo's
   integration attaches to the `pie` tag, and a recipe's own integrations attach to its
   `pie-recipe-<name>` tag.
@@ -52,6 +52,60 @@ home = ["shell", { name = "zsh", mode = "append" }]
 
 Run `pie sync` after adding a set, then `pie check`, which names any rule a set breaks.
 
+## Repositories
+
+A recipe's `repositories` clone into `~/workspace` over https, only when the directory is missing:
+
+```toml
+repositories = [
+  "jliocsar/pie",
+  { repo = "jliocsar/nidus", dir = "nidus" },
+  { repo = "some-org/some-repo", integration = "some-org-git" },
+]
+```
+
+Without `integration`, a repo clones through exe.dev's GitHub App integration. For an org that won't
+install the App, name an `http-proxy` integration instead, and pie clones from
+`https://<integration>.int.exe.xyz/<repo>.git`. The user makes it, attached to the recipe's tag:
+
+```sh
+ssh exe.dev "integrations add http-proxy --name some-org-git \
+  --target https://github.com \
+  --header 'Authorization:Basic <base64 of x-access-token:PAT>' \
+  --attach tag:pie-recipe-<recipe>"
+```
+
+The PAT is a fine-grained token with Contents: read on the repo. A 403 or 404 through a proxy that
+answers otherwise means the token can't see the repo: it's still pending the org's approval, or it
+doesn't cover that repo.
+
+## Routines
+
+A routine is a headless `claude -p` run on a schedule, one `routines/<name>.toml` each:
+
+```toml
+label = "Triage new issues"
+recipe = "personal"
+schedule = "*/15 * * * *"
+timeout = "25 minutes"
+prompt = "Triage issues opened since your last run."
+arguments = ["--model", "opus"]
+```
+
+- `schedule` is a 5-field crontab line. `timeout` is required, in long form: `"25 minutes"` works,
+  `"25m"` doesn't.
+- A VM runs a routine when it also carries `pie-routine-<name>`. `pod up` writes the schedule into a
+  marked block of the user's crontab, and removes it when no routine tags are left.
+- The routine's `recipe` must be the VM's recipe, or `pod up` fails before changing anything.
+- A run that's still going when the next one is due is skipped, not doubled up. Past its timeout,
+  it's killed.
+
+On the pod, `pie routine run <name>` runs one by hand, and `pie routine log <name>` lists past runs
+with their session ids, so any run can be resumed with `claude --resume <id>`.
+
+To add one: write the file, `pie sync`, `pie check`, push, tag the VM
+(`ssh exe.dev tag <vm> pie-routine-<name>`), then `ssh <vm>.exe.xyz pie pod up`.
+
 ## From the laptop
 
 The laptop isn't a pod. It edits the config repo and validates it:
@@ -69,6 +123,8 @@ The laptop isn't a pod. It edits the config repo and validates it:
    ssh exe.dev new --name <vm> --tag pie,pie-recipe-<recipe>
    ```
 
+   Add `pie-routine-<name>` for each routine it should run.
+
 2. Install pie on it and apply the recipe:
 
    ```sh
@@ -83,7 +139,8 @@ The laptop isn't a pod. It edits the config repo and validates it:
 
 Integrations a recipe needs go on `pie-recipe-<recipe>` before step 2:
 
-- a GitHub integration reaching the repos it clones. Without one, step 2 fails and names the repo.
+- a GitHub integration reaching the repos it clones, or the `http-proxy` integration a repo names.
+  Without one, step 2 fails and names the repo and integration.
 - an HTTP proxy integration for each MCP that needs a secret. pie can't tell when one is missing,
   so the MCP just fails inside Claude.
 

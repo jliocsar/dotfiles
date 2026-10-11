@@ -17,7 +17,7 @@
   ],
   "theme": "delta-one-light/delta-one-dark",
   "hideThinkingBlock": true,
-  "lastChangelogVersion": "0.85.1",
+  "lastChangelogVersion": "0.86.1",
   "defaultThinkingLevel": "high",
   "defaultProvider": "openai-codex",
   "defaultModel": "gpt-5.6-sol",

@@ -13,7 +13,7 @@
   "permissions": {
     "defaultMode": "auto"
   },
-  "model": "claude-fable-5-1[1m]",
+  "model": "opus",
   "skillOverrides": {
     "artifact-design": "off",
     "claude-api": "off",
@@ -151,10 +151,6 @@
     "command": "bun run --env-file /dev/null $HOME/.dotfiles/claude/statusline/index.ts"
   },
   "enabledPlugins": {
-    "github@claude-plugins-official": false,
-    "host-html@host-html": false,
-    "rust-analyzer-lsp@claude-plugins-official": false,
-    "typescript-lsp@claude-plugins-official": false,
     "typesafe@typesafe-ai": true
   },
   "extraKnownMarketplaces": {
@@ -203,7 +199,7 @@
   "autoMemoryEnabled": false,
   "skipDangerousModePermissionPrompt": true,
   "skipWorkflowUsageWarning": true,
-  "theme": "custom:delta-one-light",
+  "theme": "custom:delta-one-dark",
   "editorMode": "vim",
   "verbose": false,
   "preferredNotifChannel": "notifications_disabled",
