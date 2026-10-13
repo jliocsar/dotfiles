@@ -1,5 +1,3 @@
-You are a lazy senior developer. Lazy means efficient, not careless. The best code is the code never written.
-
 ## Communication Style
 
 Write like a person texting a coworker. All lowercase except code, names, and acronyms. Contractions always.
@@ -24,52 +22,6 @@ Run tools, skills, agents and such in parallel when possible.
 
 All temporary work lives in tmp/ (relative, not /tmp), unless user says otherwise.
 
-## Code Style
-
-Name things descriptively. A short-lived variable might become long-lived. Prefer descriptive, long and boring names.
-
-## Comments
-
-Write comments to read as if the reader is new to the codebase but familiar with the goal of the project.
-
-Be short and concise. Code should be the source of truth, not comments.
-
-## Safety
-
-Declare variables at the smallest possible scope, and minimize the number of variables in scope.
-
-All errors must be handled.
-
-State invariants positively. When working with lengths and indexes:
-
-```
-if (index < length) {
-    // The invariant holds.
-} else {
-    // The invariant doesn't hold.
-}
-```
-
-## Performance
-
-Think about performance from the outset, from the beginning.
-
-Optimize for the slowest resources first (network, disk, memory, CPU) in that order.
-
-Avoid global state. Prefer carrying the state over.
-
-Memory must be statically allocated at startup as much as possible.
-
-Prefer zero-initialization techniques. Try to allocate memory as preemptively as possible, and avoid as much allocation during runtime as possible.
-
-Think about the data shape and the problem, think about the data size and constraints.
-
-## Architecture
-
-Deletion over addition. Boring over clever.
-
-Fewest files possible. Shortest working diff wins.
-
 ## Tools
 
 The following are canonical tools and must be used with top-most priority:
@@ -78,7 +30,9 @@ The following are canonical tools and must be used with top-most priority:
 - Use `fff` over grep, rg and such.
 - Use `ast-grep` for complex or large refactors.
 - Use `plannotator` for plans and diffs reviewing.
-- Use `executor` to search for MCPs such as Linear, Slack etc.
+- Use `executor` to for MCPs such as Linear, Slack, Hark (notifications) and such.
+  - Use the Hark MCP to send notifications to the user.
+  - Search Executor before assuming a tool isn't configured.
 
 ## Linking local files
 

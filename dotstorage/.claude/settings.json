@@ -204,6 +204,8 @@
   "verbose": false,
   "preferredNotifChannel": "notifications_disabled",
   "switchModelsOnFlag": false,
+  "remoteControlAtStartup": true,
   "skipAutoPermissionPrompt": true,
-  "voiceEnabled": true
+  "voiceEnabled": true,
+  "agentPushNotifEnabled": true
 }

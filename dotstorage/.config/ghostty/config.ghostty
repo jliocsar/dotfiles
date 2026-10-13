@@ -6,7 +6,7 @@ keybind = ctrl+enter=unbind
 # Delta One themes live in ./themes/, Zenbones ships with ghostty.
 theme = light:Delta One Light,dark:Delta One Dark
 background = 191c1f
-background-opacity = 0.92
+background-opacity = 0.8
 
 gtk-titlebar = false
 gtk-titlebar-style = native
