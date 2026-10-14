@@ -73,8 +73,16 @@ const cacheHitColor = (pct: number) => {
 };
 
 // ─── Section builders ───
+// Hacky: there's no explicit "work" signal on every host, so treat a custom
+// CLAUDE_CONFIG_DIR (the laptop's ~/.claude-work) or the work executor toolkit
+// (the remote VM runs on ~/.claude) as a work session. Replace with a real flag.
+const isWorkSession = (): boolean =>
+  process.env.WORK === "1" ||
+  Boolean(process.env.CLAUDE_CONFIG_DIR) ||
+  process.env.EXECUTOR_TOOLKIT === "work";
+
 function envLabelSection(): string {
-  const label = process.env.WORK === "1" ? LABELS.work : LABELS.personal;
+  const label = isWorkSession() ? LABELS.work : LABELS.personal;
   return `${BOLD}${seg(gray, label.icon, label.text)}`;
 }
 
