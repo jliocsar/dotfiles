@@ -79,33 +79,6 @@ The PAT is a fine-grained token with Contents: read on the repo. A 403 or 404 th
 answers otherwise means the token can't see the repo: it's still pending the org's approval, or it
 doesn't cover that repo.
 
-## Routines
-
-A routine is a headless `claude -p` run on a schedule, one `routines/<name>.toml` each:
-
-```toml
-label = "Triage new issues"
-recipe = "personal"
-schedule = "*/15 * * * *"
-timeout = "25 minutes"
-prompt = "Triage issues opened since your last run."
-arguments = ["--model", "opus"]
-```
-
-- `schedule` is a 5-field crontab line. `timeout` is required, in long form: `"25 minutes"` works,
-  `"25m"` doesn't.
-- A VM runs a routine when it also carries `pie-routine-<name>`. `pod up` writes the schedule into a
-  marked block of the user's crontab, and removes it when no routine tags are left.
-- The routine's `recipe` must be the VM's recipe, or `pod up` fails before changing anything.
-- A run that's still going when the next one is due is skipped, not doubled up. Past its timeout,
-  it's killed.
-
-On the pod, `pie routine run <name>` runs one by hand, and `pie routine log <name>` lists past runs
-with their session ids, so any run can be resumed with `claude --resume <id>`.
-
-To add one: write the file, `pie sync`, `pie check`, push, tag the VM
-(`ssh exe.dev tag <vm> pie-routine-<name>`), then `ssh <vm>.exe.xyz pie pod up`.
-
 ## From the laptop
 
 The laptop isn't a pod. It edits the config repo and validates it:
@@ -123,15 +96,14 @@ The laptop isn't a pod. It edits the config repo and validates it:
    ssh exe.dev new --name <vm> --tag pie,pie-recipe-<recipe>
    ```
 
-   Add `pie-routine-<name>` for each routine it should run.
-
 2. Install pie on it and apply the recipe:
 
    ```sh
    ssh <vm>.exe.xyz 'curl -fsSL https://github.com/jliocsar/pie/releases/latest/download/setup.sh | sh -s -- jliocsar/agents-machines'
    ```
 
-   The same line upgrades pie on an existing pod.
+   pie installs through mise, which updates it on its own. A pod installed before v0.14.0 has a
+   plain binary instead, and re-running the line once moves it to mise.
 
 3. Ask the user to log into `claude` on the box. It's interactive, and it's the one credential that
    lives on a pod.
