@@ -1,4 +1,4 @@
-FROM oven/bun:1.4 AS build
+FROM oven/bun:1.4.4 AS build
 WORKDIR /app
 COPY package.json bun.lock tsconfig.json ./
 COPY patches patches
@@ -9,7 +9,7 @@ COPY apps apps
 COPY packages packages
 RUN cd apps/web && bun run build
 
-FROM oven/bun:1.4-slim
+FROM oven/bun:1.4.4-slim
 WORKDIR /app/apps/web
 COPY --from=build /app /app
 ENV NODE_ENV=production DATABASE_PATH=/data/app.db PORT=3123 BACKUP_ENABLED=true
