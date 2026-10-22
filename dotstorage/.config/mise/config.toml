@@ -3,27 +3,28 @@
 tool_update.global_auto = true
 
 [tools]
-cmake = "latest"
-node = "lts"
-bun = "latest"
-pnpm = "latest"
-uv = "latest"
-rust = "stable"
-neovim = "latest"
-zoxide = "latest"
-claude = "latest"
-flyctl = "latest"
-pi = "latest"
-"github:vercel-labs/agent-browser" = "latest"
-lazydocker = "latest"
-mermaid-ascii = "latest"
-nub = "latest"
-infisical = "latest"
-"github:betterleaks/betterleaks" = { version = "latest", asset_pattern = "betterleaks_{{version}}_linux_x64.tar.gz" }
-"npm:hunkdiff" = "latest"
-"npm:@plannotator/tot" = "latest"
 "github:backnotprop/plannotator" = { version = "latest", asset_pattern = "plannotator-linux-x64" }
+"github:betterleaks/betterleaks" = { version = "latest", asset_pattern = "betterleaks_{{version}}_linux_x64.tar.gz" }
 "github:dmtrKovalenko/fff" = { version = "latest", asset_pattern = "fff-mcp-x86_64-unknown-linux-gnu" }
 "github:ente-io/ente" = { version = "latest", tag_regex = "^cli-v", version_prefix = "cli-v", asset_pattern = "ente-cli-v{{version}}-linux-amd64.tar.gz", github_attestations = false }
-herdr = "latest"
 "github:jliocsar/pie" = { version = "latest", asset_pattern = "pie-linux-x64" }
+"github:vercel-labs/agent-browser" = "latest"
+"npm:@plannotator/tot" = "latest"
+"npm:harkctl" = "latest"
+"npm:hunkdiff" = "latest"
+bun = "latest"
+claude = "latest"
+cmake = "latest"
+flyctl = "latest"
+herdr = "latest"
+infisical = "latest"
+lazydocker = "latest"
+mermaid-ascii = "latest"
+neovim = "latest"
+node = "lts"
+nub = "latest"
+pi = "latest"
+pnpm = "latest"
+rust = "stable"
+uv = "latest"
+zoxide = "latest"

@@ -220,6 +220,13 @@ PanelWindow {
         }
 
         Indicator {
+            icon: DoNotDisturb.enabled ? "󰂛" : "󰂚" // md-bell-off / md-bell
+            color: DoNotDisturb.enabled ? Theme.red : Theme.barFg
+            tooltip: DoNotDisturb.enabled ? "Do not disturb: on" : "Do not disturb: off"
+            onClicked: DoNotDisturb.toggle()
+        }
+
+        Indicator {
             readonly property int percent: Math.round(bar.battery.percentage * 100)
             readonly property bool charging: bar.battery.state === UPowerDeviceState.Charging
                                           || bar.battery.state === UPowerDeviceState.FullyCharged

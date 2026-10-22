@@ -136,13 +136,13 @@ tab_bar_position = "top"
 status_indicators = "symbols"
 
 [ui.toast]
-delivery = "herdr"
+delivery = "terminal"
 
 [experimental]
 kitty_graphics = true
 
 [ui.sound]
-enabled = true
+enabled = false
 
 # autotitle
 [[keys.command]]

@@ -49,7 +49,11 @@ PanelWindow {
         actionsSupported: true
         bodyMarkupSupported: true
         imageSupported: true
-        onNotification: notification => notification.tracked = true
+        // Untracked notifications are dropped on the spot. Critical ones still break through DND.
+        onNotification: notification => {
+            if (DoNotDisturb.enabled && notification.urgency !== NotificationUrgency.Critical) return;
+            notification.tracked = true;
+        }
     }
 
     Column {

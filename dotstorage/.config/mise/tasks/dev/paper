@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+#MISE description="Install Paper desktop (patched AppImage, no window-control overlay)"
+#MISE dir="/tmp"
+set -euo pipefail
+
+url="https://download.paper.design/linux/appImage"
+install_dir="/opt/paper"
+
+# No versioned releases; the version only shows up in the download's filename.
+version=$(curl -fsSIL "$url" | grep -io 'filename="[^"]*"' | sed -E 's/.*paper-desktop-([0-9.]+)x86_64.*/\1/')
+if [[ "$(cat "$install_dir/.version" 2>/dev/null)" == "$version" ]]; then
+  echo "[dev] paper $version already installed"
+  exit 0
+fi
+
+echo "[dev] Installing paper $version"
+
+wget -O paper.AppImage "$url"
+chmod +x ./paper.AppImage
+rm -rf ./squashfs-root
+./paper.AppImage --appimage-extract >/dev/null
+
+# Paper asks Electron for a Windows-style titleBarOverlay on every non-mac
+# platform, which paints min/max/close over its own toolbar. Drop it. The
+# swaps keep the byte length so the asar header offsets stay valid.
+python3 -I - ./squashfs-root/resources/app.asar <<'PY'
+import re, sys
+
+path = sys.argv[1]
+data = open(path, 'rb').read()
+patches = [
+    # new BaseWindow({... titleBarOverlay: isMac ? undefined : overlay() })
+    (rb'titleBarOverlay:[\w$]+\?void 0:[\w$]+\(\)', b'titleBarOverlay:void 0'),
+    # updateTitleBarOverlay(): setTitleBarOverlay throws once there's no overlay
+    (rb'isDestroyed\(\)\|\|[\w$]+\|\|this\.window\.setTitleBarOverlay\([\w$]+\(\)\)', b'isDestroyed()||!0'),
+]
+for pattern, repl in patches:
+    matches = list(re.finditer(pattern, data))
+    if len(matches) != 1:
+        sys.exit(f'[dev] paper patch broke: {len(matches)} matches for {pattern!r}')
+    m = matches[0]
+    data = data[:m.start()] + repl.ljust(m.end() - m.start()) + data[m.end():]
+open(path, 'wb').write(data)
+PY
+
+# Run unpacked: a repacked AppImage would need appimagetool. Side effect: the
+# in-app updater skips non-AppImage installs, so updating means re-running this.
+sudo rm -rf "$install_dir"
+sudo mkdir -p "$install_dir"
+sudo cp -a ./squashfs-root/. "$install_dir/"
+sudo install -m 644 "$(readlink -f ./squashfs-root/.DirIcon)" "$install_dir/paper.png"
+echo "$version" | sudo tee "$install_dir/.version" >/dev/null
+
+# Not "paper": the app installs its own CLI as ~/.paper/bin/paper.
+sudo ln -sf "$install_dir/paper-desktop" /usr/local/bin/paper-desktop
+sudo rm -f /usr/local/bin/paper
+
+# --no-sandbox comes from the vendor's own .desktop: chrome-sandbox can't be
+# setuid inside an AppImage. MimeType keeps paper:// links (login) working.
+sudo tee /usr/local/share/applications/paper.desktop >/dev/null <<DESKTOP
+[Desktop Entry]
+Type=Application
+Name=Paper
+Comment=Paper Desktop
+Exec=env ELECTRON_OZONE_PLATFORM_HINT=wayland $install_dir/paper-desktop --no-sandbox %U
+Icon=$install_dir/paper.png
+Terminal=false
+StartupWMClass=paper-desktop
+MimeType=x-scheme-handler/paper;
+Categories=Graphics;Utility;
+DESKTOP
+
+sudo update-desktop-database /usr/local/share/applications || true
+
+rm -rf ./paper.AppImage ./squashfs-root
