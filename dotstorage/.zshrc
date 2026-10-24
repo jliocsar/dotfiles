@@ -55,3 +55,9 @@ claude@work:bug-team() {
       -- "/loop 15m /bug-squad tick"
   )
 }
+
+# bun completions
+[ -s "/home/jliocsar/.bun/_bun" ] && source "/home/jliocsar/.bun/_bun"
+
+# opencode
+export PATH=/home/jliocsar/.opencode/bin:$PATH

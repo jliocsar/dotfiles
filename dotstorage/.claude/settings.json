@@ -13,7 +13,7 @@
   "permissions": {
     "defaultMode": "auto"
   },
-  "model": "opus",
+  "model": "opus[1m]",
   "skillOverrides": {
     "artifact-design": "off",
     "claude-api": "off",
@@ -81,6 +81,15 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CROOK_HOOK_SOCKET_PATH=/home/jliocsar/.local/state/crook/hook.sock /home/jliocsar/.local/bin/crook-agent hook",
+            "async": true
+          }
+        ]
       }
     ],
     "SessionEnd": [
@@ -135,6 +144,50 @@
           }
         ]
       }
+    ],
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CROOK_HOOK_SOCKET_PATH=/home/jliocsar/.local/state/crook/hook.sock /home/jliocsar/.local/bin/crook-agent hook",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CROOK_HOOK_SOCKET_PATH=/home/jliocsar/.local/state/crook/hook.sock /home/jliocsar/.local/bin/crook-agent hook",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CROOK_HOOK_SOCKET_PATH=/home/jliocsar/.local/state/crook/hook.sock /home/jliocsar/.local/bin/crook-agent hook",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PostToolBatch": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CROOK_HOOK_SOCKET_PATH=/home/jliocsar/.local/state/crook/hook.sock /home/jliocsar/.local/bin/crook-agent hook",
+            "async": true
+          }
+        ]
+      }
     ]
   },
   "worktree": {
@@ -185,6 +238,23 @@
     "autoAllowBashIfSandboxed": false
   },
   "effortLevel": "xhigh",
+  "autoCompactWindow": 400000,
+  "promptSuggestionEnabled": false,
+  "awaySummaryEnabled": false,
+  "tui": "fullscreen",
+  "autoMemoryEnabled": false,
+  "skipDangerousModePermissionPrompt": true,
+  "skipWorkflowUsageWarning": true,
+  "theme": "custom:delta-one-dark",
+  "editorMode": "vim",
+  "verbose": false,
+  "preferredNotifChannel": "notifications_disabled",
+  "autoCompactEnabled": true,
+  "switchModelsOnFlag": false,
+  "remoteControlAtStartup": true,
+  "agentPushNotifEnabled": true,
+  "skipAutoPermissionPrompt": true,
+  "voiceEnabled": true,
   "modelSettings": {
     "claude-opus-5": {
       "effortLevel": "xhigh"
@@ -199,22 +269,6 @@
       "effortLevel": "xhigh"
     }
   },
-  "autoCompactWindow": 400000,
-  "promptSuggestionEnabled": false,
-  "awaySummaryEnabled": false,
-  "tui": "fullscreen",
-  "autoMemoryEnabled": false,
-  "skipDangerousModePermissionPrompt": true,
-  "skipWorkflowUsageWarning": true,
-  "theme": "custom:delta-one-dark",
-  "editorMode": "vim",
-  "verbose": false,
-  "preferredNotifChannel": "notifications_disabled",
-  "autoCompactEnabled": true,
   "idleCompaction": false,
-  "switchModelsOnFlag": false,
-  "remoteControlAtStartup": true,
-  "agentPushNotifEnabled": true,
-  "skipAutoPermissionPrompt": true,
-  "voiceEnabled": true
+  "teammateMode": "auto"
 }
