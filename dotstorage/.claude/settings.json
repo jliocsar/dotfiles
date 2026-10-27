@@ -13,7 +13,6 @@
   "permissions": {
     "defaultMode": "auto"
   },
-  "model": "opus[1m]",
   "skillOverrides": {
     "artifact-design": "off",
     "claude-api": "off",
@@ -238,6 +237,20 @@
     "autoAllowBashIfSandboxed": false
   },
   "effortLevel": "xhigh",
+  "modelSettings": {
+    "claude-opus-5": {
+      "effortLevel": "xhigh"
+    },
+    "claude-fable-5": {
+      "effortLevel": "xhigh"
+    },
+    "claude-fable-5-1": {
+      "effortLevel": "high"
+    },
+    "claude-opus-5-5": {
+      "effortLevel": "xhigh"
+    }
+  },
   "autoCompactWindow": 400000,
   "promptSuggestionEnabled": false,
   "awaySummaryEnabled": false,
@@ -250,25 +263,11 @@
   "verbose": false,
   "preferredNotifChannel": "notifications_disabled",
   "autoCompactEnabled": true,
+  "idleCompaction": false,
   "switchModelsOnFlag": false,
+  "teammateMode": "auto",
   "remoteControlAtStartup": true,
   "agentPushNotifEnabled": true,
   "skipAutoPermissionPrompt": true,
-  "voiceEnabled": true,
-  "modelSettings": {
-    "claude-opus-5": {
-      "effortLevel": "xhigh"
-    },
-    "claude-fable-5": {
-      "effortLevel": "xhigh"
-    },
-    "claude-fable-5-1": {
-      "effortLevel": "xhigh"
-    },
-    "claude-opus-5-5": {
-      "effortLevel": "xhigh"
-    }
-  },
-  "idleCompaction": false,
-  "teammateMode": "auto"
+  "voiceEnabled": true
 }
