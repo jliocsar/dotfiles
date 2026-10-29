@@ -3,4 +3,26 @@
    (then ctrl+alt+i). use !important, slack's own rules are pretty specific. */
 
 /* px added to every monospace font-size slack sets (code, pre, code blocks…) */
-:root { --mono-bump: 1px; }
+:root {
+  --mono-bump: 1px;
+}
+
+.sk-client-theme--dark {
+  --dt_color-base-pry: #111 !important;
+  --dt_color-base-sec: #111 !important;
+  --dt_color-base-ter: #222 !important;
+  --sk_primary_background: #111 !important;
+}
+
+.c-button-unstyled.c-message_list__day_divider__label__pill {
+  background-color: #111111aa !important;
+  backdrop-filter: blur(2rem);
+}
+
+.p-theme_background {
+  background-color: #111 !important;
+}
+
+.p-rich_text_section {
+  line-height: 1.6 !important;
+}

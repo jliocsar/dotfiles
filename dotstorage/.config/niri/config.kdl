@@ -557,6 +557,11 @@ binds {
     Mod+Ctrl+Shift+WheelScrollDown { move-column-right; }
     Mod+Ctrl+Shift+WheelScrollUp   { move-column-left; }
 
+    // Logitech side buttons. Bound here, so niri eats them and apps
+    // (Chrome back/forward etc) never see them.
+    MouseForward { focus-workspace-up; }
+    MouseBack    { focus-workspace-down; }
+
     // Similarly, you can bind touchpad scroll "ticks".
     // Touchpad scrolling is continuous, so for these binds it is split into
     // discrete intervals.
