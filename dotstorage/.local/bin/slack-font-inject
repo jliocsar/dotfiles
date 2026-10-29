@@ -4,7 +4,8 @@
 // devtools: no TCP port is opened. exits when slack exits.
 //
 // also injects ~/.config/slack-custom/custom.css (SLACK_CUSTOM_CSS to override)
-// and live-reloads it on save.
+// and live-reloads it on save. mono rules get --mono-bump (px) added to their
+// font-size; set it in custom.css, e.g. :root { --mono-bump: 1px; }
 //
 // env: SLACK_FONT, SLACK_MONO_FONT, SLACK_BIN, SLACK_CUSTOM_CSS, SLACK_FONT_LOG (debug log path)
 
@@ -13,8 +14,8 @@ import { appendFileSync, readFileSync, watchFile } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
-const FONT = process.env.SLACK_FONT || 'Merriweather';
-const MONO = process.env.SLACK_MONO_FONT || 'Slack-Roboto-Mono, Menlo, monospace';
+const FONT = process.env.SLACK_FONT || 'SF Pro';
+const MONO = process.env.SLACK_MONO_FONT || 'Ioskeley Mono, Slack-Roboto-Mono, Menlo, monospace';
 const SLACK = process.env.SLACK_BIN || '/usr/bin/slack';
 const LOG = process.env.SLACK_FONT_LOG;
 const log = (...a) => LOG && appendFileSync(LOG, `[${new Date().toISOString()}] ${a.join(' ')}\n`);
@@ -33,9 +34,52 @@ const readCustomCss = () => {
 
 // the page keeps the css on window.__customCss so a re-injection swaps it in
 // place instead of stacking another timer.
+//
+// slack's own mono rules live in cascade layers, and layered !important beats
+// anything unlayered we append. so mono rules are patched in place via cssom:
+// font-family -> MONO, px font-size -> original + --mono-bump.
 const buildSource = () => `(() => {
   window.__customCss = ${JSON.stringify(fontCss + '\n' + readCustomCss())};
+  window.__monoFont = ${JSON.stringify(MONO)};
   const id = '__custom_css';
+  const isMono = (ff) => /monospace|monaco|menlo|courier/i.test(ff);
+  const patched = (window.__monoPatched ||= []);
+  const seenStyles = (window.__monoSeenStyles ||= new WeakSet());
+  const sheetSizes = (window.__monoSheetSizes ||= new WeakMap());
+  const bump = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--mono-bump')) || 0;
+  const setSize = (p, b) => p.style.setProperty('font-size', (p.orig + b) + 'px', p.prio);
+  const patchStyle = (style) => {
+    if (seenStyles.has(style)) return;
+    seenStyles.add(style);
+    if (style.getPropertyValue('--font-family-monospace')) {
+      style.setProperty('--font-family-monospace', window.__monoFont, style.getPropertyPriority('--font-family-monospace'));
+    }
+    const ff = style.getPropertyValue('font-family');
+    if (!ff || !isMono(ff)) return;
+    style.setProperty('font-family', window.__monoFont, style.getPropertyPriority('font-family'));
+    const fs = style.getPropertyValue('font-size');
+    if (/^[\\d.]+px$/.test(fs)) {
+      const p = { style, orig: parseFloat(fs), prio: style.getPropertyPriority('font-size') };
+      patched.push(p);
+      setSize(p, window.__monoBumpApplied || 0);
+    }
+  };
+  const walk = (rules) => { for (const r of rules) { if (r.style) patchStyle(r.style); if (r.cssRules) walk(r.cssRules); } };
+  const patchSheets = () => {
+    for (const sheet of document.styleSheets) {
+      if (sheet.ownerNode && sheet.ownerNode.id === id) continue;
+      let rules;
+      try { rules = sheet.cssRules; } catch { continue; }
+      if (sheetSizes.get(sheet) === rules.length) continue;
+      sheetSizes.set(sheet, rules.length);
+      walk(rules);
+    }
+    const b = bump();
+    if (b !== (window.__monoBumpApplied || 0)) {
+      window.__monoBumpApplied = b;
+      for (const p of patched) setSize(p, b);
+    }
+  };
   const apply = () => {
     if (!document.documentElement) return;
     let s = document.getElementById(id);
@@ -47,11 +91,30 @@ const buildSource = () => `(() => {
       s.parentNode.appendChild(s);
     }
     if (s.textContent !== window.__customCss) s.textContent = window.__customCss;
+    try { patchSheets(); } catch {}
   };
+  window.__applyCustomCss = apply;
   apply();
+  // electron menu accelerators don't fire on wayland with the menu bar hidden,
+  // so handle the devtools shortcut in the page. slack resets its
+  // devToolsEnabled setting from a server flag on every load, so flip it back on
+  // right before toggling (both go over the same ipc channel, in order).
+  if (!window.__customDevtoolsKeys) {
+    window.__customDevtoolsKeys = true;
+    window.addEventListener('keydown', (e) => {
+      const combo = e.key === 'F12' || (e.ctrlKey && e.altKey && !e.shiftKey && e.code === 'KeyI');
+      const app = window.desktop?.app;
+      if (!combo || !app?.toggleDevTools) return;
+      e.preventDefault();
+      e.stopPropagation();
+      if (!app.getPreference?.('devToolsEnabled')) app.setPreference?.({ name: 'devToolsEnabled', value: true });
+      setTimeout(() => app.toggleDevTools(), 50);
+    }, true);
+  }
   if (!window.__customCssTimer) {
-    document.addEventListener('DOMContentLoaded', apply);
-    window.__customCssTimer = setInterval(apply, 3000);
+    document.addEventListener('DOMContentLoaded', () => window.__applyCustomCss());
+    window.addEventListener('load', () => window.__applyCustomCss());
+    window.__customCssTimer = setInterval(() => window.__applyCustomCss(), 3000);
   }
 })()`;
 let source = buildSource();

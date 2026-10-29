@@ -1,3 +1,6 @@
 /* custom styles injected into slack by ~/.local/bin/slack-font-inject.
    live-reloads on save. find selectors with: SLACK_DEVELOPER_MENU=true slack
    (then ctrl+alt+i). use !important, slack's own rules are pretty specific. */
+
+/* px added to every monospace font-size slack sets (code, pre, code blocks…) */
+:root { --mono-bump: 1px; }

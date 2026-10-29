@@ -19,7 +19,6 @@
 .claude/skills/
 .claude/hooks/
 .claude/themes/
-.claude/output-styles/
 .claude/settings.json
 .claude/keybindings.json
 
