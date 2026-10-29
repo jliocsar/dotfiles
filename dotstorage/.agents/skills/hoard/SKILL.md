@@ -32,12 +32,12 @@ hoard meetings           # today's calendar events, with the slug of each one's 
 You never deal with versions. The CLI keeps track of them in a hidden sidecar file.
 
 ```sh
-hoard pull <ref>                 # writes /tmp/hoard/<slug>.md, prints {slug, path}
+hoard pull <ref>                 # writes ~/.cache/hoard/<slug>.md, prints {slug, path}
 # edit that file with your normal file tools
 hoard push <slug>                # or: push /path/to/<slug>.md
 ```
 
-- Pass `--dir <dir>` to use another folder instead of `/tmp/hoard`. Give the same `--dir` to `push`.
+- Pass `--dir <dir>` to use another folder instead of `~/.cache/hoard` (`$XDG_CACHE_HOME/hoard`). Give the same `--dir` to `push`. The CLI refuses (exit 2, `UnsafeDir`) a folder that's a symlink, belongs to someone else or other users can write to, so don't use `/tmp`.
 - `push` sends the edits you made. If someone changed the entry in the meantime, the CLI merges their changes in:
   - When the edits don't overlap, it pushes the merge. The output has `"merged": true`, and the file now holds the merged text.
   - When they overlap, it exits with **3** and leaves git-style conflict markers (`<<<<<<< local`, `||||||| base`, `=======`, `>>>>>>> remote`) in the file. Resolve them by keeping the right text and deleting the markers, then run `push` again.
@@ -80,14 +80,14 @@ When an artifact with that title already exists, `upload` prints `"skipped": tru
 
 ## Exit codes
 
-| code | meaning                                               | what to do                        |
-| ---- | ----------------------------------------------------- | --------------------------------- |
-| 0    | ok                                                    |                                   |
-| 1    | unexpected (network, server)                          | report it                         |
-| 2    | bad usage (flag, tag or type), or pulling an artifact | fix the command                   |
-| 3    | conflict markers were written into the file           | resolve them, then `push` again   |
-| 4    | entry or calendar event not found                     | check the ref with `list --title` |
-| 5    | unpushed local edits would be overwritten             | `push` first                      |
-| 6    | not logged in, or the token was rejected              | ask the user to run `hoard login` |
+| code | meaning                                                          | what to do                                                      |
+| ---- | ---------------------------------------------------------------- | --------------------------------------------------------------- |
+| 0    | ok                                                               |                                                                 |
+| 1    | unexpected (network, server)                                     | report it                                                       |
+| 2    | bad usage (flag, tag or type), or pulling an artifact            | fix the command                                                 |
+| 3    | conflict markers were written into the file                      | resolve them, then `push` again                                 |
+| 4    | entry or calendar event not found                                | check the ref with `list --title`                               |
+| 5    | unpushed local edits would be overwritten                        | `push` first                                                    |
+| 6    | not logged in, the token was rejected, or too many failed logins | ask the user to run `hoard login` (after a lockout, in an hour) |
 
 Login asks for a password, so it's the user's job. Never try to log in yourself.

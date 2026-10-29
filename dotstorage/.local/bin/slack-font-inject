@@ -1,0 +1,145 @@
+#!/usr/bin/env node
+// launches slack and injects a custom UI font over CDP.
+// uses --remote-debugging-pipe (fds 3/4) so only this process can talk to
+// devtools: no TCP port is opened. exits when slack exits.
+//
+// also injects ~/.config/slack-custom/custom.css (SLACK_CUSTOM_CSS to override)
+// and live-reloads it on save.
+//
+// env: SLACK_FONT, SLACK_MONO_FONT, SLACK_BIN, SLACK_CUSTOM_CSS, SLACK_FONT_LOG (debug log path)
+
+import { spawn } from 'node:child_process';
+import { appendFileSync, readFileSync, watchFile } from 'node:fs';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
+
+const FONT = process.env.SLACK_FONT || 'Merriweather';
+const MONO = process.env.SLACK_MONO_FONT || 'Slack-Roboto-Mono, Menlo, monospace';
+const SLACK = process.env.SLACK_BIN || '/usr/bin/slack';
+const LOG = process.env.SLACK_FONT_LOG;
+const log = (...a) => LOG && appendFileSync(LOG, `[${new Date().toISOString()}] ${a.join(' ')}\n`);
+
+const CUSTOM_CSS = process.env.SLACK_CUSTOM_CSS || join(homedir(), '.config/slack-custom/custom.css');
+
+const fontCss = `
+:root, body { --font-family-default: "${FONT}" !important; }
+body { font-family: "${FONT}", sans-serif !important; }
+pre, code, pre *, code *, kbd { font-family: ${MONO} !important; }
+`;
+
+const readCustomCss = () => {
+  try { return readFileSync(CUSTOM_CSS, 'utf8'); } catch { return ''; }
+};
+
+// the page keeps the css on window.__customCss so a re-injection swaps it in
+// place instead of stacking another timer.
+const buildSource = () => `(() => {
+  window.__customCss = ${JSON.stringify(fontCss + '\n' + readCustomCss())};
+  const id = '__custom_css';
+  const apply = () => {
+    if (!document.documentElement) return;
+    let s = document.getElementById(id);
+    if (!s) {
+      s = document.createElement('style');
+      s.id = id;
+      (document.head || document.documentElement).appendChild(s);
+    } else if (s.parentNode.lastElementChild !== s) {
+      s.parentNode.appendChild(s);
+    }
+    if (s.textContent !== window.__customCss) s.textContent = window.__customCss;
+  };
+  apply();
+  if (!window.__customCssTimer) {
+    document.addEventListener('DOMContentLoaded', apply);
+    window.__customCssTimer = setInterval(apply, 3000);
+  }
+})()`;
+let source = buildSource();
+
+const child = spawn(SLACK, ['--remote-debugging-pipe', ...process.argv.slice(2)], {
+  stdio: ['ignore', 'ignore', 'ignore', 'pipe', 'pipe'],
+});
+const toSlack = child.stdio[3];
+const fromSlack = child.stdio[4];
+toSlack.on('error', (e) => log('write error', e.message));
+fromSlack.on('error', (e) => log('read error', e.message));
+
+let nextId = 0;
+const pending = new Map();
+const send = (method, params = {}, sessionId) =>
+  new Promise((resolve) => {
+    const id = ++nextId;
+    pending.set(id, resolve);
+    toSlack.write(JSON.stringify({ id, method, params, ...(sessionId && { sessionId }) }) + '\0');
+  });
+
+const attached = new Set();
+const sessions = new Map(); // targetId -> { sessionId, scriptId }
+async function inject(target) {
+  attached.add(target.targetId);
+  const { result, error } = await send('Target.attachToTarget', { targetId: target.targetId, flatten: true });
+  if (error) return log('attach failed', target.url, error.message);
+  const s = result.sessionId;
+  await send('Page.enable', {}, s);
+  const added = await send('Page.addScriptToEvaluateOnNewDocument', { source }, s);
+  sessions.set(target.targetId, { sessionId: s, scriptId: added.result?.identifier });
+  await send('Runtime.evaluate', { expression: source }, s);
+  await send('Runtime.runIfWaitingForDebugger', {}, s);
+  log('injected', target.url);
+  if (LOG) {
+    setTimeout(async () => {
+      const r = await send('Runtime.evaluate', { expression: 'getComputedStyle(document.body).fontFamily', returnByValue: true }, s);
+      log('body font', target.url, r.result?.result?.value);
+    }, 15000);
+  }
+}
+
+function handle(msg) {
+  if (msg.id && pending.has(msg.id)) {
+    pending.get(msg.id)(msg);
+    pending.delete(msg.id);
+  } else if (msg.method === 'Target.targetCreated') {
+    const t = msg.params.targetInfo;
+    if (t.type === 'page' && !attached.has(t.targetId)) inject(t).catch((e) => log('inject error', e.message));
+  } else if (msg.method === 'Target.targetDestroyed') {
+    attached.delete(msg.params.targetId);
+    sessions.delete(msg.params.targetId);
+  }
+}
+
+let buf = '';
+fromSlack.setEncoding('utf8');
+fromSlack.on('data', (chunk) => {
+  buf += chunk;
+  let n;
+  while ((n = buf.indexOf('\0')) !== -1) {
+    const raw = buf.slice(0, n);
+    buf = buf.slice(n + 1);
+    try { handle(JSON.parse(raw)); } catch (e) { log('bad message', e.message); }
+  }
+});
+
+child.on('error', (e) => { console.error(`slack-font-inject: ${e.message}`); process.exit(1); });
+child.on('exit', (code) => process.exit(code ?? 0));
+for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => child.kill(sig));
+
+send('Target.setDiscoverTargets', { discover: true }).then((r) => log('discover', r.error ? r.error.message : 'ok'));
+
+// live reload: polling follows symlinks and survives editors that replace the file
+watchFile(CUSTOM_CSS, { interval: 1000 }, async () => {
+  source = buildSource();
+  for (const entry of sessions.values()) {
+    const { sessionId } = entry;
+    if (entry.scriptId) await send('Page.removeScriptToEvaluateOnNewDocument', { identifier: entry.scriptId }, sessionId);
+    const added = await send('Page.addScriptToEvaluateOnNewDocument', { source }, sessionId);
+    entry.scriptId = added.result?.identifier;
+    await send('Runtime.evaluate', { expression: source }, sessionId);
+  }
+  log('reloaded', CUSTOM_CSS);
+  if (LOG) {
+    for (const { sessionId } of sessions.values()) {
+      const r = await send('Runtime.evaluate', { expression: 'getComputedStyle(document.body).fontFamily', returnByValue: true }, sessionId);
+      log('body font after reload', r.result?.result?.value);
+    }
+  }
+});

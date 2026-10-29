@@ -1,0 +1,6 @@
+#!/bin/sh
+# launches slack with a custom UI font (override with SLACK_FONT).
+# devtools runs over a private pipe, no TCP port. see slack-font-inject.
+DIR="$(dirname "$(readlink -f "$0")")"
+NODE="$(command -v node || echo "$HOME/.local/share/mise/installs/node/lts/bin/node")"
+exec "$NODE" "$DIR/slack-font-inject" "$@"

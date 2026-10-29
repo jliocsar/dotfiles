@@ -56,5 +56,12 @@
 .config/systemd/user/quickshell.service
 .config/autostart/nm-applet.desktop
 .local/bin/waybar-claude-usage
+
+# Slack (custom UI font via CDP)
+.local/bin/slack
+.local/bin/slack-font-inject
+.local/share/applications/slack.desktop
+.config/slack-custom/custom.css
+
 # mise (global config + global tasks)
 .config/mise/
