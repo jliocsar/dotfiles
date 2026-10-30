@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Install fonts (SF Pro, Nerd Symbols, Martian Mono) + refresh cache"
+#MISE description="Install fonts (SF Pro, Lora, Inter, IBM Plex Sans, Nerd Symbols, Martian Mono) + refresh cache"
 #MISE dir="/tmp"
 set -euo pipefail
 
@@ -10,6 +10,30 @@ if [[ ! -f "$HOME/.fonts/SF-Pro.ttf" ]]; then
   echo "[system] SF Pro"
   wget -O "$HOME/.fonts/SF-Pro.ttf" \
     https://github.com/sahibjotsaggu/San-Francisco-Pro-Fonts/raw/refs/heads/master/SF-Pro.ttf
+fi
+
+if [[ ! -f "$HOME/.fonts/Lora[wght].ttf" ]]; then
+  echo "[system] Lora"
+  wget -O "$HOME/.fonts/Lora[wght].ttf" \
+    'https://github.com/google/fonts/raw/main/ofl/lora/Lora%5Bwght%5D.ttf'
+  wget -O "$HOME/.fonts/Lora-Italic[wght].ttf" \
+    'https://github.com/google/fonts/raw/main/ofl/lora/Lora-Italic%5Bwght%5D.ttf'
+fi
+
+if [[ ! -f "$HOME/.fonts/Inter[opsz,wght].ttf" ]]; then
+  echo "[system] Inter"
+  wget -O "$HOME/.fonts/Inter[opsz,wght].ttf" \
+    'https://github.com/google/fonts/raw/main/ofl/inter/Inter%5Bopsz,wght%5D.ttf'
+  wget -O "$HOME/.fonts/Inter-Italic[opsz,wght].ttf" \
+    'https://github.com/google/fonts/raw/main/ofl/inter/Inter-Italic%5Bopsz,wght%5D.ttf'
+fi
+
+if [[ ! -f "$HOME/.fonts/IBMPlexSans[wdth,wght].ttf" ]]; then
+  echo "[system] IBM Plex Sans"
+  wget -O "$HOME/.fonts/IBMPlexSans[wdth,wght].ttf" \
+    'https://github.com/google/fonts/raw/main/ofl/ibmplexsans/IBMPlexSans%5Bwdth,wght%5D.ttf'
+  wget -O "$HOME/.fonts/IBMPlexSans-Italic[wdth,wght].ttf" \
+    'https://github.com/google/fonts/raw/main/ofl/ibmplexsans/IBMPlexSans-Italic%5Bwdth,wght%5D.ttf'
 fi
 
 if [[ ! -f "$HOME/.fonts/SymbolsNerdFontMono-Regular.ttf" ]]; then

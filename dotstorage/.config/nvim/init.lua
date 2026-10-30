@@ -40,8 +40,8 @@ lazy.setup {
         enabled = true,
     },
     install = {
-        colorscheme = { 'onedark' },
-        --colorscheme = { 'zenbones' },
+        --colorscheme = { 'onedark' },
+        colorscheme = { 'zenbones' },
     },
     ui = {
         border = 'single',

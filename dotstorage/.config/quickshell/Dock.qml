@@ -161,7 +161,7 @@ PanelWindow {
         color: Theme.bgPanel
         y: dock.hidden ? dock.height : 0
         Behavior on y { NumberAnimation { id: slide; duration: Theme.dockSlideMs; easing.type: Easing.InOutCubic } }
-        border.color: Theme.border
+        border.color: Theme.dockBorder
         border.width: 1
 
         Row {
@@ -178,7 +178,7 @@ PanelWindow {
                 anchors.verticalCenter: parent.verticalCenter
                 width: 1
                 height: 28
-                color: Theme.border
+                color: Theme.dockBorder
                 visible: dock.unpinnedEntryIds.length > 0
             }
 

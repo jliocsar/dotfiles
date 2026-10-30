@@ -15,7 +15,7 @@
     "openai/gpt-realtime-2.1",
     "openai-codex/gpt-6-astra"
   ],
-  "theme": "delta-one-light/delta-one-dark",
+  "theme": "zenbones-light/zenbones-dark",
   "hideThinkingBlock": true,
   "lastChangelogVersion": "0.86.1",
   "defaultThinkingLevel": "high",

@@ -7,11 +7,364 @@
   --mono-bump: 1px;
 }
 
+/* >>> monochrome tokens (generated) ----------------------------------------
+   slack color tokens mapped to grays with the same perceived lightness
+   (oklab L), alpha kept. attention colors are left alone: important/red,
+   links + unread/notification dots, online presence, mentions/highlights,
+   huddles. regenerate: tmp/slack-font/gen-mono.mjs.
+   your own overrides below this block win (same selector, later rule). */
+.sk-client-theme--dark {
+  --sk_primary_foreground: 210, 210, 210 !important;
+  --sk_primary_background: 17, 17, 17 !important;
+  --sk_inverted_foreground: 29, 29, 29 !important;
+  --sk_inverted_background: 210, 210, 210 !important;
+  --sk_foreground_max_solid: 171, 171, 171 !important;
+  --sk_foreground_high_solid: 131, 131, 131 !important;
+  --sk_foreground_mid_solid: 84, 84, 84 !important;
+  --sk_foreground_low_solid: 55, 55, 55 !important;
+  --sk_foreground_soft_solid: 39, 39, 39 !important;
+  --sk_foreground_min_solid: 37, 37, 37 !important;
+  --dt_color-constants-white: #ffffff !important;
+  --dt_color-constants-black: #000000 !important;
+  --dt_color-brand-core-aubergine: #2f2f2f !important;
+  --dt_color-brand-core-horchatta: #eeeeee !important;
+  --dt_color-brand-core-black: #1c1c1c !important;
+  --dt_color-brand-core-white: #ffffff !important;
+  --dt_color-brand-core-slack-blue: #b3b3b3 !important;
+  --dt_color-brand-core-slack-green: #9c9c9c !important;
+  --dt_color-brand-core-slack-yellow: #bcbcbc !important;
+  --dt_color-brand-core-slack-red: #7d7d7d !important;
+  --dt_color-brand-sec-legal: #5e5e5e !important;
+  --dt_color-brand-sec-small-text: #454545 !important;
+  --dt_color-brand-sec-text: #1c1c1c !important;
+  --dt_color-brand-sec-terracotta: #a2a2a2 !important;
+  --dt_color-brand-sec-peach: #dedede !important;
+  --dt_color-brand-sec-sandbar: #dbdbdb !important;
+  --dt_color-brand-sec-moss: #797979 !important;
+  --dt_color-brand-sec-evergreen: #505050 !important;
+  --dt_color-brand-sec-pool: #c5c5c5 !important;
+  --dt_color-brand-sec-teal: #6f6f6f !important;
+  --dt_color-brand-sec-cobalt: #303030 !important;
+  --dt_color-brand-sec-bright-aubergine: #414141 !important;
+  --dt_color-brand-sec-mauve: #838383 !important;
+  --dt_color-brand-sec-berry: #353535 !important;
+  --dt_color-brand-sec-bubblegum: #cccccc !important;
+  --dt_color-brand-sec-salmon: #989898 !important;
+  --dt_color-brand-sec-crimson: #505050 !important;
+  --dt_color-base-pry: #111111 !important;
+  --dt_color-base-sec: #111111 !important;
+  --dt_color-base-ter: #222222 !important;
+  --dt_color-base-modal: #12121299 !important;
+  --dt_color-base-inv-pry: #242424 !important;
+  --dt_color-base-education: #141414 !important;
+  --dt_color-base-inv-education: #cfcfcf !important;
+  --dt_color-base-education-hover: #e8e8e814 !important;
+  --dt_color-base-education-pressed: #e8e8e82e !important;
+  --dt_color-base-inv-education-hover: #e8e8e814 !important;
+  --dt_color-base-inv-education-pressed: #e8e8e82e !important;
+  --dt_color-surf-education: #48484880 !important;
+  --dt_color-surf-education-hover: #e8e8e814 !important;
+  --dt_color-surf-education-pressed: #e8e8e82e !important;
+  --dt_color-ctr-pry: #242424 !important;
+  --dt_color-ctr-sec: #242424 !important;
+  --dt_color-content-sec: #bababa !important;
+  --dt_color-content-ter: #9b9b9b !important;
+  --dt_color-content-education: #e8e8e8 !important;
+  --dt_color-content-inv-sec: #bababa !important;
+  --dt_color-content-inv-education: #212121 !important;
+  --dt_color-otl-pry: #7c7c7c !important;
+  --dt_color-otl-sec: #7c7c7c80 !important;
+  --dt_color-otl-ter: #7c7c7c4d !important;
+  --dt_color-otl-education: #e8e8e8 !important;
+  --dt_color-otl-inv-pry: #7c7c7c !important;
+  --dt_color-otl-inv-sec: #7c7c7c80 !important;
+  --dt_color-otl-inv-ter: #7c7c7c4d !important;
+  --dt_color-plt-gray-0: 18, 18, 18 !important;
+  --dt_color-plt-gray-5: 29, 29, 29 !important;
+  --dt_color-plt-gray-10: 36, 36, 36 !important;
+  --dt_color-plt-gray-20: 53, 53, 53 !important;
+  --dt_color-plt-gray-30: 68, 68, 68 !important;
+  --dt_color-plt-gray-40: 93, 93, 93 !important;
+  --dt_color-plt-gray-50: 124, 124, 124 !important;
+  --dt_color-plt-gray-60: 155, 155, 155 !important;
+  --dt_color-plt-gray-70: 186, 186, 186 !important;
+  --dt_color-plt-gray-80: 210, 210, 210 !important;
+  --dt_color-plt-tomato-0: 26, 26, 26 !important;
+  --dt_color-plt-tomato-5: 47, 47, 47 !important;
+  --dt_color-plt-tomato-10: 59, 59, 59 !important;
+  --dt_color-plt-tomato-20: 71, 71, 71 !important;
+  --dt_color-plt-tomato-30: 92, 92, 92 !important;
+  --dt_color-plt-tomato-40: 105, 105, 105 !important;
+  --dt_color-plt-tomato-50: 127, 127, 127 !important;
+  --dt_color-plt-tomato-60: 141, 141, 141 !important;
+  --dt_color-plt-tomato-70: 161, 161, 161 !important;
+  --dt_color-plt-tomato-80: 186, 186, 186 !important;
+  --dt_color-plt-tomato-90: 206, 206, 206 !important;
+  --dt_color-plt-tomato-100: 230, 230, 230 !important;
+  --dt_color-plt-tomato-hover: #e6e6e614 !important;
+  --dt_color-plt-tomato-pressed: #e6e6e62e !important;
+  --dt_color-plt-paprika-0: 29, 29, 29 !important;
+  --dt_color-plt-paprika-5: 47, 47, 47 !important;
+  --dt_color-plt-paprika-10: 64, 64, 64 !important;
+  --dt_color-plt-paprika-20: 80, 80, 80 !important;
+  --dt_color-plt-paprika-30: 97, 97, 97 !important;
+  --dt_color-plt-paprika-40: 106, 106, 106 !important;
+  --dt_color-plt-paprika-50: 127, 127, 127 !important;
+  --dt_color-plt-paprika-60: 146, 146, 146 !important;
+  --dt_color-plt-paprika-70: 164, 164, 164 !important;
+  --dt_color-plt-paprika-80: 185, 185, 185 !important;
+  --dt_color-plt-paprika-90: 210, 210, 210 !important;
+  --dt_color-plt-paprika-100: 233, 233, 233 !important;
+  --dt_color-plt-paprika-hover: #e9e9e914 !important;
+  --dt_color-plt-paprika-pressed: #e9e9e92e !important;
+  --dt_color-plt-tangerine-0: 30, 30, 30 !important;
+  --dt_color-plt-tangerine-5: 52, 52, 52 !important;
+  --dt_color-plt-tangerine-10: 70, 70, 70 !important;
+  --dt_color-plt-tangerine-20: 87, 87, 87 !important;
+  --dt_color-plt-tangerine-30: 107, 107, 107 !important;
+  --dt_color-plt-tangerine-40: 118, 118, 118 !important;
+  --dt_color-plt-tangerine-50: 141, 141, 141 !important;
+  --dt_color-plt-tangerine-60: 155, 155, 155 !important;
+  --dt_color-plt-tangerine-70: 178, 178, 178 !important;
+  --dt_color-plt-tangerine-80: 196, 196, 196 !important;
+  --dt_color-plt-tangerine-90: 215, 215, 215 !important;
+  --dt_color-plt-tangerine-100: 232, 232, 232 !important;
+  --dt_color-plt-tangerine-hover: #e8e8e814 !important;
+  --dt_color-plt-tangerine-pressed: #e8e8e82e !important;
+  --dt_color-plt-campfire-0: 30, 30, 30 !important;
+  --dt_color-plt-campfire-5: 47, 47, 47 !important;
+  --dt_color-plt-campfire-10: 61, 61, 61 !important;
+  --dt_color-plt-campfire-20: 79, 79, 79 !important;
+  --dt_color-plt-campfire-30: 96, 96, 96 !important;
+  --dt_color-plt-campfire-40: 107, 107, 107 !important;
+  --dt_color-plt-campfire-50: 128, 128, 128 !important;
+  --dt_color-plt-campfire-60: 143, 143, 143 !important;
+  --dt_color-plt-campfire-70: 171, 171, 171 !important;
+  --dt_color-plt-campfire-80: 188, 188, 188 !important;
+  --dt_color-plt-campfire-90: 212, 212, 212 !important;
+  --dt_color-plt-campfire-100: 234, 234, 234 !important;
+  --dt_color-plt-campfire-hover: #eaeaea14 !important;
+  --dt_color-plt-campfire-pressed: #eaeaea2e !important;
+  --dt_color-plt-honeycomb-0: 36, 36, 36 !important;
+  --dt_color-plt-honeycomb-5: 53, 53, 53 !important;
+  --dt_color-plt-honeycomb-10: 74, 74, 74 !important;
+  --dt_color-plt-honeycomb-20: 88, 88, 88 !important;
+  --dt_color-plt-honeycomb-30: 112, 112, 112 !important;
+  --dt_color-plt-honeycomb-40: 123, 123, 123 !important;
+  --dt_color-plt-honeycomb-50: 146, 146, 146 !important;
+  --dt_color-plt-honeycomb-60: 161, 161, 161 !important;
+  --dt_color-plt-honeycomb-70: 180, 180, 180 !important;
+  --dt_color-plt-honeycomb-80: 195, 195, 195 !important;
+  --dt_color-plt-honeycomb-90: 212, 212, 212 !important;
+  --dt_color-plt-honeycomb-100: 234, 234, 234 !important;
+  --dt_color-plt-honeycomb-hover: #eaeaea14 !important;
+  --dt_color-plt-honeycomb-pressed: #eaeaea2e !important;
+  --dt_color-plt-sunflower-0: 34, 34, 34 !important;
+  --dt_color-plt-sunflower-5: 57, 57, 57 !important;
+  --dt_color-plt-sunflower-10: 78, 78, 78 !important;
+  --dt_color-plt-sunflower-20: 96, 96, 96 !important;
+  --dt_color-plt-sunflower-30: 124, 124, 124 !important;
+  --dt_color-plt-sunflower-40: 139, 139, 139 !important;
+  --dt_color-plt-sunflower-50: 166, 166, 166 !important;
+  --dt_color-plt-sunflower-60: 177, 177, 177 !important;
+  --dt_color-plt-sunflower-70: 194, 194, 194 !important;
+  --dt_color-plt-sunflower-80: 208, 208, 208 !important;
+  --dt_color-plt-sunflower-90: 224, 224, 224 !important;
+  --dt_color-plt-sunflower-100: 239, 239, 239 !important;
+  --dt_color-plt-sunflower-hover: #efefef14 !important;
+  --dt_color-plt-sunflower-pressed: #efefef2e !important;
+  --dt_color-plt-grass-0: 29, 29, 29 !important;
+  --dt_color-plt-grass-5: 45, 45, 45 !important;
+  --dt_color-plt-grass-10: 57, 57, 57 !important;
+  --dt_color-plt-grass-20: 70, 70, 70 !important;
+  --dt_color-plt-grass-30: 92, 92, 92 !important;
+  --dt_color-plt-grass-40: 106, 106, 106 !important;
+  --dt_color-plt-grass-50: 133, 133, 133 !important;
+  --dt_color-plt-grass-60: 150, 150, 150 !important;
+  --dt_color-plt-grass-70: 175, 175, 175 !important;
+  --dt_color-plt-grass-80: 195, 195, 195 !important;
+  --dt_color-plt-grass-90: 217, 217, 217 !important;
+  --dt_color-plt-grass-100: 239, 239, 239 !important;
+  --dt_color-plt-grass-hover: #efefef14 !important;
+  --dt_color-plt-grass-pressed: #efefef2e !important;
+  --dt_color-plt-cilantro-0: 30, 30, 30 !important;
+  --dt_color-plt-cilantro-5: 41, 41, 41 !important;
+  --dt_color-plt-cilantro-10: 53, 53, 53 !important;
+  --dt_color-plt-cilantro-20: 65, 65, 65 !important;
+  --dt_color-plt-cilantro-30: 85, 85, 85 !important;
+  --dt_color-plt-cilantro-40: 99, 99, 99 !important;
+  --dt_color-plt-cilantro-50: 125, 125, 125 !important;
+  --dt_color-plt-cilantro-60: 143, 143, 143 !important;
+  --dt_color-plt-cilantro-70: 169, 169, 169 !important;
+  --dt_color-plt-cilantro-80: 193, 193, 193 !important;
+  --dt_color-plt-cilantro-90: 214, 214, 214 !important;
+  --dt_color-plt-cilantro-100: 238, 238, 238 !important;
+  --dt_color-plt-cilantro-hover: #eeeeee14 !important;
+  --dt_color-plt-cilantro-pressed: #eeeeee2e !important;
+  --dt_color-plt-mojito-0: 28, 28, 28 !important;
+  --dt_color-plt-mojito-5: 42, 42, 42 !important;
+  --dt_color-plt-mojito-10: 53, 53, 53 !important;
+  --dt_color-plt-mojito-20: 77, 77, 77 !important;
+  --dt_color-plt-mojito-30: 97, 97, 97 !important;
+  --dt_color-plt-mojito-40: 109, 109, 109 !important;
+  --dt_color-plt-mojito-50: 134, 134, 134 !important;
+  --dt_color-plt-mojito-60: 150, 150, 150 !important;
+  --dt_color-plt-mojito-70: 174, 174, 174 !important;
+  --dt_color-plt-mojito-80: 196, 196, 196 !important;
+  --dt_color-plt-mojito-90: 216, 216, 216 !important;
+  --dt_color-plt-mojito-100: 238, 238, 238 !important;
+  --dt_color-plt-mojito-hover: #eeeeee14 !important;
+  --dt_color-plt-mojito-pressed: #eeeeee2e !important;
+  --dt_color-plt-aquarium-0: 24, 24, 24 !important;
+  --dt_color-plt-aquarium-5: 43, 43, 43 !important;
+  --dt_color-plt-aquarium-10: 53, 53, 53 !important;
+  --dt_color-plt-aquarium-20: 65, 65, 65 !important;
+  --dt_color-plt-aquarium-30: 85, 85, 85 !important;
+  --dt_color-plt-aquarium-40: 99, 99, 99 !important;
+  --dt_color-plt-aquarium-50: 127, 127, 127 !important;
+  --dt_color-plt-aquarium-60: 145, 145, 145 !important;
+  --dt_color-plt-aquarium-70: 173, 173, 173 !important;
+  --dt_color-plt-aquarium-80: 195, 195, 195 !important;
+  --dt_color-plt-aquarium-90: 216, 216, 216 !important;
+  --dt_color-plt-aquarium-100: 238, 238, 238 !important;
+  --dt_color-plt-aquarium-hover: #eeeeee14 !important;
+  --dt_color-plt-aquarium-pressed: #eeeeee2e !important;
+  --dt_color-plt-lagoon-0: 24, 24, 24 !important;
+  --dt_color-plt-lagoon-5: 44, 44, 44 !important;
+  --dt_color-plt-lagoon-10: 57, 57, 57 !important;
+  --dt_color-plt-lagoon-20: 72, 72, 72 !important;
+  --dt_color-plt-lagoon-30: 95, 95, 95 !important;
+  --dt_color-plt-lagoon-40: 110, 110, 110 !important;
+  --dt_color-plt-lagoon-50: 140, 140, 140 !important;
+  --dt_color-plt-lagoon-60: 151, 151, 151 !important;
+  --dt_color-plt-lagoon-70: 174, 174, 174 !important;
+  --dt_color-plt-lagoon-80: 192, 192, 192 !important;
+  --dt_color-plt-lagoon-90: 212, 212, 212 !important;
+  --dt_color-plt-lagoon-100: 233, 233, 233 !important;
+  --dt_color-plt-lagoon-hover: #e9e9e914 !important;
+  --dt_color-plt-lagoon-pressed: #e9e9e92e !important;
+  --dt_color-plt-ocean-0: 24, 24, 24 !important;
+  --dt_color-plt-ocean-5: 41, 41, 41 !important;
+  --dt_color-plt-ocean-10: 52, 52, 52 !important;
+  --dt_color-plt-ocean-20: 66, 66, 66 !important;
+  --dt_color-plt-ocean-30: 85, 85, 85 !important;
+  --dt_color-plt-ocean-40: 98, 98, 98 !important;
+  --dt_color-plt-ocean-50: 121, 121, 121 !important;
+  --dt_color-plt-ocean-60: 135, 135, 135 !important;
+  --dt_color-plt-ocean-70: 158, 158, 158 !important;
+  --dt_color-plt-ocean-80: 180, 180, 180 !important;
+  --dt_color-plt-ocean-90: 206, 206, 206 !important;
+  --dt_color-plt-ocean-100: 232, 232, 232 !important;
+  --dt_color-plt-ocean-hover: #e8e8e814 !important;
+  --dt_color-plt-ocean-pressed: #e8e8e82e !important;
+  --dt_color-plt-indigo-0: 20, 20, 20 !important;
+  --dt_color-plt-indigo-5: 33, 33, 33 !important;
+  --dt_color-plt-indigo-10: 44, 44, 44 !important;
+  --dt_color-plt-indigo-20: 54, 54, 54 !important;
+  --dt_color-plt-indigo-30: 72, 72, 72 !important;
+  --dt_color-plt-indigo-40: 85, 85, 85 !important;
+  --dt_color-plt-indigo-50: 110, 110, 110 !important;
+  --dt_color-plt-indigo-60: 128, 128, 128 !important;
+  --dt_color-plt-indigo-70: 158, 158, 158 !important;
+  --dt_color-plt-indigo-80: 185, 185, 185 !important;
+  --dt_color-plt-indigo-90: 207, 207, 207 !important;
+  --dt_color-plt-indigo-100: 232, 232, 232 !important;
+  --dt_color-plt-indigo-hover: #e8e8e814 !important;
+  --dt_color-plt-indigo-pressed: #e8e8e82e !important;
+  --dt_color-plt-aubergine-0: 17, 17, 17 !important;
+  --dt_color-plt-aubergine-5: 30, 30, 30 !important;
+  --dt_color-plt-aubergine-10: 44, 44, 44 !important;
+  --dt_color-plt-aubergine-20: 65, 65, 65 !important;
+  --dt_color-plt-aubergine-30: 89, 89, 89 !important;
+  --dt_color-plt-aubergine-40: 113, 113, 113 !important;
+  --dt_color-plt-aubergine-50: 141, 141, 141 !important;
+  --dt_color-plt-aubergine-60: 155, 155, 155 !important;
+  --dt_color-plt-aubergine-70: 181, 181, 181 !important;
+  --dt_color-plt-aubergine-80: 198, 198, 198 !important;
+  --dt_color-plt-aubergine-90: 214, 214, 214 !important;
+  --dt_color-plt-aubergine-100: 231, 231, 231 !important;
+  --dt_color-plt-aubergine-hover: #e7e7e714 !important;
+  --dt_color-plt-aubergine-pressed: #e7e7e72e !important;
+  --dt_color-plt-sangria-0: 23, 23, 23 !important;
+  --dt_color-plt-sangria-5: 37, 37, 37 !important;
+  --dt_color-plt-sangria-10: 52, 52, 52 !important;
+  --dt_color-plt-sangria-20: 64, 64, 64 !important;
+  --dt_color-plt-sangria-30: 89, 89, 89 !important;
+  --dt_color-plt-sangria-40: 99, 99, 99 !important;
+  --dt_color-plt-sangria-50: 128, 128, 128 !important;
+  --dt_color-plt-sangria-60: 146, 146, 146 !important;
+  --dt_color-plt-sangria-70: 173, 173, 173 !important;
+  --dt_color-plt-sangria-80: 192, 192, 192 !important;
+  --dt_color-plt-sangria-90: 212, 212, 212 !important;
+  --dt_color-plt-sangria-100: 233, 233, 233 !important;
+  --dt_color-plt-sangria-hover: #e9e9e914 !important;
+  --dt_color-plt-sangria-pressed: #e9e9e92e !important;
+  --dt_color-plt-flamingo-0: 21, 21, 21 !important;
+  --dt_color-plt-flamingo-5: 41, 41, 41 !important;
+  --dt_color-plt-flamingo-10: 55, 55, 55 !important;
+  --dt_color-plt-flamingo-20: 76, 76, 76 !important;
+  --dt_color-plt-flamingo-30: 98, 98, 98 !important;
+  --dt_color-plt-flamingo-40: 121, 121, 121 !important;
+  --dt_color-plt-flamingo-50: 134, 134, 134 !important;
+  --dt_color-plt-flamingo-60: 148, 148, 148 !important;
+  --dt_color-plt-flamingo-70: 171, 171, 171 !important;
+  --dt_color-plt-flamingo-80: 187, 187, 187 !important;
+  --dt_color-plt-flamingo-90: 207, 207, 207 !important;
+  --dt_color-plt-flamingo-100: 228, 228, 228 !important;
+  --dt_color-plt-flamingo-hover: #e4e4e414 !important;
+  --dt_color-plt-flamingo-pressed: #e4e4e42e !important;
+  --dt_color-plt-rose-0: 21, 21, 21 !important;
+  --dt_color-plt-rose-5: 41, 41, 41 !important;
+  --dt_color-plt-rose-10: 57, 57, 57 !important;
+  --dt_color-plt-rose-20: 75, 75, 75 !important;
+  --dt_color-plt-rose-30: 101, 101, 101 !important;
+  --dt_color-plt-rose-40: 117, 117, 117 !important;
+  --dt_color-plt-rose-50: 142, 142, 142 !important;
+  --dt_color-plt-rose-60: 156, 156, 156 !important;
+  --dt_color-plt-rose-70: 178, 178, 178 !important;
+  --dt_color-plt-rose-80: 193, 193, 193 !important;
+  --dt_color-plt-rose-90: 210, 210, 210 !important;
+  --dt_color-plt-rose-100: 227, 227, 227 !important;
+  --dt_color-plt-rose-hover: #e3e3e314 !important;
+  --dt_color-plt-rose-pressed: #e3e3e32e !important;
+  --dt_color-plt-horchata-0: 28, 28, 28 !important;
+  --dt_color-plt-horchata-5: 38, 38, 38 !important;
+  --dt_color-plt-horchata-10: 50, 50, 50 !important;
+  --dt_color-plt-horchata-20: 59, 59, 59 !important;
+  --dt_color-plt-horchata-30: 78, 78, 78 !important;
+  --dt_color-plt-horchata-40: 91, 91, 91 !important;
+  --dt_color-plt-horchata-50: 116, 116, 116 !important;
+  --dt_color-plt-horchata-60: 133, 133, 133 !important;
+  --dt_color-plt-horchata-70: 161, 161, 161 !important;
+  --dt_color-plt-horchata-80: 184, 184, 184 !important;
+  --dt_color-plt-horchata-90: 206, 206, 206 !important;
+  --dt_color-plt-horchata-100: 228, 228, 228 !important;
+  --dt_color-plt-horchata-hover: #e4e4e414 !important;
+  --dt_color-plt-horchata-pressed: #e4e4e42e !important;
+  --rc-drag-handle-bg-colour: #00000033 !important;
+  --rc-focus-color: #8a8a8a !important;
+  --dt_color-theme-base-sec: rgba(53, 53, 53, 1) !important;
+  --dt_color-theme-base-inv-pry: rgba(18, 18, 18, 1) !important;
+  --dt_color-theme-base-inv-sec: rgba(36, 36, 36, 1) !important;
+  --dt_color-theme-surf-pry: rgba(231, 231, 231, 0.25) !important;
+  --dt_color-theme-surf-sec: rgba(68, 68, 68, 0.3) !important;
+  --dt_color-theme-surf-ter: rgba(18, 18, 18, 0.75) !important;
+  --dt_color-theme-surf-inv-sec: rgba(18, 18, 18, 0.6) !important;
+  --dt_color-theme-content-ter: rgba(18, 18, 18, 1) !important;
+  --p-team_sidebar__text-color: #acacac !important;
+  --p-team_sidebar__text-color--opacity-30: rgba(172, 172, 172, 0.3) !important;
+  --p-team_sidebar__text-color--opacity-10: rgba(172, 172, 172, 0.1) !important;
+  --p-team_sidebar__text-color--mix-80: rgb(137, 137, 137) !important;
+}
+/* <<< monochrome tokens */
+
 .sk-client-theme--dark {
   --dt_color-base-pry: #111 !important;
   --dt_color-base-sec: #111 !important;
   --dt_color-base-ter: #222 !important;
-  --sk_primary_background: #111 !important;
+  /* --sk_* tokens are r, g, b triplets (slack uses rgba(var(--sk_x), a)),
+     a hex here makes those rgba() invalid -> transparent popups */
+  --sk_primary_background: 17, 17, 17 !important;
 }
 
 .c-button-unstyled.c-message_list__day_divider__label__pill {
@@ -25,4 +378,111 @@
 
 .p-rich_text_section {
   line-height: 1.6 !important;
+}
+
+/* floating surfaces (menus, popovers, autocomplete, hover cards, toasts):
+   translucent + blurred. hashed class names use prefix matches since the
+   hash changes between slack deploys. */
+.c-menu,
+.c-toast,
+.c-date_picker__dropdown,
+.c-texty_autocomplete,
+.c-search_modal .popover > div,
+.c-search__static_omniswitcher .c-search_autocomplete__container,
+.c-data_table_header_multi_filter__pop_over_container,
+.p-member_profile_hover_card__container,
+.p-member_profile_card,
+.p-ia_pins_popover,
+.p-huddle_participants_menu_panel__container,
+.p-workspace__primary_view_footer--float,
+[class^="popover__"],
+[class*=" popover__"],
+[class^="popoverContainer__"],
+[class*=" popoverContainer__"],
+[class^="overlayContainer__"],
+[class*=" overlayContainer__"],
+[class^="fileAttachmentsPopover__"],
+[class*=" fileAttachmentsPopover__"],
+[class^="listbox__"],
+[class*=" listbox__"] {
+  background: rgb(22 22 22 / 0.72) !important;
+  backdrop-filter: blur(24px) !important;
+}
+
+/* some menus sit in a rounded wrapper: blur the wrapper, not the menu
+   (nested backdrop-filters only blur each other) */
+[class^="customizationContainer__"],
+[class*=" customizationContainer__"] {
+  background: rgb(22 22 22 / 0.72) !important;
+  backdrop-filter: blur(24px) !important;
+}
+[class^="customizationContainer__"] .c-menu,
+[class*=" customizationContainer__"] .c-menu {
+  background: transparent !important;
+  backdrop-filter: none !important;
+}
+
+/* popovers with c-popover--fade keep their fade animation "in effect" after it
+   finishes (fill: forwards), which makes the overlay a backdrop root, so the
+   blur inside (e.g. profile hover cards) sees nothing. drop the 80ms fade. */
+.c-popover--fade {
+  animation: none !important;
+}
+
+/* tooltips paint from --background */
+.c-tooltip__tip {
+  --background: rgb(34 34 34 / 0.8) !important;
+  backdrop-filter: blur(16px) !important;
+}
+
+.c-texty_input--supports_opaque_blocks.c-texty_input_unstyled,
+.c-message__message_blocks {
+  font-family: Merriweather, serif !important;
+}
+
+.p-view_contents.p-view_contents--primary .p-file_drag_drop__container {
+  position: relative !important;
+  display: block !important;
+}
+
+.p-workspace__primary_view_body {
+  height: 100% !important;
+}
+
+.p-flexpane .c-virtual_list__item:last-of-type,
+.p-workspace__primary_view_footer--float {
+  box-shadow: inset 0 1px 0 0 rgba(var(--sk_foreground_low_solid), 1) !important;
+}
+
+.p-workspace__primary_view_footer--float {
+  max-height: unset !important;
+  margin-top: 0 !important;
+  padding-top: 8px !important;
+  position: sticky !important;
+  bottom: 0 !important;
+}
+
+.p-view_contents.p-view_contents--primary
+  .c-virtual_list__scroll_container
+  > .c-virtual_list__item:last-of-type {
+  height: 112px !important;
+}
+
+.c-wysiwyg_container {
+  border: unset !important;
+  background-color: unset !important;
+}
+
+.p-message_pane_input {
+  padding: 0 8px 8px !important;
+}
+
+.p-notification_bar {
+  position: absolute !important;
+  bottom: 7px !important;
+  right: calc(8% + 10px) !important;
+}
+
+.p-multi_thread_background.p-multi_thread_background--last .c-wysiwyg_container {
+  background: var(--dt_color-base-ter) !important;
 }

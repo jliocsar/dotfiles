@@ -4,9 +4,9 @@ keybind = ctrl+enter=unbind
 # The `theme` command rewrites the `theme` and `background` lines below from
 # its family + mode; flip `theme_family` in ~/.local/bin/theme, not these.
 # Delta One themes live in ./themes/, Zenbones ships with ghostty.
-theme = light:Delta One Light,dark:Delta One Dark
-background = 191c1f
-background-opacity = 0.8
+theme = light:Zenbones Light,dark:Zenbones Dark
+background = 0c0b0a
+background-opacity = 0.6
 
 gtk-titlebar = false
 gtk-titlebar-style = native

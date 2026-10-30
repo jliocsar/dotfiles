@@ -1,12 +1,12 @@
 // Zenbones Dark — niri colors. The `theme` command copies this to colors.kdl,
 // which config.kdl includes. Merged into config.kdl's own layout/overview.
 overview {
-    backdrop-color "#1c1917"
+    backdrop-color "#1e1e1e"
 }
 
 layout {
     // Workspace background behind gaps.
-    background-color "#1c1917"
+    background-color "#1e1e1e"
 
     focus-ring {
         active-color "#b77e64"

@@ -63,13 +63,13 @@ Singleton {
             // Muted tiers match herdr's: a step brighter than zenbones.nvim's
             // because the blurred bar sits over darker-than-spec surfaces.
             dark: {
-                bg: "#1c1917", panel: "#25211f", panelAlt: "#302b29", border: "#403833", selection: "#3d4042",
+                bg: "#1c1917", panel: "#25211f", panelAlt: "#302b29", border: "#403833", dockBorder: "#3a3a3a", selection: "#3d4042",
                 fg: "#b4bdc3", fgStrong: "#c4cacf", muted: "#979fa4", dim: "#7a716c", barFg: "#f0edec",
                 accent: "#b77e64", red: "#de6e7c", green: "#819b69", yellow: "#b77e64",
                 orange: "#d68c67", purple: "#b279a7", cyan: "#66a5ad"
             },
             light: {
-                bg: "#f0edec", panel: "#e9e4e2", panelAlt: "#ddd6d3", border: "#cfc1ba", selection: "#ded6d1",
+                bg: "#f0edec", panel: "#e9e4e2", panelAlt: "#ddd6d3", border: "#cfc1ba", dockBorder: "#c8c8c8", selection: "#ded6d1",
                 fg: "#44525b", fgStrong: "#2c363c", muted: "#8e817b", dim: "#a4968f", barFg: "#2c363c",
                 accent: "#944927", red: "#a8334c", green: "#4f6c31", yellow: "#944927",
                 orange: "#803d1c", purple: "#88507d", cyan: "#3b8992"
@@ -84,6 +84,8 @@ Singleton {
     readonly property color panel: palette.panel
     readonly property color panelAlt: palette.panelAlt
     readonly property color border: palette.border
+    // Neutral gray for the dock outline, since zenbones' border is warm brown.
+    readonly property color dockBorder: palette.dockBorder || palette.border
     readonly property color selection: palette.selection
     readonly property color hover: light ? Qt.rgba(0, 0, 0, 0.06) : Qt.rgba(1, 1, 1, 0.07)
     // Low alpha on purpose: niri blurs what sits behind these (layer-rule in its config).
@@ -109,9 +111,10 @@ Singleton {
     readonly property color purple: palette.purple
     readonly property color cyan: palette.cyan
 
-    // Brand icons: halfway between the brand color and the palette's closest accent.
-    readonly property color claude: mix(orange, Qt.lighter("#DE7356", 1.1))
-    readonly property color docker: mix(accent, Qt.lighter("#1D63ED", 1.3))
+    // Brand icons: halfway between the brand color and Delta One Dark's closest
+    // accent (orange / blue), pinned so they look the same in every family.
+    readonly property color claude: mix(Qt.lighter("#bf956a", 1), Qt.lighter("#DE7356", 1.1))
+    readonly property color docker: mix(Qt.lighter("#74ade8", 1), Qt.lighter("#1D63ED", 1.3))
 
     function mix(a, b) {
         return Qt.rgba((a.r + b.r) / 2, (a.g + b.g) / 2, (a.b + b.b) / 2, 1);

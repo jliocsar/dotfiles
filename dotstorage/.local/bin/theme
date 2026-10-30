@@ -29,8 +29,8 @@
 #        theme apply      re-apply the current mode (after changing the family)
 set -euo pipefail
 
-#theme_family=zenbones
-theme_family=delta-one
+theme_family=zenbones
+#theme_family=delta-one
 
 state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/theme"
 # Claude Code reads its UI theme from settings.json; both configs (personal +
@@ -45,7 +45,7 @@ palette_marker='# >>> theme palette'
 # swaybg draws niri's wallpaper (niri has none of its own). The light image is
 # the dark one with lightness flipped and hue kept:
 #   convert macos-muted-05.png -negate -modulate 100,100,0 -evaluate add 4% macos-muted-05-light.png
-wallpaper_dark="$HOME/Pictures/Wallpapers/macos-muted-05.png"
+wallpaper_dark="$HOME/Pictures/Wallpapers/fog.jpeg"
 wallpaper_light="$HOME/Pictures/Wallpapers/macos-muted-05-light.png"
 
 # Atomic write so fs watchers (nvim, quickshell) see a single rename, not a truncate.

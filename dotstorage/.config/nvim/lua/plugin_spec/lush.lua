@@ -11,7 +11,7 @@ return {
         -- Zenbones family; Delta One lives in plugin_spec/onedark.lua. Flip both
         -- `enabled` flags, install.colorscheme in init.lua and `theme_family`
         -- in ~/.local/bin/theme to switch.
-        enabled = false,
+        enabled = true,
         lazy = false,
         priority = 999,
         config = function()

@@ -368,7 +368,7 @@ return {
     -- Delta One family; parked in favour of Zenbones (plugin_spec/lush.lua).
     -- Flip both `enabled` flags, install.colorscheme in init.lua and
     -- `theme_family` in ~/.local/bin/theme to switch.
-    enabled = true,
+    enabled = false,
     config = function()
         local onedark = require 'onedark'
 
