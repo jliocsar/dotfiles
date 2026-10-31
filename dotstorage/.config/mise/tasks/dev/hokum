@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+#MISE description="Install Hokum (notification daemon)"
+#MISE dir="/tmp"
+set -euo pipefail
+
+if dpkg -s hokum &>/dev/null; then
+  echo "[dev] hokum already installed"
+else
+  echo "[dev] Installing hokum"
+  trap 'rm -f /tmp/hokum.deb' EXIT
+  curl -fLo /tmp/hokum.deb https://anoma.ly/release/hokum/desktop/stable/linux-x64-deb
+  # apt (not dpkg -i) so it pulls libvulkan1 & friends if missing
+  sudo apt-get install -y /tmp/hokum.deb
+fi
+
+# Default notification daemon: start with the session instead of waiting on D-Bus activation.
+systemctl --user enable hokum.service

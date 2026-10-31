@@ -13,7 +13,7 @@ fi
 echo "[system] Installing niri build deps + desktop companions"
 # Build deps: the Ubuntu 24.04 line from niri's Getting-Started wiki.
 # xcb dev libs are for xwayland-satellite (X11 apps under niri).
-# Companions: default config spawns waybar; Mod+D fuzzel; swaylock/swayidle lock (notifications live in quickshell);
+# Companions: default config spawns waybar; Mod+D fuzzel; swaylock/swayidle lock (notifications via hokum, see dev:hokum);
 # portals give file pickers + screen sharing.
 sudo apt-get update
 # --no-install-recommends: xdg-desktop-portal-gnome recommends gnome-shell, which drags in gdm3.

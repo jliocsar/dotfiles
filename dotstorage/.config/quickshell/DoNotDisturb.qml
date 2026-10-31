@@ -3,30 +3,36 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 
-// Do Not Disturb: while on, only critical notifications show up.
-// State lives in quickshell's state dir so it survives restarts without dirtying the repo.
-// `qs ipc call dnd toggle` for keybinds.
+// Do Not Disturb, backed by hokum (the notification daemon). hokum owns the state
+// (saved in its config.kdl); we just mirror it via `hokum dnd --watch --json`.
+// `qs ipc call dnd toggle` or `hokum dnd toggle` for keybinds.
 Singleton {
     id: root
 
-    readonly property bool enabled: state.enabled
+    property bool enabled: false
 
     function toggle(): void {
-        state.enabled = !state.enabled;
+        Quickshell.execDetached(["hokum", "dnd", "toggle"]);
     }
 
-    FileView {
-        path: Quickshell.statePath("dnd.json")
-        watchChanges: true
-        onFileChanged: reload()
-        onAdapterUpdated: writeAdapter()
-        // Missing file on first run is fine; it gets written on the first toggle.
-        onLoadFailed: error => { if (error !== FileViewError.FileNotFound) console.warn("dnd.json:", FileViewError.toString(error)); }
-
-        JsonAdapter {
-            id: state
-            property bool enabled: false
+    Process {
+        id: watcher
+        running: true
+        command: ["hokum", "dnd", "--watch", "--json"]
+        stdout: SplitParser {
+            onRead: line => {
+                try { root.enabled = JSON.parse(line).dnd === true; }
+                catch (e) { console.warn("hokum dnd:", line); }
+            }
         }
+        // hokum missing or restarting: retry instead of going stale.
+        onExited: retry.start()
+    }
+
+    Timer {
+        id: retry
+        interval: 5000
+        onTriggered: watcher.running = true
     }
 
     IpcHandler {
