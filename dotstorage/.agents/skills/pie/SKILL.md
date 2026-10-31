@@ -11,7 +11,9 @@ is `jliocsar/agents-machines` unless the user says otherwise. There's no server:
 own config.
 
 Run `pie --help`, and `pie <command> --help`, for the commands and their arguments. Don't guess
-them.
+them. The full docs are in pie's repo, one page per topic, starting at
+<https://github.com/jliocsar/pie/blob/main/docs/README.md>. Read the page before guessing at a
+config key or an error.
 
 Machines live on exe.dev unless the user says otherwise. Load the `using-exe-dev` skill before
 running any `ssh exe.dev` command. It covers exe.dev's CLI, its docs, and SSH from a non-interactive

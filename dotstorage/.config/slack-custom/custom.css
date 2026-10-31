@@ -440,7 +440,7 @@
   font-family: Merriweather, serif !important;
 }
 
-.p-view_contents.p-view_contents--primary .p-file_drag_drop__container {
+.p-view_contents.p-view_contents--primary .p-file_drag_drop__container:not(.p-threads_flexpane) {
   position: relative !important;
   display: block !important;
 }
@@ -449,7 +449,6 @@
   height: 100% !important;
 }
 
-.p-flexpane .c-virtual_list__item:last-of-type,
 .p-workspace__primary_view_footer--float {
   box-shadow: inset 0 1px 0 0 rgba(var(--sk_foreground_low_solid), 1) !important;
 }
@@ -483,6 +482,15 @@
   right: calc(8% + 10px) !important;
 }
 
+.p-flexpane .c-virtual_list__item:last-of-type .p-threads_footer__input,
 .p-multi_thread_background.p-multi_thread_background--last .c-wysiwyg_container {
   background: var(--dt_color-base-ter) !important;
+}
+
+.p-flexpane .c-virtual_list__item:last-of-type .p-threads_footer__input {
+  border-radius: 0.5rem !important;
+}
+
+.p-context_bar_v2 {
+  display: none !important;
 }
