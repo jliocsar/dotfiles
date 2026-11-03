@@ -3,11 +3,6 @@
 #MISE dir="/tmp"
 set -euo pipefail
 
-if dpkg -s hex &>/dev/null; then
-  echo "[dev] hex already installed"
-  exit 0
-fi
-
 echo "[dev] Installing hex"
 trap 'rm -f /tmp/hex.deb' EXIT
 curl -fLo /tmp/hex.deb https://anoma.ly/hex/download/linux-x64-deb
