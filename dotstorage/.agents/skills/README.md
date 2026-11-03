@@ -2,6 +2,26 @@
 
 Personal agent skills. Symlinked into `~/.claude/skills/` and friends.
 
+## Installed with `npx skills`
+
+These are tracked in `dotstorage/skills-lock.json`. Each lives here as a real
+directory, with a relative symlink at `.claude/skills/<skill>` pointing back.
+
+| skill               | upstream                                                                        |
+| ------------------- | ------------------------------------------------------------------------------- |
+| `statechart`        | https://github.com/cursor/plugins — `pstack/skills/statechart/SKILL.md`         |
+| `technical-writing` | https://github.com/cursor/plugins — `pstack/skills/technical-writing/SKILL.md`  |
+
+### Adding one
+
+Run from `dotstorage/`:
+
+1. `npx skills add <repo-url> -s <skill> -a claude-code -y`
+2. `npx skills` copies the skill into `.claude/skills/<skill>` instead of
+   linking it. Move the copy here and link it back:
+   `mv .claude/skills/<skill> .agents/skills/<skill> && ln -s ../../.agents/skills/<skill> .claude/skills/<skill>`
+3. Add a row to the table above.
+
 ## Vendored skills
 
 Some skills come from someone else's repo and are patched for this setup. Those
