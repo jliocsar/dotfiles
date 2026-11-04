@@ -26,6 +26,12 @@
       "skillPath": "skills/herdr/SKILL.md",
       "computedHash": "d2ee5846631446f22067c52980d100c9355df48106a679a04aab1c7a383b5f41"
     },
+    "hex-personal-commands": {
+      "source": "anomalyco/hex",
+      "sourceType": "github",
+      "skillPath": "skills/hex-personal-commands/SKILL.md",
+      "computedHash": "7b2fae78c562acb0a64f189dcbae39a69fbc03dd499019d488fbde833ba01095"
+    },
     "hoard": {
       "source": "jliocsar/hoard",
       "sourceType": "github",

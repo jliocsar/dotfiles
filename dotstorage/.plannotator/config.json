@@ -16,7 +16,34 @@
   "theme": {
     "mode": "system",
     "light": "plannotator",
-    "dark": "plannotator"
+    "dark": "neutral"
   },
-  "favicon": "classic"
+  "favicon": "classic",
+  "inboxSound": {
+    "dialogShownFor": "0.28.48"
+  },
+  "inboxListIntro": {
+    "shownAt": "2026-11-04T16:18:38.633Z"
+  },
+  "inboxSnoozeIntro": {
+    "firstUseAt": "2026-11-04T16:44:25.278Z"
+  },
+  "inboxVoiceIntro": {
+    "shownAt": "2026-11-04T16:18:38.638Z"
+  },
+  "inboxAgentNotes": {
+    "asked": [
+      "claude-code",
+      "codex",
+      "pi",
+      "cursor"
+    ],
+    "offered": true
+  },
+  "inboxTailscale": true,
+  "inboxNotifications": {
+    "enabled": true,
+    "dismissed": false,
+    "allowedOrigin": "https://cyborg-15-a13v.tail5f88c0.ts.net:38407"
+  }
 }

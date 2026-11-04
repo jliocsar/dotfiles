@@ -204,7 +204,8 @@
   },
   "enabledPlugins": {
     "typesafe@typesafe-ai": true,
-    "paper-desktop@paper": true
+    "paper-desktop@paper": true,
+    "plannotator@plannotator": true
   },
   "extraKnownMarketplaces": {
     "claude-plugins-official": {

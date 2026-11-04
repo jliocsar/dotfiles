@@ -53,6 +53,7 @@
 .config/niri/zenbones-dark.kdl
 .config/niri/zenbones-light.kdl
 .config/systemd/user/quickshell.service
+.config/systemd/user/plannotator-inbox.service
 .config/autostart/nm-applet.desktop
 .local/bin/waybar-claude-usage
 .local/bin/tlc

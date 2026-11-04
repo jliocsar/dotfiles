@@ -1,0 +1,18 @@
+[Unit]
+Description=Plannotator Inbox
+
+[Service]
+Type=exec
+WorkingDirectory=%h/.plannotator/inbox
+# tailscale gets one publish attempt at start, so give it time to come up after boot.
+ExecStartPre=-/bin/sh -c 'for i in $(seq 60); do tailscale status >/dev/null 2>&1 && exit 0; sleep 1; done; exit 1'
+ExecStart=%h/.local/share/mise/installs/github-backnotprop-plannotator/latest/plannotator inbox --no-open
+Restart=on-failure
+RestartSec=3
+SuccessExitStatus=129 130 143
+# The Inbox's in-app restart spawns its successor from inside this cgroup, then exits.
+# control-group would kill the successor.
+KillMode=process
+
+[Install]
+WantedBy=default.target

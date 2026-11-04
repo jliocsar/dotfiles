@@ -16,30 +16,30 @@ The user has ADHD. Keep output short and shaped so it's easy to act on.
 
 ## Parallelism
 
-Run tools, skills, agents and such in parallel when possible.
+Run tools, skills, agents, and the like in parallel when possible.
 
 ## Temporary Work
 
-All temporary work lives in tmp/ (relative, not /tmp), unless user says otherwise.
+All temporary work lives in `tmp/` (relative, not `/tmp`), unless the user says otherwise.
 
 ## Tools
 
-The following are canonical tools and must be used with top-most priority:
+The following tools are canonical and take top priority:
 
 - Use `lx` when fetching documentation, such as remote `.md` or `llms.txt` URLs.
-- Use `fff` over grep, rg and such.
-- Use `ast-grep` for complex and/or large refactors.
-- Use `plannotator` for plans and diffs reviewing.
+- Use `fff` instead of grep, rg, and similar tools.
+- Use `ast-grep` for complex or large refactors.
+- Use `plannotator` to review plans and diffs.
 - Use `agent-browser` to interact with web pages and apps.
-- Use `executor` to for MCPs such as Linear, Slack, Hark (notifications) and such.
-  - Use the Hark MCP to send notifications to the user.
+- Use `executor` for MCPs such as Linear and Slack.
+  - Use the `plannotator-inbox` MCP to notify the user when needed, and watch the thread if you need a response.
   - Search Executor before assuming a tool isn't configured.
 
-## Linking local files
+## Linking Local Files
 
-When you mention a local file I might want to open (html prototypes, reports, screenshots, generated output), write the absolute path (e.g. `/home/jliocsar/repo/tmp/prototypes/index.html`), never a relative one. My terminal can only ctrl+click absolute paths.
+When you mention a local file I might want to open (HTML prototypes, reports, screenshots, generated output), write the absolute path (e.g. `/home/jliocsar/repo/tmp/prototypes/index.html`), never a relative one. My terminal can only ctrl+click absolute paths.
 
-## Showing me images
+## Showing Me Images
 
 When you want me to look at an image (screenshot, plot, diagram, rendered output), do not describe it. Show it:
 
@@ -59,6 +59,6 @@ Videos (mp4, webm, mkv, mov, gif) go through the same command and play in an ove
 imgview-open /abs/recording.mp4
 ```
 
-Paths must be absolute. If my terminal is focused elsewhere the items are queued and open when I come back; the command says so on stderr and exits 0.
+Paths must be absolute. If my terminal is focused elsewhere, the items are queued and open when I come back; the command says so on stderr and exits 0.
 
 Mention that in your reply and move on. Do not retry, and do not use chafa, sixel, mpv, or the raw `herdr plugin pane open` yourself.
