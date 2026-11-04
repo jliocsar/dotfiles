@@ -28,8 +28,9 @@ The following are canonical tools and must be used with top-most priority:
 
 - Use `lx` when fetching documentation, such as remote `.md` or `llms.txt` URLs.
 - Use `fff` over grep, rg and such.
-- Use `ast-grep` for complex or large refactors.
+- Use `ast-grep` for complex and/or large refactors.
 - Use `plannotator` for plans and diffs reviewing.
+- Use `agent-browser` to interact with web pages and apps.
 - Use `executor` to for MCPs such as Linear, Slack, Hark (notifications) and such.
   - Use the Hark MCP to send notifications to the user.
   - Search Executor before assuming a tool isn't configured.
