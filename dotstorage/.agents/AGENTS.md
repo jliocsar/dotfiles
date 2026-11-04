@@ -32,7 +32,7 @@ The following tools are canonical and take top priority:
 - Use `plannotator` to review plans and diffs.
 - Use `agent-browser` to interact with web pages and apps.
 - Use `executor` for MCPs such as Linear and Slack.
-  - Use the `plannotator-inbox` MCP to notify the user when needed, and watch the thread if you need a response.
+  - Use the plannotator inbox to notify the user when needed.
   - Search Executor before assuming a tool isn't configured.
 
 ## Linking Local Files
