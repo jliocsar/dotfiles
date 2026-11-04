@@ -55,6 +55,7 @@
 .config/systemd/user/quickshell.service
 .config/autostart/nm-applet.desktop
 .local/bin/waybar-claude-usage
+.local/bin/tlc
 
 # mise (global config + global tasks)
 .config/mise/

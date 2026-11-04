@@ -7,6 +7,13 @@
       "skillPath": "skills/animation-vocabulary/SKILL.md",
       "computedHash": "39319fc9a33c15be08666b3685f58666f042ff36bb902b7814c0834a5ba99df4"
     },
+    "create-formal-verification-skill": {
+      "source": "cursor/plugins",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "pstack/skills/create-formal-verification-skill/SKILL.md",
+      "computedHash": "ecccfa683447517ba3ebcfbd3099e1f8b05b4b41875a0194942182564d553997"
+    },
     "file-storage": {
       "source": "tigrisdata/skills",
       "sourceType": "github",
@@ -30,6 +37,13 @@
       "sourceType": "github",
       "skillPath": "skills/lx/SKILL.md",
       "computedHash": "4c68b177954d3d8df4de7f69b9d16f10fcf8f316cac78e738b2eaa887223cbdb"
+    },
+    "maintain-formal-verification-skill": {
+      "source": "cursor/plugins",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "pstack/skills/maintain-formal-verification-skill/SKILL.md",
+      "computedHash": "a41b8cffadbd598e4e06dbe57e0ee5c4307f3252814257ccaef198363b359d6c"
     },
     "obsidian-cli": {
       "source": "kepano/obsidian-skills",

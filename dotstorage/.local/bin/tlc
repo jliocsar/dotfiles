@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Run the TLA+ model checker (TLC) from the mise-managed tla2tools.jar.
+# Usage: tlc [TLC options] Spec[.tla]
+# Other tools in the jar: TLA_TOOL=tla2sany.SANY tlc Spec.tla  (or pcal.trans, tlc2.REPL)
+set -euo pipefail
+
+jar="$(mise where http:tla2tools)/tla2tools.jar"
+exec mise exec java -- java -XX:+UseParallelGC -cp "$jar" "${TLA_TOOL:-tlc2.TLC}" "$@"

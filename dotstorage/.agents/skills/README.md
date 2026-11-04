@@ -7,10 +7,15 @@ Personal agent skills. Symlinked into `~/.claude/skills/` and friends.
 These are tracked in `dotstorage/skills-lock.json`. Each lives here as a real
 directory, with a relative symlink at `.claude/skills/<skill>` pointing back.
 
-| skill               | upstream                                                                        |
-| ------------------- | ------------------------------------------------------------------------------- |
-| `statechart`        | https://github.com/cursor/plugins — `pstack/skills/statechart/SKILL.md`         |
-| `technical-writing` | https://github.com/cursor/plugins — `pstack/skills/technical-writing/SKILL.md`  |
+| skill                                | upstream                                                                                         |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| `create-formal-verification-skill`   | https://github.com/cursor/plugins — `pstack/skills/create-formal-verification-skill/SKILL.md`     |
+| `maintain-formal-verification-skill` | https://github.com/cursor/plugins — `pstack/skills/maintain-formal-verification-skill/SKILL.md`   |
+| `statechart`                         | https://github.com/cursor/plugins — `pstack/skills/statechart/SKILL.md`                          |
+| `technical-writing`                  | https://github.com/cursor/plugins — `pstack/skills/technical-writing/SKILL.md`                   |
+
+The TLA+ toolchain these use (`java`, `tla2tools.jar`) is in the global mise
+config, with a `tlc` wrapper at `.local/bin/tlc`.
 
 ### Adding one
 
