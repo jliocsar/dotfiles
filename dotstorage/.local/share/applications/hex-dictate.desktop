@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Dictation Modes
+Comment=Add, edit, and delete hex-dictate's modes
+Exec=hex-dictate edit
+Icon=audio-input-microphone
+Terminal=false
+Categories=Utility;
+Keywords=hex;dictate;dictation;voice;tone;

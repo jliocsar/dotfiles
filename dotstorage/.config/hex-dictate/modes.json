@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "modes": [
+    {
+      "id": "fix",
+      "name": "Fix",
+      "description": "Grammar and repetition, keeps everything",
+      "model": "sonnet",
+      "prompt": "Light copy edit, not a summary or a rewrite. Keep the speaker's own wording, order, ideas, questions, asides, and level of detail, so the result stays nearly as long as the transcript minus what you remove. Fix grammar and punctuation, and start a new paragraph when the topic changes. Remove repeated words and phrases. When the speaker changes their mind or corrects themselves, with phrases like 'or actually', 'or sorry', 'I should say', 'no wait', 'not X but Y', or 'well I guess', keep only the final version and leave no trace of the discarded one. Those phrases must never appear in the output, so delete each one along with whatever it replaces. If the speaker states a position and later reverses it, state only the final position, once. Never replace a name or term you don't recognize with a different real product or command. For example, 'upload it to S3 or actually to GCS' becomes 'upload it to GCS', and 'I don't think we need a cache, well I guess we do' becomes 'I guess we do need a cache'. Disagreeing with someone else's proposal or comparing options is not a correction, so keep those. If the transcript stops mid-sentence, end where it ends and don't invent the rest. Plain text with no formatting."
+    },
+    {
+      "id": "slack-casual",
+      "name": "Slack Casual",
+      "description": "Lowercase, like texting a work friend",
+      "model": "sonnet",
+      "prompt": "A Slack message to a work friend, written the way people actually text. Use all lowercase everywhere, including names and the start of sentences, which overrides any capitalization rule; only code identifiers, commands, and URLs keep their case. Use contractions and relaxed wording. Keep long messages readable with commas or line breaks, but leave off the final period. This mode adds tone the speaker didn't say, which doesn't count as adding facts: when the message is frustrating, funny, or exciting, include a stretched 'bro', such as 'broooo the build broke again' or 'broooo we shipped it'. Replace 'dude' with 'bro'. A neutral request gets at most one plain 'bro', like 'bro can you check the logs', and a tiny reply like 'sounds good' gets none. Stretch other words when the speaker is emphatic, like 'noooo'. Don't add emoji the speaker didn't ask for. Use Slack formatting only where the content calls for it: *single asterisks* for bold, _underscores_ for italic, `backticks` for code, and lines starting with • for lists. Never use **double asterisks** or # headings. Write every URL as a Markdown link, [label](url), using the speaker's own words for it as the label, so 'the doc is at https://x.dev/a' becomes 'the [doc](https://x.dev/a)'. When the speaker asks for words to be bold or italic, format those words and drop the request. Write emoji as the actual Unicode character, like 👍, never as a :shortcode:. When the speaker names an emoji, such as 'thumbs up emoji', replace those words with the character. Short content stays one plain message."
+    },
+    {
+      "id": "slack-professional",
+      "name": "Slack Professional",
+      "description": "Normal, clear message for work",
+      "model": "sonnet",
+      "prompt": "A normal Slack message to colleagues: clear and natural, with proper capitalization and punctuation, but not stiff or formal. Replace slang and verbal tics such as 'dude', 'bro', and filler 'like' with neutral wording. Keep it conversational, not like an email, so no subject line, greeting, or sign-off unless the speaker said one. Use Slack formatting only where the content calls for it: *single asterisks* for bold, _underscores_ for italic, `backticks` for code, and lines starting with • for lists. Never use **double asterisks** or # headings. Write every URL as a Markdown link, [label](url), using the speaker's own words for it as the label, so 'the doc is at https://x.dev/a' becomes 'the [doc](https://x.dev/a)'. When the speaker asks for words to be bold or italic, format those words and drop the request. Write emoji as the actual Unicode character, like 👍, never as a :shortcode:. When the speaker names an emoji, such as 'thumbs up emoji', replace those words with the character. Short content stays one plain message."
+    },
+    {
+      "id": "markdown",
+      "name": "Markdown",
+      "description": "Organized by topic, for plans and long prompts",
+      "model": "sonnet",
+      "prompt": "Plain Markdown for a plan or a long prompt to an agent. Organize the content by topic: group related points under ## headings with short, descriptive titles, and gather points about the same topic even when the speaker jumped around. Use bullets for points, nested bullets for detail, numbered lists for steps that happen in order, and backticks for code identifiers, commands, flags, and paths. This is reorganizing, not summarizing: keep every detail, reason, example, question, open doubt, and aside, in the speaker's own first-person voice, and merge points only when they truly repeat. Questions stay questions. Don't add a document title, an overview, or sections like 'Next steps' unless the speaker said them. Don't use tables, bold, or horizontal rules. Short content with a single topic stays a plain paragraph with no heading."
+    },
+    {
+      "id": "todo",
+      "name": "To-do",
+      "description": "Checklist of action items",
+      "model": "sonnet",
+      "prompt": "A Markdown checklist of what the speaker needs done. Write each action as its own '- [ ] ' item, starting with a verb, in the order spoken, with any owner, deadline, and detail kept in that item. Split a sentence holding several actions into separate items. Put context that isn't an action, such as a reason or a caveat, in a nested plain bullet under the item it belongs to, or as a plain bullet at the end if it belongs to none, so nothing is lost. Questions stay questions, as plain bullets. Don't add tasks the speaker didn't mention, and don't use headings, bold, or tables. If there's no action at all, output the cleaned-up text as a plain sentence."
+    }
+  ]
+}

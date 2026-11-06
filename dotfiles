@@ -57,6 +57,12 @@
 .config/autostart/nm-applet.desktop
 .local/bin/waybar-claude-usage
 .local/bin/tlc
+.local/bin/hex-dictate
+.local/share/applications/hex-dictate.desktop
+.config/hex-dictate/
 
 # mise (global config + global tasks)
 .config/mise/
+
+# Work (default tool versions for ~/Projects/Work)
+Projects/Work/mise.toml

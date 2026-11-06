@@ -16,7 +16,7 @@
   "theme": {
     "mode": "system",
     "light": "plannotator",
-    "dark": "neutral"
+    "dark": "cursor"
   },
   "favicon": "classic",
   "inboxSound": {
@@ -44,6 +44,14 @@
   "inboxNotifications": {
     "enabled": true,
     "dismissed": false,
-    "allowedOrigin": "https://cyborg-15-a13v.tail5f88c0.ts.net:38407"
+    "allowedOrigin": "http://localhost:38407"
+  },
+  "inboxRows": [
+    "titleFirst"
+  ],
+  "inboxRowsRev": 13,
+  "inboxBoard": true,
+  "inboxBoardIntro": {
+    "shownAt": "2026-11-04T20:56:49.624Z"
   }
 }

@@ -1,0 +1,3 @@
+# default for everything under ~/Projects/Work; a repo with its own config overrides this
+[tools]
+node = "24"
