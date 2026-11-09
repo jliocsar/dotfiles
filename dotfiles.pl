@@ -85,6 +85,43 @@ my $MY_ROOT = "$HOME/".ROOT;
 my $DOTSTORAGE = "$MY_ROOT/dotstorage";
 my $DOTFILES_CACHE_PATH = "$MY_ROOT/dotfiles";
 
+# The commit message for the staged changes, written by Haiku through `claude -p`:
+# the rules go in the system prompt, the diff goes in on stdin. Falls back to
+# 'sync' when claude fails, times out or answers nothing.
+sub dotfiles_commit_message {
+    my $fallback = "sync";
+
+    $ENV{DOTFILES_COMMIT_SYSTEM_PROMPT} = join(" ",
+        "You write git commit messages for a personal dotfiles repository.",
+        "The user message is the staged diff, its --stat summary first; a long diff is cut short.",
+        "Reply with the commit message and nothing else: no preamble, no quotes, no code fences.",
+        "Write it as plain prose: a short first line under 72 characters saying what changed,",
+        "then, only if it helps, a blank line and a few sentences on the notable changes.",
+        "Name the tools and configs touched (niri, zsh, claude, quickshell...).",
+    );
+
+    # The stat always goes in; the patch is cut at 60KB so Haiku stays fast.
+    my $command = join(" ",
+        "{ git diff --cached --stat; echo; git diff --cached | head -c 60000; }",
+        "| timeout 90 claude -p",
+        "--model haiku",
+        "--tools ''",
+        "--strict-mcp-config",
+        "--disable-slash-commands",
+        "--no-session-persistence",
+        "--system-prompt \"\$DOTFILES_COMMIT_SYSTEM_PROMPT\"",
+        "2>/dev/null",
+    );
+    my $message = `$command`;
+    return $fallback unless $? == 0 && defined $message;
+
+    $message =~ s/^\s*```\w*\s*\n//;
+    $message =~ s/\n\s*```\s*$//;
+    $message =~ s/^\s+|\s+$//g;
+
+    return $message eq "" ? $fallback : $message;
+}
+
 # Perform sync if requested
 if ($op_type eq "sync") {
     dotfiles_print "Syncing dotfiles to Git...";
@@ -101,8 +138,19 @@ if ($op_type eq "sync") {
 			exit 1;
 		}
 
-		# Add all changes to the Git index, commit them, and push to the remote repository
-    `git add . && git commit -m 'sync' && git push`;
+		# Stage everything; stop here when there's nothing to commit
+    system("git", "add", ".");
+    if (system("git diff --cached --quiet") == 0) {
+        dotfiles_print(dotfiles_color("Nothing to commit.", { fg_color => "yellow" }));
+        exit 0;
+    }
+
+		# Commit with a message Haiku writes from the staged diff, or 'sync' if that fails
+    dotfiles_print "Writing the commit message...";
+    my $message = dotfiles_commit_message();
+    dotfiles_print(dotfiles_color($message, { fg_color => "cyan" }));
+    system("git", "commit", "--quiet", "-m", $message) == 0 or die "Failed to commit!\n";
+    system("git", "push") == 0 or die "Failed to push!\n";
 
 		# Print success message
     dotfiles_print(dotfiles_color("All done!", { fg_color => "green" }));
