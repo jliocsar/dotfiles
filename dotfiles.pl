@@ -94,21 +94,22 @@ sub dotfiles_commit_message {
     $ENV{DOTFILES_COMMIT_SYSTEM_PROMPT} = join(" ",
         "You write git commit messages for a personal dotfiles repository.",
         "The user message is the staged diff, its --stat summary first; a long diff is cut short.",
-        "Reply with the commit message and nothing else: no preamble, no quotes, no code fences.",
-        "Write it as plain prose: a short first line under 72 characters saying what changed,",
-        "then, only if it helps, a blank line and a few sentences on the notable changes.",
-        "Name the tools and configs touched (niri, zsh, claude, quickshell...).",
+        "Reply with one line under 60 characters saying what changed,",
+        "naming the tools touched (niri, zsh, claude, quickshell...).",
+        "Nothing else: no body, no preamble, no quotes, no code fences.",
     );
 
-    # The stat always goes in; the patch is cut at 60KB so Haiku stays fast.
+    # The stat always goes in; the patch is cut at 20KB so Haiku stays fast.
+    # --setting-sources '' skips settings, hooks and plugins: ~2s instead of ~7s.
     my $command = join(" ",
-        "{ git diff --cached --stat; echo; git diff --cached | head -c 60000; }",
-        "| timeout 90 claude -p",
+        "{ git diff --cached --stat; echo; git diff --cached | head -c 20000; }",
+        "| timeout 30 claude -p",
         "--model haiku",
         "--tools ''",
         "--strict-mcp-config",
         "--disable-slash-commands",
         "--no-session-persistence",
+        "--setting-sources ''",
         "--system-prompt \"\$DOTFILES_COMMIT_SYSTEM_PROMPT\"",
         "2>/dev/null",
     );
@@ -118,6 +119,7 @@ sub dotfiles_commit_message {
     $message =~ s/^\s*```\w*\s*\n//;
     $message =~ s/\n\s*```\s*$//;
     $message =~ s/^\s+|\s+$//g;
+    ($message) = split /\n/, $message;
 
     return $message eq "" ? $fallback : $message;
 }
