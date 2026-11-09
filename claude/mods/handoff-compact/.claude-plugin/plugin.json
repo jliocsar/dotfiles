@@ -1,0 +1,8 @@
+{
+  "name": "handoff-compact",
+  "version": "0.1.0",
+  "description": "/handoff-compact writes a handoff, compacts, then says go. /compact-go does just the compact + go.",
+  "author": {
+    "name": "jliocsar"
+  }
+}

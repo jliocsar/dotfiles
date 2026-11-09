@@ -9,12 +9,18 @@ import type {
   Register,
 } from 'claude-code'
 
-import { CACHE, fit, hash, isImagePath, parseIdentify } from './image'
+import { CACHE, MAX_SIDE, copySize, fit, hash, isImagePath, needsCopy, parseIdentify } from './image'
 import type { Probe } from './image'
-import type { Expanded, Shown } from '../types'
+import type { Expanded, Pending, Seen, Shown } from '../types'
 
 const shown = atom({ plugin: 'images-preview', key: 'shown' } as const, {} as Shown)
 const expanded = atom({ plugin: 'images-preview', key: 'expanded' } as const, {} as Expanded)
+const pending = atom({ plugin: 'images-preview', key: 'pending' } as const, [] as Pending)
+const seen = atom({ plugin: 'images-preview', key: 'seen' } as const, {} as Seen)
+
+// A call made through `$.tool.call` (codemode's nested calls) has an id of this
+// shape and no transcript row of its own.
+const NESTED_ID = 'toolu_plugin_'
 
 const TOOL = 'mcp__images-preview__show_image'
 const CODEMODE = 'mcp__codemode__run'
@@ -27,6 +33,7 @@ export const register: Register = on => {
   // The codemode run whose nested calls are running now: a show_image call
   // made inside it draws under that run's row, the only one the transcript has.
   let codemodeRun: string | undefined
+
 
   on('session.start', async ($, e, next) => {
     await $.tool.register({
@@ -83,24 +90,16 @@ export const register: Register = on => {
       }
     }
 
-    const row = codemodeRun ?? e.tool_use_id
+    // codemode answers its own tool.call above this mod, so `codemodeRun` stays
+    // unset and its running row is not drawn until the run ends: a nested call's
+    // images wait in `pending` for that row's first draw (drawCodemodeRow).
+    const row = codemodeRun ?? (e.tool_use_id.startsWith(NESTED_ID) ? undefined : e.tool_use_id)
     if (found.length > 0) {
-      await update($, shown, all => ({ ...all, [row]: [...(all[row] ?? []), ...found] }))
-      // DIAGNOSTIC: a blit onto the drawn Image says why it shows its alt.
-      const first = found[0] as string
-      $.clock.after(1500, async () => {
-        const image = await probe($, first)
-        if (!image) {
-          $.ui.toast('images-preview: no probe result')
-          return
-        }
-        const blitted = await $.ui.blit({
-          requestId: row,
-          key: 'pic-0',
-          source: { file: image.file, format: 'png' },
-        })
-        $.ui.toast(`images-preview blit: ${blitted.deny ?? 'taken (pixels should show)'}`)
-      })
+      if (row) {
+        await update($, shown, all => ({ ...all, [row]: [...(all[row] ?? []), ...found] }))
+      } else {
+        await update($, pending, all => [...all, ...found])
+      }
     }
 
     return {
@@ -118,8 +117,36 @@ export const register: Register = on => {
   )
 
   on('ui.render', { component: 'ToolResult', props: { tool: CODEMODE } }, async ($, e, next) =>
-    e.surface === 'terminal' ? drawRow($, e, await next(e)) : next(e),
+    e.surface === 'terminal' ? drawCodemodeRow($, e, await next(e)) : next(e),
   )
+}
+
+// A codemode row drawn for the first time is the run that just ended: it takes
+// the images its nested show_image calls left pending. Rows drawn before keep
+// what they have.
+async function drawCodemodeRow(
+  $: EngineInterface,
+  e: RenderInputOf<'ToolResult', 'terminal'>,
+  core: RenderElement,
+) {
+  const row = e.props.tool_use_id
+  const known = (await read($, seen))[row]
+  if (!known) {
+    const waiting = await read($, pending)
+    // State is written outside the draw.
+    $.clock.after(0, async () => {
+      await update($, seen, all => ({ ...all, [row]: true as const }))
+      if (waiting.length > 0) {
+        await update($, pending, all => all.filter(p => !waiting.includes(p)))
+        await update($, shown, all => ({ ...all, [row]: [...(all[row] ?? []), ...waiting] }))
+      }
+    })
+    if (waiting.length > 0) {
+      return previews($, $.ui.resolve(e), row, e.viewport, core, waiting)
+    }
+  }
+
+  return drawRow($, e, core)
 }
 
 async function drawRow(
@@ -207,18 +234,26 @@ async function probe($: EngineInterface, path: string): Promise<Probe | null> {
 }
 
 async function load($: EngineInterface, path: string, key: string): Promise<Probe | null> {
-  const identified = await $.process.run(['identify', '-format', '%w %h %m\n', `${path}[0]`])
+  const identified = await $.process.run(['identify', '-format', '%w %h %m %z\n', `${path}[0]`])
   const image = identified.exitCode === 0 ? parseIdentify(identified.stdout) : null
   if (!image) {
     return null
   }
-  if (image.format === 'PNG') {
+  if (!needsCopy(image)) {
     return { file: path, width: image.width, height: image.height }
   }
 
   const file = `${CACHE}/${await hash(key)}.png`
   await $.process.run(['mkdir', '-p', CACHE])
-  const converted = await $.process.run(['convert', `${path}[0]`, file])
+  const converted = await $.process.run([
+    'convert',
+    `${path}[0]`,
+    '-resize',
+    `${MAX_SIDE}x${MAX_SIDE}>`,
+    '-depth',
+    '8',
+    file,
+  ])
 
-  return converted.exitCode === 0 ? { file, width: image.width, height: image.height } : null
+  return converted.exitCode === 0 ? { file, ...copySize(image) } : null
 }

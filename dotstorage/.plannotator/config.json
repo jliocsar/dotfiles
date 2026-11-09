@@ -16,7 +16,7 @@
   "theme": {
     "mode": "system",
     "light": "plannotator",
-    "dark": "cursor"
+    "dark": "vesper"
   },
   "favicon": "classic",
   "inboxSound": {
@@ -53,5 +53,15 @@
   "inboxBoard": true,
   "inboxBoardIntro": {
     "shownAt": "2026-11-04T20:56:49.624Z"
+  },
+  "inboxReveals": {
+    "waitingSince": {
+      "snooze": "2026-11-08T17:48:10.785Z"
+    }
+  },
+  "starAsk": {
+    "answer": "already",
+    "answeredAt": "2026-11-09T18:49:46.786Z",
+    "surface": "annotate"
   }
 }

@@ -7,7 +7,8 @@
   "env": {
     "CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN": "0",
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "0",
-    "ENABLE_LSP_TOOL": "1"
+    "ENABLE_LSP_TOOL": "1",
+    "CLAUDE_CODE_PLUGIN_DIRS": "~/.dotfiles/claude/mods/handoff-compact:~/.dotfiles/claude/mods/images-preview"
   },
   "includeCoAuthoredBy": false,
   "permissions": {
@@ -205,7 +206,8 @@
   "enabledPlugins": {
     "typesafe@typesafe-ai": true,
     "paper-desktop@paper": true,
-    "plannotator@plannotator": true
+    "plannotator@plannotator": true,
+    "tokenfall@tokenfall": true
   },
   "extraKnownMarketplaces": {
     "claude-plugins-official": {
@@ -230,6 +232,12 @@
       "source": {
         "source": "github",
         "repo": "paper-design/agent-plugins"
+      }
+    },
+    "tokenfall": {
+      "source": {
+        "source": "directory",
+        "path": "/home/jliocsar/Projects/claude-agents-visualizer/plugin"
       }
     }
   },
