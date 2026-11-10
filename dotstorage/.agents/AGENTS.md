@@ -41,24 +41,4 @@ When you mention a local file I might want to open (HTML prototypes, reports, sc
 
 ## Showing Me Images
 
-When you want me to look at an image (screenshot, plot, diagram, rendered output), do not describe it. Show it:
-
-```sh
-imgview-open /abs/path/one.png /abs/path/two.png
-```
-
-Custom captions:
-
-```sh
-IMGVIEW_ITEMS=$'Before\t/abs/a.png\nAfter\t/abs/b.png' imgview-open
-```
-
-Videos (mp4, webm, mkv, mov, gif) go through the same command and play in an overlay pane; don't mix images and videos in one call:
-
-```sh
-imgview-open /abs/recording.mp4
-```
-
-Paths must be absolute. If my terminal is focused elsewhere, the items are queued and open when I come back; the command says so on stderr and exits 0.
-
-Mention that in your reply and move on. Do not retry, and do not use chafa, sixel, mpv, or the raw `herdr plugin pane open` yourself.
+When you want me to look at an image (screenshot, plot, diagram, rendered output), do not describe it. Show it with the `show_image` tool, passing absolute paths. Mention that in your reply and move on.
