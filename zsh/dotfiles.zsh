@@ -85,7 +85,6 @@ dotfiles_custom_claude() {
     --permission-mode auto \
     --model opus \
     --effort high \
-    --plugin-dir "$HOME/Projects/claude-codemode" \
     --disallowed-tools ${disallowed_tools[@]} \
     --system-prompt "$system_prompt" \
     "$@"

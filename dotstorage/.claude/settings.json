@@ -38,7 +38,10 @@
     "import-memory": "off",
     "built-in-browser": "off",
     "chrome-browser": "off",
-    "computer-use": "off"
+    "computer-use": "off",
+    "anthropic-skills:deep-research": "off",
+    "anthropic-skills:docs": "off",
+    "anthropic-skills:google-workspace": "off"
   },
   "hooks": {
     "MessageDisplay": [
@@ -205,10 +208,12 @@
     "command": "bun run --env-file /dev/null $HOME/.dotfiles/claude/statusline/index.ts"
   },
   "enabledPlugins": {
-    "typesafe@typesafe-ai": true,
-    "paper-desktop@paper": true,
+    "typesafe@typesafe-ai": false,
+    "paper-desktop@paper": false,
     "plannotator@plannotator": true,
-    "tokenfall@tokenfall": true
+    "tokenfall@tokenfall": true,
+    "session-share@claude-code-session-share": true,
+    "codemode@claude-codemode": true
   },
   "extraKnownMarketplaces": {
     "claude-plugins-official": {
@@ -239,6 +244,18 @@
       "source": {
         "source": "directory",
         "path": "/home/jliocsar/Projects/claude-agents-visualizer/plugin"
+      }
+    },
+    "claude-code-session-share": {
+      "source": {
+        "source": "github",
+        "repo": "jliocsar/claude-code-session-share"
+      }
+    },
+    "claude-codemode": {
+      "source": {
+        "source": "github",
+        "repo": "jliocsar/claude-codemode"
       }
     }
   },
@@ -280,7 +297,7 @@
   "switchModelsOnFlag": false,
   "teammateMode": "auto",
   "remoteControlAtStartup": true,
-  "agentPushNotifEnabled": true,
+  "agentPushNotifEnabled": false,
   "skipAutoPermissionPrompt": true,
   "voiceEnabled": true
 }
