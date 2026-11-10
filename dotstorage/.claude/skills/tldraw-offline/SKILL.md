@@ -52,6 +52,7 @@ curl -s http://localhost:7236/readme
 - `GET /api/doc/:id/script-status`: inspect a locally owned document's watcher state for `script/**` edits and find `errorLogPath`.
 - `GET /api/doc/:id/scripts`: list the `/exec` snippets running in the document right now (id, start time, status, code preview) plus the board script's last run outcome. Ask before you write to a board you did not start.
 - `DELETE /api/doc/:id/snippets/:snippetId`: fire a snippet's abort signal, stopping the listeners, timers and animation loops it registered against `signal`. The `snippetId` comes back on the `/exec` response and from `/scripts`. Works on a snippet that already returned — that is the one still holding listeners — and the response's `aborted` reports only whether execution was interrupted. A snippet that ignores its signal runs to completion: this is a stop request, not a kill. It is also not an undo — edits the snippet already made stay on the canvas (a snippet that fails on its own IS rolled back), and its `/exec` call answers `success: false` with an error beginning `Snippet stopped:`.
+- `POST /api/doc/:id/reload`: reload a locally owned document's window when it crashed, hung, or shows "Something went wrong". Answers once the editor is back; the doc id is unchanged and unsaved edits survive.
 
 The code-taking POST endpoints accept raw JavaScript as the request body (`content-type: text/plain`) or a JSON body `{"code": "..."}`, and wrap the code in an async function so top-level `await` works. Prefer raw bodies for shell use.
 
@@ -160,6 +161,8 @@ Arrange existing shapes with `editor.alignShapes(ids, 'top')`, `editor.stackShap
 
 A card and the words on it are one shape: the words go in the geo's `richText` label, as above; a long label wants a bigger card (`verticalAlign: 'start'`), not a separate `text` shape. `text` shapes are for words that stand on their own, like a heading over a group of cards.
 
+A text box sits fully inside a panel or frame or fully outside it, never across its border, and nothing inside a frame extends past the frame's edge; `helpers.getLints()` reports both as `text-crosses-container` and `shape-outside-frame`. A shape parented to a frame or group takes `x`/`y` relative to that parent, not the page: a card for a column frame at page x 360 gets local x 20, not 380. `editor.reparentShapes(ids, frameId)` keeps page positions when moving existing shapes in.
+
 ### Freehand draw shapes
 
 A `draw` shape's `props.segments` hold delta-encoded base64 `path` strings, not point arrays — a segment like `{ type: 'free', points: [...] }` fails validation and crashes `createShape`. Never build `path` strings by hand: compute your points as `{ x, y, z }` objects (`z` is pressure; use `0.5`) and convert them with `compressLegacySegments` from `'tldraw'`. Coordinates are relative to the shape's own `x`/`y`:
@@ -197,26 +200,29 @@ For a closed loop, end the points where they started. Multiple strokes are multi
 - Create every meaningful connection with `helpers.createArrowBetweenShapes(fromId, toId, options)` so both endpoints have real bindings.
 - Never create a raw arrow shape for a meaningful connection. Raw unbound arrows are only appropriate for explicitly decorative marks.
 - Run `helpers.getLints()` before reporting a diagram complete and address every actionable result. The `connect-shapes-with-bound-arrows` recipe in `api.recipes` is the worked example; fetch `/readme` for the `meta.lintIgnore` opt-out for intentional decorative arrows.
-- For a whole diagram from structure — a flowchart, sequence diagram, state machine, or mindmap — generate it with `helpers.mermaid(source)` rather than placing nodes and arrows by hand; it creates real bound shapes. The `draw-a-diagram-from-mermaid` recipe is the worked example.
+- An `/exec` response may carry `lints: { new, resolved }`: the lints that snippet introduced and cleared. Fix every `new` lint before reporting done.
+- For a whole diagram from structure — a flowchart, sequence diagram, state machine, or mindmap — generate it with `helpers.mermaid(source)` rather than placing nodes and arrows by hand; it creates real bound shapes. The `draw-a-diagram-from-mermaid` recipe is the worked example. Two or more diagrams to compare are still mermaid: one source with a `subgraph` per diagram (a `flowchart LR` puts them beside each other), or one call per diagram with `options.blueprintRender.position` set so they do not overlap. "Side by side", headings, and colours are not reasons to place nodes by hand.
 
 ## Comments
 
-Comment threads are how people and agents talk about the canvas in context — each thread is anchored to a shape, a point, a region, or the page, so the anchor tells you what the words are about. `api.getComments(doc.id)` (via `/api/search`) returns every live thread with its anchor, plaintext comments, and resolved state; `supported: false` means this board has no comment lane — report that rather than working around it. When a task starts from a comment ("do what the comments say"), read the threads first and use each anchor to find the shapes under discussion. Reply in the thread you acted on and resolve it once its ask is done; post a new thread anchored to what you changed when a note in context serves better than a chat summary. All comment writes go through `/exec` with the `@tldraw/commenting` verbs (`putCommentRecords`, `resolveThread`, …) — never a raw `store.put`, which puts comment records on the user's undo stack. A supported board that holds no threads yet has comments turned off: agent writes are reverted until the board owner enables commenting in the app, so ask the user first — except on an offline-server board (`ownership: 'server'`), which has no owner and no gate: a supported server board with no threads is simply empty, so write. Read the `comment-threads-read-reply-resolve` recipe from `api.recipes` before writing one.
+Comment threads are how people and agents talk about the canvas in context — each thread is anchored to a shape, a point, a region, or the page, so the anchor tells you what the words are about. `api.getComments(doc.id)` (via `/api/search`) returns every live thread with its anchor, plaintext comments, and resolved state; `supported: false` means this board has no comment lane — report that rather than working around it. When a task starts from a comment ("do what the comments say"), read the threads first and use each anchor to find the shapes under discussion. Reply in the thread you acted on and resolve it once its ask is done. A thread that asks you not to act, or that is addressed to someone else ("leave this one for Kevin"), is not yours: do not reply in it, do not resolve it, and do not touch its anchor — mention it in your summary instead; post a new thread anchored to what you changed when a note in context serves better than a chat summary. All comment writes go through `/exec` with the `@tldraw/commenting` verbs (`putCommentRecords`, `resolveThread`, …) — never a raw `store.put`, which puts comment records on the user's undo stack. A supported board that holds no threads yet has comments turned off: agent writes are reverted until the board owner enables commenting in the app, so ask the user first — except on an offline-server board (`ownership: 'server'`), which has no owner and no gate: a supported server board with no threads is simply empty, so write. Read the `comment-threads-read-reply-resolve` recipe from `api.recipes` before writing one.
 
 ## Workflow
 
-1. Restate the intended outcome in concrete canvas terms.
+1. Restate the intended outcome in concrete canvas terms. If the request does not say which shapes it means and nothing on the board says either ("make the important one stand out" over six identical cards), ask which and stop there: the turn ends with the question. An unanswered question is not permission to pick a default — write nothing until the answer comes.
 2. Choose durability:
    - Static drawing edits such as moving, arranging, labeling, or styling shapes use `/exec`.
    - Durable behavior on a locally owned document such as clickable UI, animations, reactive layouts, or "run on open" logic uses `/script-workspace` and direct filesystem edits under `script/**`. Read the worked recipes from `api.recipes` (via `/api/search`) before building durable behavior. Remote boards have no local script workspace; an offline-server board's script is written on the server (the `script-a-board-on-an-offline-server` recipe).
-3. Verify once with records from `api.getShapes()`, `api.getBindings()`, `api.getScriptStatus()`, or a screenshot when visual placement is uncertain. After a resize or move, compare `helpers.getLints()` from before and after your edit: fix only lints your edit introduced, on the shape you edited, never by moving a neighbour you were not asked to touch. Save only a locally owned document with `helpers.saveDoc()`; remote edits sync to the host working copy.
+3. Verify once with records from `api.getShapes()`, `api.getBindings()`, `api.getScriptStatus()`, or a screenshot when visual placement is uncertain. After a resize or move, compare `helpers.getLints()` from before and after your edit: fix only lints your edit introduced, on the shape you edited, never by moving a neighbour you were not asked to touch. Save only a locally owned document that has a `filePath` with `helpers.saveDoc()`; remote edits sync to the host working copy.
 4. Stop after one successful verification unless the user explicitly asks for debugging.
 
 Never edit `.tldraw` archive files directly while they are open, and never edit `db.sqlite`, `db.sqlite-wal`, `db.sqlite-shm`, `metadata.json`, `.lock`, or `.script-workspace/**`.
 
 ## Recovering from a closed or unresponsive target document
 
-If a request to your target `docId` comes back `"Window closed before responding"`, an error like `"Document not found"`, or times out with no response at all, that window is gone. Do not retry the same `docId`, and do not assume whatever `api.getDocs()` returns next is the same document — with more than one window open, the next call can silently resolve to a completely different, unrelated file.
+If an `/exec` or `/api/search` call on a locally owned `docId` fails because the renderer crashed, stopped responding, or timed out, or a screenshot shows "Something went wrong", the window is still open: `POST /api/doc/:id/reload` once, then retry the same `docId`. If it hung on your own edit, find the cause first (a loop in your snippet, or a board script reacting to it), or the retry hangs the window again. Unsaved edits come back with it. Only if the reload itself fails, treat the window as gone.
+
+If a request comes back `"Window closed before responding"` or `"Document not found"`, that window is gone. Do not retry the same `docId`, and do not assume whatever `api.getDocs()` returns next is the same document — with more than one window open, the next call can silently resolve to a completely different, unrelated file.
 
 - Call `api.getDocs()` fresh and match the result against the doc `name` (and `documentId` if you captured it) you were actually working on.
 - **Name matches** → safe to resume against the new `id` for that doc.
@@ -233,6 +239,7 @@ Use this when a board script draws a board that users should rearrange or restyl
 - Use `helpers.onShapeTranslate(anchorId, ({ dx, dy }) => ... , { signal })` to respond only to that anchor.
 - Move script-owned internals with `helpers.translateShapes(..., dx, dy)` — the handler's dx/dy and the delta it consumes are both page-space, so pass them straight through even when shapes sit in frames or groups. It runs without recording undo history; wrap other script-owned writes in `editor.run(fn, { history: 'ignore' })`.
 - Render per-frame or purely visual writes through `helpers.renderEphemeral(fn)`: they paint without dirtying the document, landing in a save, syncing to LAN participants, or entering undo. `history: 'ignore'` alone still persists every frame, so an animation written that way can never be saved cleanly.
+- A shape id is bound to its type for the life of the editor: deleting a shape and creating a different type under the same id (in one batch or one `renderEphemeral` frame) leaves an "Error" badge in its place. Give a slot that changes type a new id. `helpers.getLints()` reports a shape showing that badge as `shape-render-error`, for shapes on the current page.
 - Avoid broad `store.listen` / `afterChange` layout handlers that react to every shape; they can treat the script's own writes as new user edits and recurse.
 
 ## Editor customization: custom shapes, tools, and overlays (`config.js`)
@@ -261,7 +268,7 @@ curl -s -X POST http://localhost:$PORT/api/search \
   -H "authorization: Bearer $TOKEN" \
   -d '{"code":"const [doc] = await api.getDocs(); return await api.getShapes(doc.id)"}'
 
-# Mutate a LOCAL doc and save with /exec, then verify once with api.getShapes().
+# Mutate a LOCAL doc (one with a filePath) and save with /exec, then verify once with api.getShapes().
 # For a remote doc, omit helpers.saveDoc(); its host owns archive saving.
 curl -s -X POST http://localhost:$PORT/api/doc/DOC_ID/exec \
   -H 'content-type: application/json' \
