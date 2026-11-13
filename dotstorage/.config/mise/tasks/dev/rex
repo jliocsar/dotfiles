@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+#MISE description="Install Rex (terminal multiplexer server + CLI) from superlogical's apt repo"
+#MISE dir="/tmp"
+set -euo pipefail
+
+# The script adds the apt repo, so updates arrive with normal system updates after this.
+# No stable channel yet; it falls back to snapshot on its own.
+if [[ -x "$(command -v rex)" ]]; then
+  echo "[dev] rex already installed"
+  exit 0
+fi
+
+echo "[dev] Installing rex"
+curl -fsSL https://pkgs.superlogical.com/rex/install.sh | sh

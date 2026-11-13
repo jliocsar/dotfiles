@@ -431,6 +431,10 @@ binds {
     Super+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn "swaylock"; }
     Ctrl+Shift+Space repeat=false hotkey-overlay-title="Toggle Dictation: hex" { spawn "hex" "dictation" "toggle"; }
     Ctrl+Alt+Space repeat=false hotkey-overlay-title="Toggle Dictation with a Tone: hex-dictate" { spawn "hex-dictate" "toggle"; }
+    // hex Annotate. niri has no GlobalShortcuts portal, so hex's own F9 never binds.
+    // niri binds only fire on press, so hold-to-draw is out: Shift+F9 toggles the pen instead.
+    F9 repeat=false hotkey-overlay-title="Toggle Annotate: hex" { spawn "hex" "annotate" "toggle"; }
+    Shift+F9 repeat=false hotkey-overlay-title="Toggle Annotate Pen: hex" { spawn "hex" "annotate" "draw"; }
 
     // Use spawn-sh to run a shell command. Do this if you need pipes, multiple commands, etc.
     // Note: the entire command goes as a single argument. It's passed verbatim to `sh -c`.
