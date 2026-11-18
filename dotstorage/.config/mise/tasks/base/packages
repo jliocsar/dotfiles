@@ -32,6 +32,7 @@ sudo apt-get install -y \
   lua5.4 \
   make \
   meson \
+  nmap \
   openssh-server \
   pkg-config \
   tldr \

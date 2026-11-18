@@ -4,7 +4,9 @@
 set -euo pipefail
 
 if [[ -x "$(command -v sbx)" ]]; then
-  echo "[dev] sbx already installed"
+  echo "[dev] sbx already installed, upgrading via apt"
+  sudo apt-get update
+  sudo apt-get install -y --only-upgrade docker-sbx
   exit 0
 fi
 

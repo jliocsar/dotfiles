@@ -81,7 +81,11 @@ Then `chmod +x` the file and confirm it shows up:
 mise tasks ls | grep foo
 ```
 
-The guard matters: tasks get re-run on a fresh box.
+The guard matters: tasks get re-run on a fresh box. Rerunning is also how task
+apps get updated, so a bare "installed → exit" guard is wrong for anything that
+ships new versions. Compare the installed version with upstream latest and skip
+only when they match (`dev/obsidian`, `dev/zed`, `web/discord`), or for an
+apt-repo app run `apt-get install -y --only-upgrade <pkg>` (`dev/claude-desktop`).
 
 ## Gotchas
 

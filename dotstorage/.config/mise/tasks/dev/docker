@@ -4,7 +4,9 @@
 # No `set -e`: groupadd/usermod are expected to fail when already applied.
 
 if [[ -x "$(command -v docker)" ]]; then
-  echo "[dev] docker already installed"
+  echo "[dev] docker already installed, upgrading via apt"
+  sudo apt-get update
+  sudo apt-get install -y --only-upgrade docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
   exit 0
 fi
 

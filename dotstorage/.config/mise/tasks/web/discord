@@ -1,10 +1,20 @@
 #!/usr/bin/env bash
-#MISE description="Install Discord"
+#MISE description="Install or update Discord"
 #MISE dir="/tmp"
 set -euo pipefail
 
-echo "[web] Installing Discord"
-if [[ ! -f "./discord.deb" ]]; then
-  wget -O discord.deb "https://discord.com/api/download?platform=linux&format=deb"
+# The download link redirects to .../linux/x64/<version>/Discord.deb.
+deb_url=$(curl -fsSIL -o /dev/null -w '%{url_effective}' "https://discord.com/api/download?platform=linux&format=deb")
+latest=$(basename "$(dirname "$deb_url")")
+installed=$(dpkg-query -W -f='${Version}' discord 2>/dev/null || true)
+
+if [[ "$installed" == "$latest" ]]; then
+  echo "[web] discord $latest already installed"
+  exit 0
 fi
-sudo dpkg -i discord.deb
+
+echo "[web] Installing discord $latest${installed:+ (was $installed)}"
+trap 'rm -f ./discord.deb' EXIT
+wget -O discord.deb "$deb_url"
+# apt (not dpkg -i) so new dependencies get pulled in
+sudo apt-get install -y ./discord.deb

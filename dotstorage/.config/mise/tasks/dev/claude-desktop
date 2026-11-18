@@ -4,7 +4,9 @@
 set -euo pipefail
 
 if [[ -x "$(command -v claude-desktop)" ]]; then
-  echo "[dev] claude-desktop already installed"
+  echo "[dev] claude-desktop already installed, upgrading via apt"
+  sudo apt-get update
+  sudo apt-get install -y --only-upgrade claude-desktop
   exit 0
 fi
 

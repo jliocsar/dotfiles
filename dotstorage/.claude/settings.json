@@ -14,7 +14,7 @@
   "permissions": {
     "defaultMode": "auto"
   },
-  "model": "claude-fable-5-2",
+  "model": "fable",
   "skillOverrides": {
     "artifact-design": "off",
     "claude-api": "off",
@@ -299,5 +299,6 @@
   "remoteControlAtStartup": true,
   "agentPushNotifEnabled": false,
   "skipAutoPermissionPrompt": true,
-  "voiceEnabled": true
+  "voiceEnabled": true,
+  "advisorModel": "fable"
 }

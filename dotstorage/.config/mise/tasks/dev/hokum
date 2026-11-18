@@ -1,14 +1,18 @@
 #!/usr/bin/env bash
-#MISE description="Install Hokum (notification daemon)"
+#MISE description="Install or update Hokum (notification daemon)"
 #MISE dir="/tmp"
 set -euo pipefail
 
-if dpkg -s hokum &>/dev/null; then
-  echo "[dev] hokum already installed"
+# No version endpoint: the .deb is small, so fetch it and read its version.
+trap 'rm -f /tmp/hokum.deb' EXIT
+curl -fsSLo /tmp/hokum.deb https://anoma.ly/release/hokum/desktop/stable/linux-x64-deb
+latest=$(dpkg-deb -f /tmp/hokum.deb Version)
+installed=$(dpkg-query -W -f='${Version}' hokum 2>/dev/null || true)
+
+if [[ "$installed" == "$latest" ]]; then
+  echo "[dev] hokum $latest already installed"
 else
-  echo "[dev] Installing hokum"
-  trap 'rm -f /tmp/hokum.deb' EXIT
-  curl -fLo /tmp/hokum.deb https://anoma.ly/release/hokum/desktop/stable/linux-x64-deb
+  echo "[dev] Installing hokum $latest${installed:+ (was $installed)}"
   # apt (not dpkg -i) so it pulls libvulkan1 & friends if missing
   sudo apt-get install -y /tmp/hokum.deb
 fi

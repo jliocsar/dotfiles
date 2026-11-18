@@ -5,7 +5,7 @@ set -euo pipefail
 
 if [[ -x "$(command -v tailscale)" ]]; then
   echo "[dev] tailscale already installed"
-  sudo tailscale update
+  sudo tailscale update --yes
   exit 0
 fi
 

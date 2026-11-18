@@ -3,10 +3,12 @@
 #MISE dir="/tmp"
 set -euo pipefail
 
-# The script adds the apt repo, so updates arrive with normal system updates after this.
+# The script adds the apt repo; reruns upgrade through it.
 # No stable channel yet; it falls back to snapshot on its own.
 if [[ -x "$(command -v rex)" ]]; then
-  echo "[dev] rex already installed"
+  echo "[dev] rex already installed, upgrading via apt"
+  sudo apt-get update
+  sudo apt-get install -y --only-upgrade rex
   exit 0
 fi
 

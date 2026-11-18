@@ -16,7 +16,7 @@
   "theme": {
     "mode": "system",
     "light": "plannotator",
-    "dark": "vesper"
+    "dark": "caffeine"
   },
   "favicon": "classic",
   "inboxSound": {
@@ -26,7 +26,8 @@
     "shownAt": "2026-11-04T16:18:38.633Z"
   },
   "inboxSnoozeIntro": {
-    "firstUseAt": "2026-11-04T16:44:25.278Z"
+    "firstUseAt": "2026-11-04T16:44:25.278Z",
+    "shownAt": "2026-11-17T22:08:58.416Z"
   },
   "inboxVoiceIntro": {
     "shownAt": "2026-11-04T16:18:38.638Z"
@@ -44,7 +45,7 @@
   "inboxNotifications": {
     "enabled": true,
     "dismissed": false,
-    "allowedOrigin": "http://localhost:38407"
+    "allowedOrigin": "https://cyborg-15-a13v.tail5f88c0.ts.net:38407"
   },
   "inboxRows": [
     "titleFirst"
@@ -56,12 +57,19 @@
   },
   "inboxReveals": {
     "waitingSince": {
-      "snooze": "2026-11-08T17:48:10.785Z"
+      "snooze": "2026-11-08T17:48:10.785Z",
+      "steps": "2026-11-11T18:27:24.212Z"
+    },
+    "lastShownAt": "2026-11-17T22:08:58.416Z",
+    "steps": {
+      "shownAt": "2026-11-11T18:34:54.621Z",
+      "key": "41f34787-e077-40b8-b692-cd91daa75a22"
     }
   },
   "starAsk": {
     "answer": "already",
     "answeredAt": "2026-11-09T18:49:46.786Z",
     "surface": "annotate"
-  }
+  },
+  "inboxSteps": true
 }

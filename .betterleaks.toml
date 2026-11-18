@@ -1,8 +1,11 @@
 # Default rules plus filters for known false positives in this repo.
 # Placeholder creds in docs (user:pass@localhost) and a perl var named *_password.
+# Plannotator stores random UUIDs as "key" (UI reveal ids), which trips generic-api-key.
 filter = '''
 finding["match"] contains "localhost"
 || finding["match"] contains "nmcli"
+|| (attributes["path"] endsWith ".plannotator/config.json"
+    && finding["secret"] matches "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
 '''
 
 [extend]
