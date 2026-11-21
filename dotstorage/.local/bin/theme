@@ -222,12 +222,14 @@ start_reveal() {
     return 1
 }
 
-# Open the circle from the centre of the focused output (niri's global
-# layout coordinates); 0,0 when niri can't say.
+# Open the circle at THEME_REVEAL_ORIGIN ("x y", niri's global layout
+# coordinates; the bar's sun/moon button passes its own centre), else the
+# centre of the focused output, else 0,0.
 finish_reveal() {
-    local origin
-    origin=$(niri msg -j focused-output 2>/dev/null |
-        jq -r '.logical | "\(.x + .width / 2 | floor) \(.y + .height / 2 | floor)"' 2>/dev/null) ||
+    local origin="${THEME_REVEAL_ORIGIN:-}"
+    [[ "$origin" =~ ^[0-9]+\ [0-9]+$ ]] ||
+        origin=$(niri msg -j focused-output 2>/dev/null |
+            jq -r '.logical | "\(.x + .width / 2 | floor) \(.y + .height / 2 | floor)"' 2>/dev/null) ||
         origin="0 0"
     [[ "$origin" =~ ^[0-9]+\ [0-9]+$ ]] || origin="0 0"
     # shellcheck disable=SC2086 # "x y", two arguments
