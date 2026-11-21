@@ -33,11 +33,11 @@ PanelWindow {
 
     PwObjectTracker { objects: [bar.sink] }
 
-    // `qs ipc call bar toggle calendar|claude|docker|wifi|power` — keybind-friendly popup toggles.
+    // `qs ipc call bar toggle calendar|claude|docker|bridge|wifi|power` — keybind-friendly popup toggles.
     IpcHandler {
         target: "bar"
         function toggle(name: string): void {
-            const popup = { calendar, claude: claudePopup, docker: dockerPopup, wifi: wifiPopup, power: powerPopup }[name];
+            const popup = { calendar, claude: claudePopup, docker: dockerPopup, bridge: bridgePopup, wifi: wifiPopup, power: powerPopup }[name];
             if (popup) popup.visible = !popup.visible;
         }
     }
@@ -125,6 +125,22 @@ PanelWindow {
             DockerPopup {
                 id: dockerPopup
                 anchorItem: dockerIndicator
+            }
+        }
+
+        // The captain's bridge-ipad dashboard: its view and theme, set from here.
+        Indicator {
+            id: bridgeIndicator
+            icon: "󰠳" // md-ship_wheel
+            iconSize: 15
+            iconColor: BridgeIpad.reachable ? Theme.cyan : Theme.dim
+            tooltip: "Bridge iPad"
+            active: bridgePopup.visible
+            onClicked: bridgePopup.visible = !bridgePopup.visible
+
+            BridgeIpadPopup {
+                id: bridgePopup
+                anchorItem: bridgeIndicator
             }
         }
 
