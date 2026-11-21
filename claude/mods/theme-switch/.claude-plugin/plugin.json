@@ -1,0 +1,8 @@
+{
+  "name": "theme-switch",
+  "version": "0.1.0",
+  "description": "/theme light|dark|toggle flips the whole machine through ~/.local/bin/theme; bare /theme keeps the picker.",
+  "author": {
+    "name": "jliocsar"
+  }
+}

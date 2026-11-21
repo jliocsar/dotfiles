@@ -8,7 +8,7 @@
     "CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN": "0",
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "0",
     "ENABLE_LSP_TOOL": "1",
-    "CLAUDE_CODE_PLUGIN_DIRS": "~/.dotfiles/claude/mods/handoff-compact:~/.dotfiles/claude/mods/images-preview"
+    "CLAUDE_CODE_PLUGIN_DIRS": "~/.dotfiles/claude/mods/handoff-compact:~/.dotfiles/claude/mods/images-preview:~/.dotfiles/claude/mods/theme-switch"
   },
   "includeCoAuthoredBy": false,
   "permissions": {
@@ -288,7 +288,7 @@
   "autoMemoryEnabled": false,
   "skipDangerousModePermissionPrompt": true,
   "skipWorkflowUsageWarning": true,
-  "theme": "custom:zenbones-dark",
+  "theme": "custom:zenbones",
   "editorMode": "vim",
   "verbose": false,
   "preferredNotifChannel": "notifications_disabled",
