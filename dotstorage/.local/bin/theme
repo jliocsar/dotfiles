@@ -51,6 +51,8 @@ wallpaper_light="$HOME/Pictures/Wallpapers/macos-muted-05-light.png"
 # crossfades to the new frame. Long enough for ghostty's reload and the portal
 # apps' repaint; anything slower repaints after the fade.
 transition_delay_ms=250
+# bridge-ipad's state endpoint (localhost only, no token).
+ipad_state_url=http://127.0.0.1:42461/state
 
 # Atomic write so fs watchers (nvim, quickshell) see a single rename, not a truncate.
 write_state() {
@@ -166,6 +168,15 @@ start_transition() {
         >/dev/null 2>&1 || true
 }
 
+# The bridge-ipad dashboard (poormans-captain) follows the laptop's mode. One
+# way: the iPad's own button doesn't touch the laptop. Backgrounded with a 1s
+# cap and silent, so a stopped server never slows or breaks the switch.
+notify_ipad() {
+    command -v curl >/dev/null 2>&1 || return 0
+    (curl -s -m 1 -o /dev/null -X POST "$ipad_state_url?theme=$1" || true) \
+        >/dev/null 2>&1 </dev/null &
+}
+
 current_mode() {
     if [[ -r "$state_dir/mode" ]]; then
         cat "$state_dir/mode"
@@ -190,6 +201,7 @@ apply_mode() {
     local scheme=prefer-dark
     [[ "$mode" == light ]] && scheme=prefer-light
     gsettings set org.gnome.desktop.interface color-scheme "$scheme" 2>/dev/null || true
+    notify_ipad "$mode"
 
     apply_wallpaper "$mode"
     apply_ghostty_theme "$family" "$mode"
