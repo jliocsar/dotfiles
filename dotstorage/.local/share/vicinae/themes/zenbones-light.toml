@@ -1,0 +1,40 @@
+# Zenbones Light for vicinae: zenwritten-light with zenbones' warm hues, same
+# tokens as the herdr / Claude / hunk zenbones-light palettes.
+# Picked by vicinae when the system is light (settings.json `theme.light`).
+
+[meta]
+version = 1
+name = "Zenbones Light"
+description = "Zenbones light, matched to the rest of the desktop"
+variant = "light"
+inherits = "zenwritten-light"
+icon = "/usr/local/share/vicinae/themes/icons/zenbones.png"
+
+[colors.core]
+background = "#f0edec"
+foreground = "#2c363c"
+secondary_background = "#e9e4e2"
+border = "#cfc1ba"
+accent = "#944927"
+accent_foreground = "#f0edec"
+
+[colors.accents]
+blue = "#286486"
+green = "#4f6c31"
+magenta = "#88507d"
+orange = "#944927"
+purple = "#88507d"
+red = "#a8334c"
+yellow = "#944927"
+cyan = "#3b8992"
+
+[colors.text]
+muted = "#4f5e68"
+placeholder = "#a4968f"
+
+[colors.list.item.selection]
+background = "#ddd6d3"
+secondary_background = "#ddd6d3"
+
+[colors.grid.item]
+background = "#ddd6d3"

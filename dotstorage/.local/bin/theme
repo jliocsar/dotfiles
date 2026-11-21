@@ -36,6 +36,11 @@ state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/theme"
 # Claude Code reads its UI theme from settings.json; both configs (personal +
 # work) share ~/.claude/themes/<family>-<mode>.json.
 claude_settings=("$HOME/.claude/settings.json" "$HOME/.claude-work/settings.json")
+claude_themes="$HOME/.claude/themes"
+# GTK3 has no portal color-scheme; it reads this flag at app start.
+gtk3_settings="$HOME/.config/gtk-3.0/settings.ini"
+icon_theme_dark=Fluent-dark
+icon_theme_light=Fluent
 # pi takes a "light/dark" pair of ~/.pi/agent/themes/<family>-<mode>.json.
 pi_settings="$HOME/.pi/agent/settings.json"
 ghostty_config="$HOME/.config/ghostty/config.ghostty"
@@ -85,6 +90,10 @@ set_json_string() {
     local file="$1" key="$2" value="$3"
     [[ -f "$file" ]] || return 0
 
+    # Leave the file alone when it already holds the value: Claude reloads
+    # settings.json on every write.
+    [[ "$(jq -r --arg key "$key" '.[$key] // empty' "$file" 2>/dev/null)" == "$value" ]] && return 0
+
     local tmp="$file.theme.tmp"
     if jq --arg key "$key" --arg value "$value" '.[$key] = $value' "$file" >"$tmp" 2>/dev/null; then
         cat "$tmp" >"$file"
@@ -128,6 +137,37 @@ apply_ghostty_theme() {
         --object-path /com/mitchellh/ghostty \
         --method org.gtk.Actions.Activate reload-config "[]" "{}" \
         >/dev/null 2>&1 || true
+}
+
+# Running Claude sessions don't re-read a `theme` change in settings.json, but
+# they do re-read the custom theme file it names. So settings point at
+# custom:<family> once, and <family>.json (generated, gitignored) gets this
+# mode's palette written into it in place, keeping the watcher on the file.
+apply_claude_theme() {
+    local family="$1" mode="$2"
+    local src="$claude_themes/$family-$mode.json" dst="$claude_themes/$family.json"
+    [[ -f "$src" ]] || return 0
+    cmp -s "$src" "$dst" || cat "$src" >"$dst"
+
+    command -v jq >/dev/null 2>&1 || return 0
+    local file
+    for file in "${claude_settings[@]}"; do
+        set_json_string "$file" theme "custom:$family"
+    done
+}
+
+# GTK3 apps: the prefer-dark flag (seen at their next start) and the icon
+# theme (live, through gsettings).
+apply_gtk() {
+    local mode="$1" prefer=1 icons="$icon_theme_dark"
+    [[ "$mode" == light ]] && prefer=0 icons="$icon_theme_light"
+
+    gsettings set org.gnome.desktop.interface icon-theme "$icons" 2>/dev/null || true
+    [[ -f "$gtk3_settings" ]] || return 0
+    # --follow-symlinks so the dotstorage link survives the rewrite.
+    sed -i --follow-symlinks \
+        "s|^gtk-application-prefer-dark-theme=.*|gtk-application-prefer-dark-theme=$prefer|" \
+        "$gtk3_settings"
 }
 
 # niri includes colors.kdl (optional=true) and live-reloads when it changes.
@@ -206,14 +246,12 @@ apply_mode() {
     apply_wallpaper "$mode"
     apply_ghostty_theme "$family" "$mode"
     apply_niri_colors "$family" "$mode"
+    apply_gtk "$mode"
+    apply_claude_theme "$family" "$mode"
     replace_palette "$HOME/.config/hunk/config.toml" "$HOME/.config/hunk/$family-$mode.toml"
 
-    # Running Claude/pi sessions pick these up on their next settings read.
+    # Claude: see apply_claude_theme. pi reads its light/dark pair itself.
     if command -v jq >/dev/null 2>&1; then
-        local file
-        for file in "${claude_settings[@]}"; do
-            set_json_string "$file" theme "custom:$family-$mode"
-        done
         set_json_string "$pi_settings" theme "$family-light/$family-dark"
     fi
 }

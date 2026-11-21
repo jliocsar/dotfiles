@@ -1,0 +1,40 @@
+# Zenbones Dark for vicinae: zenwritten-dark with zenbones' warm hues, same
+# tokens as the herdr / Claude / hunk zenbones-dark palettes.
+# Picked by vicinae when the system is dark (settings.json `theme.dark`).
+
+[meta]
+version = 1
+name = "Zenbones Dark"
+description = "Zenbones dark, matched to the rest of the desktop"
+variant = "dark"
+inherits = "zenwritten-dark"
+icon = "/usr/local/share/vicinae/themes/icons/zenbones.png"
+
+[colors.core]
+background = "#1c1917"
+foreground = "#b4bdc3"
+secondary_background = "#25211f"
+border = "#403833"
+accent = "#b77e64"
+accent_foreground = "#1c1917"
+
+[colors.accents]
+blue = "#6099c0"
+green = "#819b69"
+magenta = "#b279a7"
+orange = "#b77e64"
+purple = "#b279a7"
+red = "#de6e7c"
+yellow = "#b77e64"
+cyan = "#65b8c1"
+
+[colors.text]
+muted = "#888f94"
+placeholder = "#685f5a"
+
+[colors.list.item.selection]
+background = "#302b29"
+secondary_background = "#302b29"
+
+[colors.grid.item]
+background = "#302b29"

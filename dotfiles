@@ -61,6 +61,9 @@
 .local/share/applications/hex-dictate.desktop
 .config/hex-dictate/
 
+# Vicinae (zenbones themes; settings.json stays untracked, vicinae rewrites it)
+.local/share/vicinae/themes/
+
 # mise (global config + global tasks)
 .config/mise/
 
