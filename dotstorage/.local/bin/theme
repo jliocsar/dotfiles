@@ -52,10 +52,13 @@ palette_marker='# >>> theme palette'
 #   convert macos-muted-05.png -negate -modulate 100,100,0 -evaluate add 4% macos-muted-05-light.png
 wallpaper_dark="$HOME/Pictures/Wallpapers/fog.jpeg"
 wallpaper_light="$HOME/Pictures/Wallpapers/macos-muted-05-light.png"
-# niri freezes the screen this long while everything below flips, then
-# crossfades to the new frame. Long enough for ghostty's reload and the portal
-# apps' repaint; anything slower repaints after the fade.
-transition_delay_ms=250
+# The switch animates through a one-shot quickshell (ThemeReveal): it freezes
+# every output on its current frame, the flip runs underneath, then a circle
+# opens onto the new theme and the shell quits. Kept out of the bar's shell so
+# a crash there never takes the bar down.
+reveal_config="$HOME/.config/quickshell/reveal"
+# Polls for the frozen frames every ~60ms (20ms + the IPC call), then gives up.
+reveal_tries=20
 # bridge-ipad's state endpoint (localhost only, no token).
 ipad_state_url=http://127.0.0.1:42461/state
 
@@ -198,14 +201,37 @@ apply_wallpaper() {
     fi
 }
 
-# Ask niri to freeze the screen and crossfade to whatever it shows once
-# transition_delay_ms is up. Returns at once; the flip runs under the freeze.
-# Skipped outside a niri session.
-start_transition() {
-    [[ -n "${NIRI_SOCKET:-}" ]] || return 0
-    command -v niri >/dev/null 2>&1 || return 0
-    niri msg action do-screen-transition --delay-ms "$transition_delay_ms" \
-        >/dev/null 2>&1 || true
+reveal_ipc() {
+    qs -p "$reveal_config" ipc call themeReveal "$@" 2>/dev/null
+}
+
+# Start a reveal shell, which covers every output with its frozen frame. Fails
+# (and the switch just runs unanimated) outside Wayland, without quickshell, or
+# when the frames don't come up in time. The shell quits on its own after 2s.
+start_reveal() {
+    [[ -n "${WAYLAND_DISPLAY:-}" && -f "$reveal_config/shell.qml" ]] || return 1
+    command -v qs >/dev/null 2>&1 || return 1
+    setsid qs -p "$reveal_config" >/dev/null 2>&1 </dev/null &
+
+    local try
+    for ((try = 0; try < reveal_tries; try++)); do
+        [[ "$(reveal_ipc frozen)" == true ]] && return 0
+        sleep 0.02
+    done
+    reveal_ipc cancel >/dev/null || true
+    return 1
+}
+
+# Open the circle from the centre of the focused output (niri's global
+# layout coordinates); 0,0 when niri can't say.
+finish_reveal() {
+    local origin
+    origin=$(niri msg -j focused-output 2>/dev/null |
+        jq -r '.logical | "\(.x + .width / 2 | floor) \(.y + .height / 2 | floor)"' 2>/dev/null) ||
+        origin="0 0"
+    [[ "$origin" =~ ^[0-9]+\ [0-9]+$ ]] || origin="0 0"
+    # shellcheck disable=SC2086 # "x y", two arguments
+    reveal_ipc reveal $origin >/dev/null || reveal_ipc cancel >/dev/null || true
 }
 
 # The bridge-ipad dashboard (poormans-captain) follows the laptop's mode. One
@@ -230,9 +256,11 @@ current_mode() {
 }
 
 apply_mode() {
-    local mode="$1" family="$theme_family" animate="${2:-}"
+    local mode="$1" family="$theme_family" animate="${2:-}" revealing=
 
-    [[ -n "$animate" ]] && start_transition
+    if [[ -n "$animate" ]] && start_reveal; then
+        revealing=1
+    fi
 
     # Family first, so a watcher woken by the mode change reads the new pair.
     write_state family "$family"
@@ -254,6 +282,8 @@ apply_mode() {
     if command -v jq >/dev/null 2>&1; then
         set_json_string "$pi_settings" theme "$family-light/$family-dark"
     fi
+
+    [[ -z "$revealing" ]] || finish_reveal
 }
 
 case "${1:-}" in
