@@ -47,6 +47,10 @@ palette_marker='# >>> theme palette'
 #   convert macos-muted-05.png -negate -modulate 100,100,0 -evaluate add 4% macos-muted-05-light.png
 wallpaper_dark="$HOME/Pictures/Wallpapers/fog.jpeg"
 wallpaper_light="$HOME/Pictures/Wallpapers/macos-muted-05-light.png"
+# niri freezes the screen this long while everything below flips, then
+# crossfades to the new frame. Long enough for ghostty's reload and the portal
+# apps' repaint; anything slower repaints after the fade.
+transition_delay_ms=250
 
 # Atomic write so fs watchers (nvim, quickshell) see a single rename, not a truncate.
 write_state() {
@@ -142,8 +146,24 @@ apply_wallpaper() {
     command -v swaybg >/dev/null 2>&1 || return 0
     pgrep -fx "swaybg -m fill -i $wallpaper" >/dev/null 2>&1 && return 0
 
-    pkill -x swaybg 2>/dev/null || true
+    # New one first, old one after it has drawn, so there's never a bare frame.
+    local old
+    old=$(pgrep -x swaybg || true)
     setsid swaybg -m fill -i "$wallpaper" >/dev/null 2>&1 </dev/null &
+    if [[ -n "$old" ]]; then
+        # shellcheck disable=SC2086 # one pid per word
+        (sleep 0.5 && kill $old 2>/dev/null) >/dev/null 2>&1 </dev/null &
+    fi
+}
+
+# Ask niri to freeze the screen and crossfade to whatever it shows once
+# transition_delay_ms is up. Returns at once; the flip runs under the freeze.
+# Skipped outside a niri session.
+start_transition() {
+    [[ -n "${NIRI_SOCKET:-}" ]] || return 0
+    command -v niri >/dev/null 2>&1 || return 0
+    niri msg action do-screen-transition --delay-ms "$transition_delay_ms" \
+        >/dev/null 2>&1 || true
 }
 
 current_mode() {
@@ -159,7 +179,9 @@ current_mode() {
 }
 
 apply_mode() {
-    local mode="$1" family="$theme_family"
+    local mode="$1" family="$theme_family" animate="${2:-}"
+
+    [[ -n "$animate" ]] && start_transition
 
     # Family first, so a watcher woken by the mode change reads the new pair.
     write_state family "$family"
@@ -186,9 +208,15 @@ apply_mode() {
 
 case "${1:-}" in
     "") current_mode ;;
-    dark | light) apply_mode "$1" ;;
+    # Crossfade only when the mode actually changes; `apply` (niri startup,
+    # family change) and a same-mode set flip without it.
+    dark | light)
+        animate=
+        [[ "$(current_mode)" != "$1" ]] && animate=1
+        apply_mode "$1" "$animate"
+        ;;
     apply) apply_mode "$(current_mode)" ;;
-    toggle) [[ "$(current_mode)" == dark ]] && apply_mode light || apply_mode dark ;;
+    toggle) [[ "$(current_mode)" == dark ]] && apply_mode light 1 || apply_mode dark 1 ;;
     *)
         echo "Usage: theme [toggle|dark|light|apply]" >&2
         exit 1
