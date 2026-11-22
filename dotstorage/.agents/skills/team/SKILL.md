@@ -104,8 +104,13 @@ Then give it its own tab and start it:
 
 ```sh
 herdr tab create --workspace {workspace_id} --label {name} --cwd "$PWD" --no-focus
-herdr pane run {root_pane_id} "{config_prefix}claude --name {name} --model {model} -- \"\$(cat /tmp/team/{workspace}/{name}.md)\""
+herdr pane run {root_pane_id} "INBOX_THREAD=0 {config_prefix}claude --name {name} --model {model} -- \"\$(cat /tmp/team/{workspace}/{name}.md)\""
 ```
+
+`INBOX_THREAD=0` turns off the inbox-thread mod for the teammate. That mod
+posts every turn of a session to its own Plannotator Inbox thread. Teammates
+report to you, not the inbox, so they don't get a thread. Keep it on every
+teammate's command.
 
 Write the prompt files with a quoted heredoc (`<<'EOF'`). With an unquoted
 one, the shell runs anything in backticks, and prompts are full of them.
@@ -114,7 +119,7 @@ For a teammate with an agent, add `--agent {agent}` to that `claude` command,
 keeping everything else the same:
 
 ```sh
-{config_prefix}claude --agent {agent} --name {name} --model {model} -- "$(cat /tmp/team/{workspace}/{name}.md)"
+INBOX_THREAD=0 {config_prefix}claude --agent {agent} --name {name} --model {model} -- "$(cat /tmp/team/{workspace}/{name}.md)"
 ```
 
 Always pass `--name` and `--model`, even with `--agent`. Tested on v2.1.280:
