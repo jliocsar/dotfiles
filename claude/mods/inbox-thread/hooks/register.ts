@@ -1,7 +1,24 @@
 import type { EngineInterface, PromptOrigin, Register } from 'claude-code'
 
 import type { Mode, Thread } from '../types'
-import { MIN_ANSWER, buildPost, candidates, isWake, sectionText, subjectFor, threadNameFor } from './post'
+import {
+  MIN_ANSWER,
+  TITLE_MODEL,
+  TITLE_SYSTEM,
+  buildPost,
+  candidates,
+  cleanTitle,
+  isThin,
+  isWake,
+  normName,
+  parseThreadNames,
+  sectionPendingText,
+  sectionText,
+  subjectFor,
+  threadNameFor,
+  titlePrompt,
+  uniqueName,
+} from './post'
 
 // One Plannotator Inbox thread per Claude session: each main-loop answer goes
 // there, with the images, plans and HTML the turn made or named. julio's
@@ -16,6 +33,12 @@ const THREAD = { plugin: 'inbox-thread', key: 'thread' } as const
 
 const INBOX_TOOL = 'plannotator_inbox'
 const KEY_PREFIX = 'inbox-thread:'
+// $.store keys: `thread:<session id>`, so a resume in a new process finds
+// its thread ($.state only outlives a hot reload). The oldest go past MAX_STORED.
+const STORE_PREFIX = 'thread:'
+const MAX_STORED = 300
+const LIST_LIMIT = 100
+const TITLE_TIMEOUT_MS = 15_000
 
 // Under $HOME. The lookout loops on its own: it would flood the inbox. The
 // captain stays on: its waiter wakes are plugin prompts, skipped below, so
@@ -56,6 +79,10 @@ let firstPrompt = ''
 // `mcp__<server>__plannotator_inbox` once found; plannotator registers it in
 // its own session.start, so it is looked up when first needed.
 let inboxTool: McpTool | undefined
+// The session's thread being named (a model call and a thread listing), shared
+// by the first turn's early start and its post.
+let naming: Promise<Thread> | undefined
+let namingStarted = false
 
 async function defaultMode($: EngineInterface): Promise<Mode> {
   const env = (await $.env.get('INBOX_THREAD'))?.trim()
@@ -98,6 +125,87 @@ async function existing($: EngineInterface, paths: readonly string[]): Promise<s
   return found
 }
 
+const isThread = (value: unknown): value is Thread =>
+  typeof value === 'object' &&
+  value !== null &&
+  typeof (value as Thread).name === 'string' &&
+  typeof (value as Thread).subject === 'string'
+
+// This session's thread, once named: $.state, else $.store (a resume in a new
+// process). A thread held for another session id (before a /clear) isn't it.
+async function heldThread($: EngineInterface): Promise<Thread | undefined> {
+  const sessionId = await $.session.id()
+  const held = (await $.state.get(THREAD)).value
+  if (held && (held.session === undefined || held.session === sessionId)) return held
+  const stored = await $.store.get(`${STORE_PREFIX}${sessionId}`)
+  if (!isThread(stored)) return undefined
+  await $.state.set(THREAD, stored)
+
+  return stored
+}
+
+async function saveThread($: EngineInterface, thread: Thread & { session: string }): Promise<void> {
+  await $.state.set(THREAD, thread)
+  await $.store.set(`${STORE_PREFIX}${thread.session}`, thread)
+  const keys = (await $.store.keys()).filter(k => k.startsWith(STORE_PREFIX))
+  for (const old of keys.slice(0, Math.max(0, keys.length - MAX_STORED))) await $.store.delete(old)
+}
+
+// The names of the project's open threads, from any session.
+async function openThreadNames($: EngineInterface, tool: McpTool): Promise<string[]> {
+  const res = await $.tool.call({ tool, action: 'read_thread', asked_by: 'anyone', limit: LIST_LIMIT })
+  if ('deny' in res && res.deny) return []
+  const text = typeof res.text === 'string' ? res.text : typeof res.result === 'string' ? res.result : ''
+
+  return parseThreadNames(text)
+}
+
+// A 3-6 word title from the small fast model; undefined when it fails.
+async function titleFor($: EngineInterface, prompt: string, answer?: string): Promise<string | undefined> {
+  const reply = await $.model
+    .complete({
+      model: TITLE_MODEL,
+      system: TITLE_SYSTEM,
+      prompt: titlePrompt(prompt, answer),
+      maxTokens: 40,
+      effort: 'low',
+      timeoutMs: TITLE_TIMEOUT_MS,
+    })
+    .catch(() => null)
+
+  return reply?.isAnswered ? cleanTitle(reply.text) : undefined
+}
+
+// The session's thread: an open one under the old `claude · dir · id8` name
+// (a session from before titles) keeps it; else a title no open thread has,
+// else the old name.
+async function nameThread($: EngineInterface, tool: McpTool, prompt: string, answer?: string): Promise<Thread> {
+  const session = await $.session.id()
+  const legacy = threadNameFor(cwd, session)
+  const open = await openThreadNames($, tool).catch(() => [])
+  const title = open.some(n => normName(n) === normName(legacy))
+    ? undefined
+    : await titleFor($, prompt, isThin(prompt) ? answer : undefined)
+  const thread = title
+    ? { name: uniqueName(title, open), subject: title, session }
+    : { name: legacy, subject: subjectFor(cwd, prompt), session }
+  await saveThread($, thread)
+
+  return thread
+}
+
+async function ensureThread($: EngineInterface, prompt: string, answer?: string): Promise<Thread | undefined> {
+  const held = await heldThread($)
+  if (held) return held
+  const tool = await findInboxTool($)
+  if (!tool) return undefined
+  naming ??= nameThread($, tool, prompt, answer).finally(() => {
+    naming = undefined
+  })
+
+  return naming
+}
+
 async function post($: EngineInterface, done: Turn, answer: string): Promise<void> {
   const tool = await findInboxTool($)
   if (!tool) return
@@ -105,11 +213,9 @@ async function post($: EngineInterface, done: Turn, answer: string): Promise<voi
   const files = await existing($, candidates(answer, done.touched, await $.env.get('HOME')))
   if (answer.trim().length < MIN_ANSWER && files.length === 0) return
 
+  const thread = await ensureThread($, firstPrompt || done.prompt, answer)
+  if (!thread) return
   const sessionId = await $.session.id()
-  const held = (await $.state.get(THREAD)).value
-  const name = threadNameFor(cwd, sessionId)
-  const thread: Thread =
-    held?.name === name ? held : { name, subject: subjectFor(cwd, firstPrompt || done.prompt) }
   const { body, attachments } = buildPost(answer, quoteOrigin(done.origin) ? done.prompt : undefined, files)
 
   const res = await $.tool.call({
@@ -127,9 +233,7 @@ async function post($: EngineInterface, done: Turn, answer: string): Promise<voi
   }
   if (res.isError) {
     $.ui.toast(`inbox-thread: post failed (${(res.text ?? '').slice(0, 120)})`)
-    return
   }
-  if (held?.name !== name) await $.state.set(THREAD, thread)
 }
 
 export const register: Register = on => {
@@ -145,6 +249,16 @@ export const register: Register = on => {
     return next(e)
   })
 
+  // A /clear or /resume goes on under another session id: another thread.
+  on('session.end', async ($, e, next) => {
+    firstPrompt = ''
+    namingStarted = false
+    turn = undefined
+    pending = undefined
+
+    return next(e)
+  })
+
   on('command.run', { command: 'inbox-thread' }, async ($, e) => {
     const arg = e.args.trim().toLowerCase()
     if (arg === 'on' || arg === 'off') {
@@ -153,7 +267,7 @@ export const register: Register = on => {
       return { text: `inbox-thread ${arg} for this session` }
     }
     const { mode, why } = await modeOf($)
-    const thread = (await $.state.get(THREAD)).value
+    const thread = await heldThread($)
     const tool = await findInboxTool($)
 
     return {
@@ -192,6 +306,17 @@ export const register: Register = on => {
     }
     if (!firstPrompt && quoteOrigin(from?.origin) && e.text.trim()) firstPrompt = e.text
 
+    // Name the thread while the first turn runs, so the system prompt can name
+    // it from the turn's next request. A thin prompt waits for the answer.
+    if (!namingStarted && interactive && !turn.skip && firstPrompt && !isThin(firstPrompt)) {
+      namingStarted = true
+      const prompt = firstPrompt
+      $.clock.after(0, async () => {
+        if ((await modeOf($)).mode === 'off') return
+        await ensureThread($, prompt).catch(() => undefined)
+      })
+    }
+
     return next(e)
   })
 
@@ -212,14 +337,15 @@ export const register: Register = on => {
   }).catch(($, e, next) => next(e))
 
   // Tells the model which thread is this session's, so its own sends land
-  // there. Steady per session (it is cached): changes only with /inbox-thread.
+  // there. Changes once, when the thread gets its name, and with /inbox-thread.
   on('prompt.compose', async ($, e, next) => {
     const out = await next(e)
     const tool = e.tools.find(isInboxTool)
     if (!interactive || !tool || (await modeOf($)).mode === 'off') return out
-    const name = threadNameFor(cwd, await $.session.id())
+    const thread = await heldThread($)
+    const text = thread ? sectionText(thread.name) : sectionPendingText()
 
-    return { sections: [...out.sections, { id: 'inbox-thread', scope: 'session', text: sectionText(name) }] }
+    return { sections: [...out.sections, { id: 'inbox-thread', scope: 'session', text }] }
   }).catch(($, e, next) => next(e))
 
   on('turn.complete', async ($, e, next) => {

@@ -1,18 +1,46 @@
 import type { On } from 'claude-code'
 import { expect, mock, test, type Engine } from 'claude-code/testing'
 
+import { cleanTitle } from './post'
+
 const HOME = '/home/test'
 const INBOX = 'mcp__plannotator__plannotator_inbox'
 const SESSION = 'abcdef12-3456-7890'
 const FILES = new Set([`${HOME}/shot.png`, `${HOME}/mock.html`, `${HOME}/.claude/plans/plan.md`])
 
-type World = { env?: Record<string, string>; inbox?: boolean }
+const TITLE = 'Mock page for checkout'
+const LEGACY = 'claude · app · abcdef12'
 
-// The engine beneath the mod: env, files, the session, plannotator's tool.
-const world = (on: On, { env = {}, inbox = true }: World = {}) => {
+type World = {
+  env?: Record<string, string>
+  inbox?: boolean
+  // The open threads' names read_thread lists.
+  open?: string[]
+  // The small model's reply; null: the call fails.
+  title?: string | null
+  store?: Record<string, unknown>
+}
+
+const listing = (names: readonly string[]) =>
+  [`${names.length} threads in app.`, ...names.map((n, i) => `- msg_${i} · "subject ${i}" · name "${n}" · quiet · 1 message`)].join('\n')
+
+// The engine beneath the mod: env, files, the session, plannotator's tool,
+// the small model.
+const world = (on: On, { env = {}, inbox = true, open = [], title = TITLE, store = {} }: World = {}) => {
   const sent: Record<string, unknown>[] = []
+  const asked: string[] = []
   const clock = mock.clock(on)
   mock.env(on, { HOME, ...env })
+  mock.store(on, store)
+  on('model.complete', (_, e) => {
+    asked.push(String(e.prompt))
+    return {
+      value:
+        title === null
+          ? ({ isAnswered: false, reason: 'empty-reply' } as never)
+          : ({ isAnswered: true, text: title, usage: { input_tokens: 1, output_tokens: 1 } } as never),
+    }
+  })
 
   on('session.start', (_, e) => ({ cwd: e.cwd }))
   on('prompt.submit', (_, e) => ({ text: e.text }))
@@ -27,11 +55,13 @@ const world = (on: On, { env = {}, inbox = true }: World = {}) => {
     return { value: { kind: 'file' as const, size: 1, mtimeMs: 0, isLink: false } }
   })
   on('tool.call', (_, e) => {
-    if (String(e.tool) === INBOX) sent.push({ ...e })
+    const call = e as unknown as Record<string, unknown>
+    if (String(e.tool) === INBOX && call.action === 'read_thread') return { result: listing(open) }
+    if (String(e.tool) === INBOX) sent.push({ ...call })
     return { result: 'ok' }
   })
 
-  return { sent, clock }
+  return { sent, asked, clock }
 }
 
 const start = ($: Engine, cwd = `${HOME}/Projects/app`) =>
@@ -73,8 +103,8 @@ test('a typed turn posts its answer, files and prompt to the session thread', as
   expect(sent).toHaveLength(1)
   const msg = sent[0]!
   expect(msg.action).toBe('send_message')
-  expect(msg.thread).toBe('claude · app · abcdef12')
-  expect(msg.subject).toBe('app: make me a mock page')
+  expect(msg.thread).toBe(TITLE)
+  expect(msg.subject).toBe(TITLE)
   expect(msg.body).toContain('> make me a mock page')
   expect(msg.body).toContain(ANSWER)
   expect(msg.body).toContain(`![shot.png](${HOME}/shot.png)`)
@@ -89,8 +119,8 @@ test('the second turn goes to the same thread with the first subject', async ($,
   await turn($, 'second ask', 'a long enough second answer here')
   await clock.advance(1)
 
-  expect(sent.map(m => m.thread)).toEqual(['claude · app · abcdef12', 'claude · app · abcdef12'])
-  expect(sent.map(m => m.subject)).toEqual(['app: first ask', 'app: first ask'])
+  expect(sent.map(m => m.thread)).toEqual([TITLE, TITLE])
+  expect(sent.map(m => m.subject)).toEqual([TITLE, TITLE])
 })
 
 test('wake prompts, subagents and trivial answers post nothing', async ($, on) => {
@@ -156,22 +186,94 @@ test('the lookout is off by default and /inbox-thread on turns it on', async ($,
   expect(sent).toHaveLength(1)
 })
 
-test('the system prompt names the thread, and not when off', async ($, on) => {
-  world(on)
-  on('prompt.compose', () => ({ sections: [] }))
-  await start($)
-  const compose = () =>
-    $.prompt.compose({ model: 'm', promptModel: 'm', surfaces: ['terminal'], tools: [INBOX], outputStyle: null, traits: [] })
+const COMPOSE = { model: 'm', promptModel: 'm', surfaces: ['terminal'], tools: [INBOX], outputStyle: null, traits: [] } as const
 
-  const on1 = await compose()
-  expect(on1.sections.map(x => x.id)).toEqual(['inbox-thread'])
-  expect(on1.sections[0]!.text).toContain('thread: "claude · app · abcdef12"')
-
-  await $.command.run({
+const offCmd = ($: Engine) =>
+  $.command.run({
     command: 'inbox-thread',
     args: 'off',
     origin: { kind: 'composer' },
     presentation: { isFullscreen: false, columns: 80 },
   })
-  expect((await compose()).sections).toEqual([])
+
+test('the system prompt says the name is pending, then names the stored thread, and nothing when off', async ($, on) => {
+  const { clock } = world(on)
+  on('prompt.compose', () => ({ sections: [] }))
+  await start($)
+
+  const before = await $.prompt.compose(COMPOSE)
+  expect(before.sections.map(x => x.id)).toEqual(['inbox-thread'])
+  expect(before.sections[0]!.text).toContain('being named now')
+
+  // The first turn names the thread early, before its answer.
+  await $.prompt.submit({ text: 'build the checkout mock page', origin: { kind: 'composer' }, wait: false })
+  await $.turn.start({ text: 'build the checkout mock page', turnId: 'early' })
+  await clock.advance(1)
+
+  const named = await $.prompt.compose(COMPOSE)
+  expect(named.sections[0]!.text).toContain(`thread: "${TITLE}"`)
+
+  await offCmd($)
+  expect((await $.prompt.compose(COMPOSE)).sections).toEqual([])
+})
+
+test('a title another open thread has gets a suffix', async ($, on) => {
+  const { sent, clock } = world(on, { open: ['theme switch', 'mock PAGE for  checkout', `${TITLE} (2)`] })
+  await start($)
+
+  await turn($, 'make me a mock page', 'a long enough answer for the post')
+  await clock.advance(1)
+
+  expect(sent.map(m => m.thread)).toEqual([`${TITLE} (3)`])
+})
+
+test('a failed model call falls back to the old name', async ($, on) => {
+  const { sent, clock } = world(on, { title: null })
+  await start($)
+
+  await turn($, 'make me a mock page', 'a long enough answer for the post')
+  await clock.advance(1)
+
+  expect(sent.map(m => [m.thread, m.subject])).toEqual([[LEGACY, 'app: make me a mock page']])
+})
+
+test('a session whose old-style thread is open keeps it, with no model call', async ($, on) => {
+  const { sent, asked, clock } = world(on, { open: [LEGACY] })
+  await start($)
+
+  await turn($, 'make me a mock page', 'a long enough answer for the post')
+  await clock.advance(1)
+
+  expect(sent.map(m => m.thread)).toEqual([LEGACY])
+  expect(asked).toEqual([])
+})
+
+test('a resume finds its thread in the store, with no model call', async ($, on) => {
+  const held = { name: 'Fix the flaky login test', subject: 'Fix the flaky login test', session: SESSION }
+  const { sent, asked, clock } = world(on, { store: { [`thread:${SESSION}`]: held } })
+  await start($)
+
+  await turn($, 'and now the signup one', 'a long enough answer for the post')
+  await clock.advance(1)
+
+  expect(sent.map(m => m.thread)).toEqual([held.name])
+  expect(asked).toEqual([])
+})
+
+test('a thin first prompt is named with its answer too', async ($, on) => {
+  const { sent, asked, clock } = world(on)
+  await start($)
+
+  await turn($, 'go', 'built the checkout mock page with three steps')
+  await clock.advance(1)
+
+  expect(asked).toHaveLength(1)
+  expect(asked[0]).toContain('<reply>\nbuilt the checkout mock page')
+  expect(sent.map(m => m.thread)).toEqual([TITLE])
+})
+
+test('titles come back as one plain line', async () => {
+  expect(cleanTitle('Title: "Fix the flaky login test."\nmore')).toBe('Fix the flaky login test')
+  expect(cleanTitle('**Checkout mock page**')).toBe('Checkout mock page')
+  expect(cleanTitle('  \n...')).toBeUndefined()
 })
