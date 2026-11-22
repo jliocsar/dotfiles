@@ -306,8 +306,8 @@
   "switchModelsOnFlag": false,
   "teammateMode": "auto",
   "remoteControlAtStartup": true,
+  "crossSessionInbound": "accept",
   "agentPushNotifEnabled": false,
   "skipAutoPermissionPrompt": true,
-  "voiceEnabled": true,
-  "advisorModel": "fable"
+  "voiceEnabled": true
 }

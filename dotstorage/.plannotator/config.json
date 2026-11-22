@@ -16,9 +16,9 @@
   "theme": {
     "mode": "system",
     "light": "plannotator",
-    "dark": "caffeine"
+    "dark": "vitesse-black"
   },
-  "favicon": "classic",
+  "favicon": "glass",
   "inboxSound": {
     "dialogShownFor": "0.28.48"
   },
@@ -48,9 +48,19 @@
     "allowedOrigin": "https://cyborg-15-a13v.tail5f88c0.ts.net:38407"
   },
   "inboxRows": [
-    "titleFirst"
+    "smallNames",
+    "hidePreview",
+    "unreadDot",
+    "relativeTime",
+    "titleFirst",
+    "marksProjects",
+    "markInline",
+    "repoLogo",
+    "githubPictures",
+    "dividers",
+    "boldNames"
   ],
-  "inboxRowsRev": 13,
+  "inboxRowsRev": 155,
   "inboxBoard": true,
   "inboxBoardIntro": {
     "shownAt": "2026-11-04T20:56:49.624Z"
@@ -71,5 +81,46 @@
     "answeredAt": "2026-11-09T18:49:46.786Z",
     "surface": "annotate"
   },
-  "inboxSteps": true
+  "inboxSteps": true,
+  "inboxRowsDefaults": 2,
+  "inboxRowsPrev": [
+    "smallNames",
+    "hidePreview",
+    "unreadDot",
+    "relativeTime",
+    "titleFirst",
+    "marksProjects",
+    "repoLogo",
+    "githubPictures",
+    "dividers",
+    "boldNames"
+  ],
+  "inboxRowsBy": null,
+  "inboxTextSize": 15,
+  "inboxSidebar": {
+    "top": [
+      "search",
+      "new-message",
+      "inbox",
+      "board",
+      "scheduled",
+      "shape",
+      "artifacts",
+      "reviews",
+      "drafts"
+    ],
+    "bottom": [
+      "copy-prompt",
+      "feedback",
+      "usage",
+      "settings"
+    ],
+    "hidden": [
+      "copy-prompt",
+      "feedback",
+      "theme"
+    ]
+  },
+  "inboxSidebarRev": 22,
+  "inboxMarkReadWarning": false
 }

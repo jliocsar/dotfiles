@@ -19,6 +19,7 @@
 .claude/skills/
 .claude/hooks/
 .claude/themes/
+.claude/rules/
 .claude/settings.json
 .claude/keybindings.json
 

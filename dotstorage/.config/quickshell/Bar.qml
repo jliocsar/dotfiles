@@ -242,6 +242,21 @@ PanelWindow {
             onClicked: DoNotDisturb.toggle()
         }
 
+        // Flips the whole machine's theme; the circular reveal opens from this icon.
+        Indicator {
+            id: themeIndicator
+            icon: Theme.light ? "󰖙" : "󰖔" // md-weather-sunny / md-weather-night
+            tooltip: Theme.light ? "Light theme: click for dark" : "Dark theme: click for light"
+            onClicked: {
+                // The icon's centre in niri's global layout space.
+                const centre = themeIndicator.mapToItem(null, width / 2, height / 2);
+                Quickshell.execDetached({
+                    command: [Quickshell.env("HOME") + "/.local/bin/theme", "toggle"],
+                    environment: { THEME_REVEAL_ORIGIN: Math.round(bar.modelData.x + centre.x) + " " + Math.round(bar.modelData.y + centre.y) }
+                });
+            }
+        }
+
         Indicator {
             readonly property int percent: Math.round(bar.battery.percentage * 100)
             readonly property bool charging: bar.battery.state === UPowerDeviceState.Charging

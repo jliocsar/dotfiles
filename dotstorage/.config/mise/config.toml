@@ -38,3 +38,6 @@ java = "temurin-25"
 "npm:typescript-language-server" = "latest"
 "npm:yarn" = "latest"
 "npm:@tigrisdata/cli" = { version = "latest", allow_low_downloads = true }
+
+# TEMPORARY: not meant to stay, remove when done
+luau = "latest"
