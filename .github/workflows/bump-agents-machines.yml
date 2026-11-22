@@ -1,0 +1,22 @@
+name: bump agents-machines
+
+on:
+  push:
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch bump-dotfiles in agents-machines
+        run: |
+          curl --fail-with-body --silent --show-error --request POST \
+            --header "Authorization: Bearer $TOKEN" \
+            --header "Accept: application/vnd.github+json" \
+            --header "X-GitHub-Api-Version: 2022-11-28" \
+            --data '{"ref":"main"}' \
+            https://api.github.com/repos/jliocsar/agents-machines/actions/workflows/bump-dotfiles.yml/dispatches
+        env:
+          TOKEN: ${{ secrets.AGENTS_MACHINES_DISPATCH_TOKEN }}
