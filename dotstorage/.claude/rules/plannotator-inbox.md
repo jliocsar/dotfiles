@@ -12,3 +12,11 @@ A decision you sent to the Inbox stays there. When the person writes in this cha
 Before reply_to into a thread you have not read in this context window, call read_thread with no id and match the subject.
 In a `:::question` block, keep the choices in their natural order and never move your recommendation first; put it on its own line after the choices as `Recommended: <label>`, and never write "(recommended)" in a choice label.
 <!-- plannotator-inbox:end -->
+
+## Inbox thread (Claude Code, the inbox-thread mod)
+
+When the system prompt has a "Plannotator Inbox thread" section, the inbox-thread mod is on and this session is that one thread: it overrides "one thread per work stream" above.
+Your final answer each turn is posted to the thread by itself. Don't also send it with send_message.
+Name the images, HTML and plan files the person should see by absolute path in the answer: they're attached to the post.
+Call send_message yourself only for a `:::question` decision or something the answer can't carry, with `thread` set to the name the section gives. That turn isn't posted again, so put in the message what the person needs.
+The person turns it off with `/inbox-thread off` or `INBOX_THREAD=0`.

@@ -8,7 +8,7 @@
     "CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN": "0",
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "0",
     "ENABLE_LSP_TOOL": "1",
-    "CLAUDE_CODE_PLUGIN_DIRS": "~/.dotfiles/claude/mods/handoff-compact:~/.dotfiles/claude/mods/images-preview:~/.dotfiles/claude/mods/theme-switch"
+    "CLAUDE_CODE_PLUGIN_DIRS": "~/.dotfiles/claude/mods/handoff-compact:~/.dotfiles/claude/mods/images-preview:~/.dotfiles/claude/mods/theme-switch:~/.dotfiles/claude/mods/inbox-thread"
   },
   "includeCoAuthoredBy": false,
   "permissions": {

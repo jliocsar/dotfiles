@@ -1,0 +1,10 @@
+{
+  "name": "inbox-thread",
+  "version": "0.1.0",
+  "description": "One Plannotator Inbox thread per Claude session: each main-loop answer is posted there, with the images, plans and HTML it made or named.",
+  "author": {
+    "name": "jliocsar"
+  },
+  "types": "./types/index.d.ts",
+  "dependencies": ["plannotator"]
+}
