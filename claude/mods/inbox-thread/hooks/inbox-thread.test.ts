@@ -134,9 +134,9 @@ test('no plannotator_inbox tool: nothing posts', async ($, on) => {
   expect(sent).toHaveLength(0)
 })
 
-test('the captain is off by default and /inbox-thread on turns it on', async ($, on) => {
+test('the lookout is off by default and /inbox-thread on turns it on', async ($, on) => {
   const { sent, clock } = world(on)
-  await start($, `${HOME}/Projects/poormans-captain`)
+  await start($, `${HOME}/Projects/poormans-captain/lookout`)
   const cmd = (args: string) =>
     $.command.run({
       command: 'inbox-thread',

@@ -17,8 +17,11 @@ const THREAD = { plugin: 'inbox-thread', key: 'thread' } as const
 const INBOX_TOOL = 'plannotator_inbox'
 const KEY_PREFIX = 'inbox-thread:'
 
-// Under $HOME. The captain wakes every few minutes: it would flood the inbox.
-const OFF_BY_DEFAULT = ['/Projects/poormans-captain']
+// Under $HOME. The lookout loops on its own: it would flood the inbox. The
+// captain stays on: its waiter wakes are plugin prompts, skipped below, so
+// only julio's own chats post (julio, 22 Nov). poormans-capitain is a
+// symlink to the same repo.
+const OFF_BY_DEFAULT = ['/Projects/poormans-captain/lookout', '/Projects/poormans-capitain/lookout']
 
 // Sources whose turns aren't worth a post. A plugin's prompt stays when it
 // was sent as the person's own words, or by plannotator (julio's reply).
