@@ -57,8 +57,9 @@ wallpaper_light="$HOME/Pictures/Wallpapers/macos-muted-05-light.png"
 # opens onto the new theme and the shell quits. Kept out of the bar's shell so
 # a crash there never takes the bar down.
 reveal_config="$HOME/.config/quickshell/reveal"
-# Polls for the frozen frames every ~60ms (20ms + the IPC call), then gives up.
-reveal_tries=20
+# Polls for the frozen frames every ~35ms (10ms + the IPC call); ~1.5s of
+# tries covers quickshell's cold start, then it gives up.
+reveal_tries=40
 # bridge-ipad's state endpoint (localhost only, no token).
 ipad_state_url=http://127.0.0.1:42461/state
 
@@ -151,21 +152,30 @@ apply_claude_theme() {
     local src="$claude_themes/$family-$mode.json" dst="$claude_themes/$family.json"
     [[ -f "$src" ]] || return 0
     cmp -s "$src" "$dst" || cat "$src" >"$dst"
+}
 
+# The settings half: point both Claude configs at custom:<family>. A no-op
+# once set, and nothing on screen, so it runs after the reveal.
+apply_claude_settings() {
     command -v jq >/dev/null 2>&1 || return 0
     local file
     for file in "${claude_settings[@]}"; do
-        set_json_string "$file" theme "custom:$family"
+        set_json_string "$file" theme "custom:$1"
     done
 }
 
-# GTK3 apps: the prefer-dark flag (seen at their next start) and the icon
-# theme (live, through gsettings).
-apply_gtk() {
-    local mode="$1" prefer=1 icons="$icon_theme_dark"
-    [[ "$mode" == light ]] && prefer=0 icons="$icon_theme_light"
-
+# The icon theme, live through gsettings.
+apply_icons() {
+    local icons="$icon_theme_dark"
+    [[ "$1" == light ]] && icons="$icon_theme_light"
     gsettings set org.gnome.desktop.interface icon-theme "$icons" 2>/dev/null || true
+}
+
+# GTK3 apps' prefer-dark flag. They read it at start, so nothing on screen
+# changes and it runs after the reveal.
+apply_gtk3_flag() {
+    local prefer=1
+    [[ "$1" == light ]] && prefer=0
     [[ -f "$gtk3_settings" ]] || return 0
     # --follow-symlinks so the dotstorage link survives the rewrite.
     sed -i --follow-symlinks \
@@ -189,12 +199,24 @@ apply_wallpaper() {
     [[ "$mode" == light ]] && wallpaper="$wallpaper_light"
     [[ -n "${NIRI_SOCKET:-}" && -f "$wallpaper" ]] || return 0
     command -v swaybg >/dev/null 2>&1 || return 0
-    pgrep -fx "swaybg -m fill -i $wallpaper" >/dev/null 2>&1 && return 0
+
+    # The running swaybg's pid comes from the state dir, checked against
+    # /proc: a pgrep walks every process and cost 50-80ms here. pgrep is only
+    # the fallback (first run, or a swaybg started elsewhere).
+    local old="" pid cmdline
+    read -r pid <"$state_dir/swaybg" 2>/dev/null || pid=
+    if [[ "$pid" =~ ^[0-9]+$ ]] && cmdline=$(tr '\0' ' ' <"/proc/$pid/cmdline" 2>/dev/null) &&
+        [[ "$cmdline" == "swaybg -m fill -i "* ]]; then
+        # Same image already up: nothing to do (no flicker on a same-image flip).
+        [[ "$cmdline" == "swaybg -m fill -i $wallpaper " ]] && return 0
+        old="$pid"
+    else
+        old=$(pgrep -x swaybg || true)
+    fi
 
     # New one first, old one after it has drawn, so there's never a bare frame.
-    local old
-    old=$(pgrep -x swaybg || true)
     setsid swaybg -m fill -i "$wallpaper" >/dev/null 2>&1 </dev/null &
+    write_state swaybg "$!"
     if [[ -n "$old" ]]; then
         # shellcheck disable=SC2086 # one pid per word
         (sleep 0.5 && kill $old 2>/dev/null) >/dev/null 2>&1 </dev/null &
@@ -205,18 +227,33 @@ reveal_ipc() {
     qs -p "$reveal_config" ipc call themeReveal "$@" 2>/dev/null
 }
 
-# Start a reveal shell, which covers every output with its frozen frame. Fails
-# (and the switch just runs unanimated) outside Wayland, without quickshell, or
-# when the frames don't come up in time. The shell quits on its own after 2s.
+# Freeze every output under a reveal shell. From the bar's button one is
+# usually already up on standby (started on hover); otherwise start one, and
+# pay quickshell's start (~150ms warm, up to ~1s cold). Fails (and the switch
+# just runs unanimated) outside Wayland, without quickshell, or when the frames
+# don't come up in time. The shell quits on its own whatever happens.
 start_reveal() {
     [[ -n "${WAYLAND_DISPLAY:-}" && -f "$reveal_config/shell.qml" ]] || return 1
     command -v qs >/dev/null 2>&1 || return 1
-    setsid qs -p "$reveal_config" >/dev/null 2>&1 </dev/null &
+    # freeze() answers nothing; any output is qs saying no shell is up yet.
+    local asked=
+    if [[ -z "$(reveal_ipc freeze)" ]]; then
+        asked=1
+    else
+        # -n: never a second shell next to a standby one.
+        setsid qs -n -p "$reveal_config" >/dev/null 2>&1 </dev/null &
+    fi
 
-    local try
+    local try state
     for ((try = 0; try < reveal_tries; try++)); do
-        [[ "$(reveal_ipc frozen)" == true ]] && return 0
-        sleep 0.02
+        state=$(reveal_ipc frozen)
+        if [[ -z "$asked" && "$state" =~ ^(true|false)$ ]]; then
+            reveal_ipc freeze >/dev/null
+            asked=1
+            continue
+        fi
+        [[ -n "$asked" && "$state" == true ]] && return 0
+        sleep 0.01
     done
     reveal_ipc cancel >/dev/null || true
     return 1
@@ -270,22 +307,36 @@ apply_mode() {
 
     local scheme=prefer-dark
     [[ "$mode" == light ]] && scheme=prefer-light
-    gsettings set org.gnome.desktop.interface color-scheme "$scheme" 2>/dev/null || true
     notify_ipad "$mode"
 
-    apply_wallpaper "$mode"
-    apply_ghostty_theme "$family" "$mode"
-    apply_niri_colors "$family" "$mode"
-    apply_gtk "$mode"
-    apply_claude_theme "$family" "$mode"
-    replace_palette "$HOME/.config/hunk/config.toml" "$HOME/.config/hunk/$family-$mode.toml"
+    # Everything on screen, side by side: they touch different files and
+    # processes, so the frozen frame waits for the slowest one, not the sum.
+    local pids=()
+    gsettings set org.gnome.desktop.interface color-scheme "$scheme" 2>/dev/null &
+    pids+=($!)
+    apply_wallpaper "$mode" &
+    pids+=($!)
+    apply_ghostty_theme "$family" "$mode" &
+    pids+=($!)
+    apply_niri_colors "$family" "$mode" &
+    pids+=($!)
+    apply_icons "$mode" &
+    pids+=($!)
+    apply_claude_theme "$family" "$mode" &
+    pids+=($!)
+    # Only these: a bare `wait` would also wait on notify_ipad's curl.
+    wait "${pids[@]}" || true
 
-    # Claude: see apply_claude_theme. pi reads its light/dark pair itself.
+    [[ -z "$revealing" ]] || finish_reveal
+
+    # Not on screen: config read by apps at their next start.
+    apply_gtk3_flag "$mode"
+    apply_claude_settings "$family"
+    replace_palette "$HOME/.config/hunk/config.toml" "$HOME/.config/hunk/$family-$mode.toml"
+    # pi reads its light/dark pair itself.
     if command -v jq >/dev/null 2>&1; then
         set_json_string "$pi_settings" theme "$family-light/$family-dark"
     fi
-
-    [[ -z "$revealing" ]] || finish_reveal
 }
 
 case "${1:-}" in

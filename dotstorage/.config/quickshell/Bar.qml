@@ -247,6 +247,10 @@ PanelWindow {
             id: themeIndicator
             icon: Theme.light ? "󰖙" : "󰖔" // md-weather-sunny / md-weather-night
             tooltip: Theme.light ? "Light theme: click for dark" : "Dark theme: click for light"
+            // Warm the reveal shell while the pointer is on its way to a click, so the
+            // click skips quickshell's start (~150ms warm, up to ~1s cold). It waits
+            // transparent and quits after 5s unclicked; -n never starts a second one.
+            onHoveredChanged: if (hovered) Quickshell.execDetached(["qs", "-n", "-p", Quickshell.env("HOME") + "/.config/quickshell/reveal"])
             onClicked: {
                 // The icon's centre in niri's global layout space.
                 const centre = themeIndicator.mapToItem(null, width / 2, height / 2);

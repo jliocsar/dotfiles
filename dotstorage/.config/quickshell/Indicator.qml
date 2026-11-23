@@ -16,6 +16,7 @@ Item {
     property string tooltip: ""
     // Keeps the pill lit while this item's popup is open.
     property bool active: false
+    readonly property bool hovered: mouse.containsMouse
     signal clicked()
 
     implicitWidth: row.implicitWidth + Theme.indicatorPadding * 2

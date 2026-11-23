@@ -4,26 +4,32 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 
-// One reveal per process. ~/.local/bin/theme starts this shell, which freezes
-// every output on its current frame right away, then:
+// One reveal per process. It starts on standby, transparent: the bar's theme
+// button starts one on hover so a click skips quickshell's cold start, and
+// ~/.local/bin/theme starts one when none is up. Then:
 //
+//   qs -p ~/.config/quickshell/reveal ipc call themeReveal freeze      cover every output with its frozen frame
 //   qs -p ~/.config/quickshell/reveal ipc call themeReveal frozen      true once every frame is up
 //   (theme flips everything underneath)
 //   qs -p ~/.config/quickshell/reveal ipc call themeReveal reveal X Y  open a circle at global X,Y
 //   qs -p ~/.config/quickshell/reveal ipc call themeReveal cancel      quit now
 //
 // The overlay takes no input (empty mask, no keyboard focus) and can't stick:
-// the process quits when the circle is open, and safetyMs after it started
-// whatever else happens.
+// the process quits when the circle is open, standbyMs after it started if
+// nothing froze it, and safetyMs after freeze() whatever else happens.
 Scope {
     id: root
 
-    // Whatever happens, the process is gone this long after it started.
+    // Unfrozen (a hover that never became a click), the process quits after this.
+    readonly property int standbyMs: 5000
+    // Whatever happens, the process is gone this long after freeze().
     readonly property int safetyMs: 2000
     // Let ghostty's reload and the portal apps' repaint land before opening.
     readonly property int settleMs: 90
     readonly property int revealMs: 350
 
+    // Set by freeze(): the frames get captured and the safety clock starts.
+    property bool active: false
     property int framesReady: 0
     // The circle's centre, in global logical coordinates (niri's layout space).
     property real originX: 0
@@ -39,6 +45,13 @@ Scope {
 
     IpcHandler {
         target: "themeReveal"
+
+        function freeze(): void {
+            if (root.active)
+                return;
+            root.active = true;
+            safety.restart();
+        }
 
         function frozen(): bool {
             return root.framesReady >= Quickshell.screens.length;
@@ -57,6 +70,12 @@ Scope {
 
     Timer {
         running: true
+        interval: root.standbyMs
+        onTriggered: if (!root.active) root.finish()
+    }
+
+    Timer {
+        id: safety
         interval: root.safetyMs
         onTriggered: root.finish()
     }
@@ -93,11 +112,13 @@ Scope {
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
             WlrLayershell.namespace: "qs-theme-reveal"
 
-            // One still frame of this output, taken as the window is built.
+            // One still frame of this output, taken on freeze(). The window itself
+            // is mapped from launch (empty and transparent until then), so freeze()
+            // costs one capture and no map.
             ScreencopyView {
                 id: frame
                 anchors.fill: parent
-                captureSource: win.modelData
+                captureSource: root.active ? win.modelData : null
                 live: false
                 paintCursor: false
                 visible: false
