@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve, sep } from "node:path";
 import { homedir } from "node:os";
 
@@ -300,10 +300,25 @@ function wrap(segments: Array<string>, columns: number): string {
   return lines.join("\n");
 }
 
+// Loops sharing this plan read the snapshot to pause before a limit hits.
+function recordRateLimits(input: Input) {
+  const limits = input.rate_limits;
+  if (!limits?.five_hour && !limits?.seven_day) return;
+  try {
+    const dir = join(HOME, ".cache", "claude-usage");
+    mkdirSync(dir, { recursive: true });
+    const file = join(dir, "rate-limits.json");
+    const tmp = `${file}.${process.pid}`;
+    writeFileSync(tmp, JSON.stringify({ at: Math.floor(Date.now() / 1000), ...limits }));
+    renameSync(tmp, file);
+  } catch {}
+}
+
 // ─── Main ───
 async function main() {
   const raw = await Bun.stdin.text();
   const input: Input = raw.trim() ? JSON.parse(raw) : {};
+  recordRateLimits(input);
 
   const sections: Array<string | null> = [
     envLabelSection(),
