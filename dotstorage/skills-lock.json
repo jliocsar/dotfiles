@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "agent-vms": {
+      "source": "jliocsar/agents-machines",
+      "sourceType": "github",
+      "skillPath": "skills/agent-vms/SKILL.md",
+      "computedHash": "3a7b788f42c585aaf0269c5bd8b26ac6ee42bd75fdbc3f4f15b7ce40232b64c1"
+    },
     "animation-vocabulary": {
       "source": "emilkowalski/skills",
       "sourceType": "github",
