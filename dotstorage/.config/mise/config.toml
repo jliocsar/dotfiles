@@ -7,7 +7,6 @@ tool_update.global_auto = true
 "github:betterleaks/betterleaks" = { version = "latest", asset_pattern = "betterleaks_{{version}}_linux_x64.tar.gz" }
 "github:dmtrKovalenko/fff" = { version = "latest", asset_pattern = "fff-mcp-x86_64-unknown-linux-gnu" }
 "github:ente-io/ente" = { version = "latest", tag_regex = "^cli-v", version_prefix = "cli-v", asset_pattern = "ente-cli-v{{version}}-linux-amd64.tar.gz", github_attestations = false }
-"github:jliocsar/pie" = { version = "latest", asset_pattern = "pie-linux-x64" }
 "github:vercel-labs/agent-browser" = "latest"
 "npm:@plannotator/tot" = "latest"
 "npm:harkctl" = "latest"
