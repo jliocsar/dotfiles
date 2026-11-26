@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
-#MISE description="Install Rex (terminal multiplexer server + CLI) from superlogical's apt repo"
+#MISE description="Install Rex, keep it on the tailnet, and follow the rex-home home"
 #MISE dir="/tmp"
 set -euo pipefail
+
+# Julio's Rex home: jc-rex-home in jliocsar/iac. It holds the host list that
+# every device (laptop, phone) follows.
+REX_HOME_URL="https://rex-home.tail5f88c0.ts.net"
 
 # The script adds the apt repo; reruns upgrade through it.
 # No stable channel yet; it falls back to snapshot on its own.
@@ -9,8 +13,28 @@ if [[ -x "$(command -v rex)" ]]; then
   echo "[dev] rex already installed, upgrading via apt"
   sudo apt-get update
   sudo apt-get install -y --only-upgrade rex
-  exit 0
+else
+  echo "[dev] Installing rex"
+  curl -fsSL https://pkgs.superlogical.com/rex/install.sh | sh
 fi
 
-echo "[dev] Installing rex"
-curl -fsSL https://pkgs.superlogical.com/rex/install.sh | sh
+# Keep Tailscale on across restarts: `rex server tailscale on` lasts only
+# until the server stops. Reuse the node name this server already enrolled
+# as, so no second sign-in. This never restarts rex.service (that ends every
+# session); the flags apply on its next start.
+node="$(rex server status --json 2>/dev/null | jq -r '.tailscale.dns_name // empty' | cut -d. -f1)"
+node="${node:-rex-$(hostname -s)}"
+dropin="$HOME/.config/systemd/user/rex.service.d/tailscale.conf"
+mkdir -p "$(dirname "$dropin")"
+cat >"$dropin" <<EOF
+[Service]
+ExecStart=
+ExecStart=/usr/bin/rex server run --log-format text --tailscale --tailscale-hostname $node
+EOF
+systemctl --user daemon-reload
+echo "[dev] rex.service starts with --tailscale as $node (from its next start)"
+
+# Follow the home for hosts and shortcuts. A client setting: no restart.
+if [[ "$(rex home --json 2>/dev/null | jq -r '.home.endpoint // empty')" != "$REX_HOME_URL" ]]; then
+  rex home set "$REX_HOME_URL" --label rex-home
+fi
