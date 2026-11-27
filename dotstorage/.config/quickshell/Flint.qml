@@ -3,7 +3,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 
-// The captain's bridge-ipad dashboard (poormans-captain/bridge-ipad, served from
+// Flint, the captain's main bridge (poormans-captain/flint, served from
 // this laptop): its view (near | far) and theme (dark | light), read and set
 // through the server's localhost-only /state endpoint. Polled every 3s while the
 // popup is open (the iPad's own taps show up too), every 30s otherwise.

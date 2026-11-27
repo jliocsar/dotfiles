@@ -71,10 +71,27 @@ PanelWindow {
 
     // Right-click menu target: the icon delegate the menu is anchored to.
     property Item menuTarget: null
+    // A Repeater rebuild can destroy the target under an open menu.
+    onMenuTargetChanged: if (menuTarget === null) menu.visible = false
 
+    // The menu takes no popup grab: niri drops a grab whose button is already up, and a
+    // touchpad tap releases before the popup maps, so grabbed menus died on every tap.
+    // It closes when the cursor leaves the dock and menu instead (see closeMenuTimer).
     function openMenu(item) {
+        console.log("[dock-dbg] openMenu", item?.modelData, "visible", menu.visible, "target", menuTarget?.modelData);
+        const sameTarget = menu.visible && menuTarget === item;
+        // Hide first so the popup re-anchors on the new icon.
+        menu.visible = false;
+        if (sameTarget) return;
         menuTarget = item;
         menu.visible = true;
+    }
+
+    Timer {
+        id: closeMenuTimer
+        interval: 300
+        running: menu.visible && !hover.hovered && !menu.hovered
+        onTriggered: menu.visible = false
     }
 
     // Open windows grouped by desktop entry id (raw app id when no entry matches),
@@ -103,7 +120,8 @@ PanelWindow {
 
     readonly property int edgeGap: 6
     property bool peeking: false
-    readonly property bool hidden: Niri.focusedMaximized && !peeking
+    // An open menu keeps the dock up, or it'd slide away once the cursor moves onto the menu.
+    readonly property bool hidden: Niri.focusedMaximized && !peeking && !menu.visible
 
     anchors.bottom: true
     implicitWidth: pill.width
@@ -234,7 +252,7 @@ PanelWindow {
 
             function activate() {
                 if (windowIds.length === 0) {
-                    entry?.execute();
+                    Launch.app(entry);
                     return;
                 }
                 const nextIndex = (windowIds.indexOf(Niri.focusedId) + 1) % windowIds.length;
@@ -269,10 +287,13 @@ PanelWindow {
                 acceptedButtons: Qt.LeftButton | Qt.RightButton
                 cursorShape: launcher.dragged ? Qt.ClosedHandCursor : Qt.PointingHandCursor
                 onPressed: event => {
-                    // Menus open on press: niri only honors a popup's grab while the button
-                    // that asked for it is still held, otherwise it dismisses the popup at once.
-                    if (event.button === Qt.RightButton) dock.openMenu(launcher);
-                    else pressRowX = mapToItem(icons, event.x, 0).x;
+                    console.log("[dock-dbg] press", event.button, launcher.modelData);
+                    if (event.button === Qt.RightButton) {
+                        dock.openMenu(launcher);
+                        return;
+                    }
+                    menu.visible = false;
+                    pressRowX = mapToItem(icons, event.x, 0).x;
                 }
                 onPositionChanged: event => {
                     if (!(pressedButtons & Qt.LeftButton) || !launcher.pinned) return;
@@ -317,7 +338,17 @@ PanelWindow {
         anchor.margins.bottom: 10
         contentWidth: 220
         spacing: 2
-        onVisibleChanged: if (!visible) dock.menuTarget = null
+        grabFocus: false
+        // Fed by the HoverHandler below: ids inside popup content don't resolve from the dock.
+        property bool hovered: false
+        onVisibleChanged: {
+            console.log("[dock-dbg] menu visible", visible, "target", dock.menuTarget?.modelData);
+            if (!visible) dock.menuTarget = null;
+        }
+
+        HoverHandler {
+            onHoveredChanged: menu.hovered = hovered
+        }
 
         // The app's own desktop actions ("New Incognito Window" and friends).
         Repeater {
@@ -327,7 +358,7 @@ PanelWindow {
                 required property var modelData
                 text: modelData.name
                 onClicked: {
-                    modelData.execute();
+                    Launch.app(modelData);
                     menu.visible = false;
                 }
             }
@@ -337,7 +368,7 @@ PanelWindow {
             visible: menu.target?.entry != null
             text: "New window"
             onClicked: {
-                menu.target.entry.execute();
+                Launch.app(menu.target.entry);
                 menu.visible = false;
             }
         }

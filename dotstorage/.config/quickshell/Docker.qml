@@ -21,11 +21,11 @@ Singleton {
     }
 
     function openLogs(name) {
-        Quickshell.execDetached(["ghostty", "-e", "docker", "logs", "-f", "--tail", "200", name]);
+        Launch.cmd(["ghostty", "-e", "docker", "logs", "-f", "--tail", "200", name], "ghostty", "");
     }
 
     function openShell(name) {
-        Quickshell.execDetached(["ghostty", "-e", "docker", "exec", "-it", name, "sh", "-c", "command -v bash >/dev/null && exec bash || exec sh"]);
+        Launch.cmd(["ghostty", "-e", "docker", "exec", "-it", name, "sh", "-c", "command -v bash >/dev/null && exec bash || exec sh"], "ghostty", "");
     }
 
     Process {

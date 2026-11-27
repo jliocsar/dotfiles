@@ -28,10 +28,11 @@ PanelWindow {
     }
 
     readonly property PwNode sink: Pipewire.defaultAudioSink
+    readonly property PwNode source: Pipewire.defaultAudioSource
     readonly property WifiDevice wifi: Networking.devices.values.find(device => device.type === DeviceType.Wifi) ?? null
     readonly property UPowerDevice battery: UPower.displayDevice
 
-    PwObjectTracker { objects: [bar.sink] }
+    PwObjectTracker { objects: [bar.sink, bar.source] }
 
     // `qs ipc call bar toggle calendar|claude|docker|bridge|wifi|power` — keybind-friendly popup toggles.
     IpcHandler {
@@ -128,17 +129,23 @@ PanelWindow {
             }
         }
 
-        // The captain's bridge-ipad dashboard: its view and theme, set from here.
+        // Flint, the captain's bridge: its view and theme, set from here.
         Indicator {
             id: bridgeIndicator
             icon: "󰠳" // md-ship_wheel
             iconSize: 15
-            iconColor: BridgeIpad.reachable ? Theme.cyan : Theme.dim
-            tooltip: "Bridge iPad"
+            iconColor: Flint.reachable ? Theme.cyan : Theme.dim
+            tooltip: (VoiceMode.on ? "Flint · voice " + VoiceMode.mode : "Flint") + " · right-click: voice on/off"
+            // The captain's voice mode (Mod+Shift+Space): red = live and ready, amber blinking = starting up or
+            // waiting on the answer, red ripple = speaking. No dot = off.
+            dot: VoiceMode.busy ? Theme.yellow : VoiceMode.on ? Theme.red : "transparent"
+            dotBlink: VoiceMode.busy
+            dotRipple: VoiceMode.speaking
             active: bridgePopup.visible
             onClicked: bridgePopup.visible = !bridgePopup.visible
+            onRightClicked: VoiceMode.toggle()
 
-            BridgeIpadPopup {
+            FlintPopup {
                 id: bridgePopup
                 anchorItem: bridgeIndicator
             }
@@ -175,7 +182,7 @@ PanelWindow {
             text: muted ? "" : Math.round(volume * 100) + "%"
             color: muted ? Theme.dim : Theme.barFg
             tooltip: bar.sink?.description ?? ""
-            onClicked: Quickshell.execDetached(["io.elementary.settings", "settings://sound"])
+            onClicked: Launch.cmd(["io.elementary.settings", "settings://sound"], "settings", "")
 
             MouseArea {
                 anchors.fill: parent
@@ -186,6 +193,18 @@ PanelWindow {
                     bar.sink.audio.volume = Math.max(0, Math.min(1, bar.sink.audio.volume + step));
                 }
             }
+        }
+
+        // The default mic, muted at the OS level (pipewire, same as `wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle`),
+        // so voice mode stays live but hears nothing (JC 11-26: "so that i can mute while in live mode still").
+        // Follows a mute from anywhere else too.
+        Indicator {
+            readonly property bool muted: bar.source?.audio?.muted ?? false
+            visible: bar.source !== null
+            icon: muted ? "󰍭" : "󰍬" // md-microphone-off / md-microphone
+            color: muted ? Theme.red : Theme.barFg
+            tooltip: (muted ? "Mic muted" : "Mic on") + (bar.source?.description ? " · " + bar.source.description : "") + " · click to " + (muted ? "unmute" : "mute")
+            onClicked: if (bar.source?.audio) bar.source.audio.muted = !muted
         }
 
         Indicator {
@@ -213,7 +232,7 @@ PanelWindow {
             icon: !powered ? "󰂲" : connectedDevices.length > 0 ? "󰂱" : "󰂯"
             color: powered ? Theme.barFg : Theme.dim
             tooltip: connectedDevices.map(device => device.name).join("\n")
-            onClicked: Quickshell.execDetached(["io.elementary.settings", "settings://network/bluetooth"])
+            onClicked: Launch.cmd(["io.elementary.settings", "settings://network/bluetooth"], "settings", "")
         }
 
         Indicator {
