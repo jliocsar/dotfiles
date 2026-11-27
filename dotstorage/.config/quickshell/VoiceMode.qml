@@ -10,7 +10,10 @@ Singleton {
     id: root
 
     property string mode: "off"
-    readonly property bool on: mode !== "" && mode !== "off"
+    // the hey-flint standby, asleep: not live, but the keyword works (JC 11-27: "so I know that I can trigger via
+    // the keyword"). voiced writes asleep while the standby waits for "hey flint"
+    readonly property bool asleep: mode === "asleep"
+    readonly property bool on: mode !== "" && mode !== "off" && mode !== "asleep"
     // Starting up, or transcribing + waiting on the captain's answer.
     readonly property bool busy: mode === "starting" || mode === "loading"
     readonly property bool speaking: mode === "speaking"

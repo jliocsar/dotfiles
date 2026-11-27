@@ -135,10 +135,10 @@ PanelWindow {
             icon: "󰠳" // md-ship_wheel
             iconSize: 15
             iconColor: Flint.reachable ? Theme.cyan : Theme.dim
-            tooltip: (VoiceMode.on ? "Flint · voice " + VoiceMode.mode : "Flint") + " · right-click: voice on/off"
+            tooltip: (VoiceMode.on ? "Flint · voice " + VoiceMode.mode : VoiceMode.asleep ? "Flint · standby: say hey flint" : "Flint") + " · right-click: voice on/off"
             // The captain's voice mode (Mod+Shift+Space): red = live and ready, amber blinking = starting up or
             // waiting on the answer, red ripple = speaking. No dot = off.
-            dot: VoiceMode.busy ? Theme.yellow : VoiceMode.on ? Theme.red : "transparent"
+            dot: VoiceMode.busy ? Theme.yellow : VoiceMode.on ? Theme.red : VoiceMode.asleep ? Theme.green : "transparent"
             dotBlink: VoiceMode.busy
             dotRipple: VoiceMode.speaking
             active: bridgePopup.visible
