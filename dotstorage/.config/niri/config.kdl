@@ -426,11 +426,14 @@ binds {
     Mod+Shift+Slash { show-hotkey-overlay; }
 
     // Suggested binds for running programs: terminal, app launcher, screen locker.
-    Mod+T hotkey-overlay-title="Open a Terminal: alacritty" { spawn "ghostty"; }
+    //Mod+T hotkey-overlay-title="Open a Terminal: ghostty" { spawn "ghostty"; }
+    Mod+T hotkey-overlay-title="Open a Terminal: wyrm" { spawn "wyrm"; }
     Mod+D hotkey-overlay-title="Run an Application: vicinae" { spawn "vicinae" "toggle"; }
     Super+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn "swaylock"; }
     Ctrl+Shift+Space repeat=false hotkey-overlay-title="Toggle Dictation: hex" { spawn "hex" "dictation" "toggle"; }
     Ctrl+Alt+Space repeat=false hotkey-overlay-title="Toggle Dictation with a Tone: hex-dictate" { spawn "hex-dictate" "toggle"; }
+    // the captain's voice mode (poormans-captain/voice): on/off; while it speaks, stops the speech
+    Mod+Shift+Space repeat=false hotkey-overlay-title="Captain Voice Mode" { spawn "/home/jliocsar/Projects/poormans-captain/voice/voice.sh" "key"; }
     // hex Annotate. niri has no GlobalShortcuts portal, so hex's own F9 never binds.
     // niri binds only fire on press, so hold-to-draw is out: Shift+F9 toggles the pen instead.
     F9 repeat=false hotkey-overlay-title="Toggle Annotate: hex" { spawn "hex" "annotate" "toggle"; }

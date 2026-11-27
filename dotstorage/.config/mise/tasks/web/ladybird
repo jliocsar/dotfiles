@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+#MISE description="Install Ladybird browser from its apt repo"
+#MISE dir="/tmp"
+set -euo pipefail
+
+if [[ -x "$(command -v ladybird)" ]]; then
+  echo "[web] ladybird already installed, upgrading via apt"
+  sudo apt-get update
+  sudo apt-get install -y --only-upgrade ladybird
+  exit 0
+fi
+
+echo "[web] Installing ladybird"
+
+sudo install -d -m 755 /etc/apt/keyrings
+sudo curl -fsSLo /etc/apt/keyrings/ladybird.asc https://apt.ladybird.org/ladybird.asc
+sudo curl -fsSLo /etc/apt/sources.list.d/ladybird.sources https://apt.ladybird.org/ladybird-noble.sources
+
+sudo apt-get update
+sudo apt-get install -y ladybird

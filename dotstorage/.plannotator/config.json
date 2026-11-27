@@ -16,7 +16,7 @@
   "theme": {
     "mode": "system",
     "light": "plannotator",
-    "dark": "vitesse-black"
+    "dark": "plannotator"
   },
   "favicon": "glass",
   "inboxSound": {
@@ -45,7 +45,7 @@
   "inboxNotifications": {
     "enabled": true,
     "dismissed": false,
-    "allowedOrigin": "https://cyborg-15-a13v.tail5f88c0.ts.net:38407"
+    "allowedOrigin": "http://localhost:38407"
   },
   "inboxRows": [
     "smallNames",
@@ -53,14 +53,13 @@
     "unreadDot",
     "relativeTime",
     "titleFirst",
+    "marksThreads",
     "marksProjects",
-    "markInline",
     "repoLogo",
     "githubPictures",
-    "dividers",
     "boldNames"
   ],
-  "inboxRowsRev": 155,
+  "inboxRowsRev": 238,
   "inboxBoard": true,
   "inboxBoardIntro": {
     "shownAt": "2026-11-04T20:56:49.624Z"
@@ -84,15 +83,16 @@
   "inboxSteps": true,
   "inboxRowsDefaults": 2,
   "inboxRowsPrev": [
+    "compact",
     "smallNames",
     "hidePreview",
     "unreadDot",
     "relativeTime",
     "titleFirst",
+    "marksThreads",
     "marksProjects",
     "repoLogo",
     "githubPictures",
-    "dividers",
     "boldNames"
   ],
   "inboxRowsBy": null,
@@ -122,5 +122,10 @@
     ]
   },
   "inboxSidebarRev": 22,
-  "inboxMarkReadWarning": false
+  "inboxMarkReadWarning": false,
+  "inboxAgentStatus": true,
+  "inboxCodeReview": true,
+  "inboxLaunch": {
+    "startIn": "rex"
+  }
 }

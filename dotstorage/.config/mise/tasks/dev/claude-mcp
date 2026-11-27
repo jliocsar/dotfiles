@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+#MISE description="Add the personal Claude Code MCP servers (fff, lx, executor), user scope, personal account only"
+#MISE dir="/tmp"
+# Personal account only: unset CLAUDE_CONFIG_DIR so this never writes to ~/.claude-work.
+# Re-runnable: each server is removed first, then added again as below.
+# EXECUTOR_URL stays literal; Claude Code expands it when it starts the server.
+set -euo pipefail
+
+if ! command -v claude >/dev/null; then
+  echo "[dev] claude not installed, skipping MCP servers"
+  exit 0
+fi
+
+add() {
+  local name=$1 json=$2
+  env -u CLAUDE_CONFIG_DIR claude mcp remove -s user "$name" >/dev/null 2>&1 || true
+  env -u CLAUDE_CONFIG_DIR claude mcp add-json -s user "$name" "$json"
+}
+
+add fff '{"command":"fff-mcp"}'
+add lx '{"command":"lx","args":["mcp"],"env":{"LX_EMBED_ENABLED":"1"}}'
+add executor '{"type":"http","url":"${EXECUTOR_URL}/toolkits/personal"}'
+
+echo "[dev] claude MCP servers added (personal, user scope)"

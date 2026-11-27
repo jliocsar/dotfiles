@@ -14,7 +14,7 @@
   "permissions": {
     "defaultMode": "auto"
   },
-  "model": "fable",
+  "model": "opus",
   "skillOverrides": {
     "artifact-design": "off",
     "claude-api": "off",
@@ -222,7 +222,8 @@
     "plannotator@plannotator": true,
     "tokenfall@tokenfall": true,
     "session-share@claude-code-session-share": true,
-    "codemode@claude-codemode": true
+    "codemode@claude-codemode": true,
+    "untangle-codebase@caldo-skills": true
   },
   "extraKnownMarketplaces": {
     "claude-plugins-official": {
@@ -265,6 +266,12 @@
       "source": {
         "source": "github",
         "repo": "jliocsar/claude-codemode"
+      }
+    },
+    "caldo-skills": {
+      "source": {
+        "source": "github",
+        "repo": "caldoai/skills"
       }
     }
   },

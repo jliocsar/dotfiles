@@ -1,11 +1,3 @@
-if command -v herdr >/dev/null 2>&1; then
-  if [[ -z "$(herdr session list --json 2>/dev/null | jq -r '.sessions[0].name // empty')" ]]; then
-    exec herdr
-  elif [[ -z "$HERDR_ENV" ]]; then
-    echo "herdr is already running"
-  fi
-fi
-
 # dotfiles
 source $HOME/.dotfiles/zsh/dotfiles.zsh
 
